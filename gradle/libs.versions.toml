@@ -30,6 +30,7 @@ espresso = { module = "androidx.test.espresso:espresso-core", version = "3.7.0" 
 uiautomator = { module = "androidx.test.uiautomator:uiautomator", version = "2.3.0" }
 benchmark = { module = "androidx.benchmark:benchmark-macro-junit4", version = "1.4.1" }
 profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
+serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.9.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -37,4 +38,5 @@ android-test = { id = "com.android.test", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

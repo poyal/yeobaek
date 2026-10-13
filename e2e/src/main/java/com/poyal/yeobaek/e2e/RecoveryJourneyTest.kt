@@ -28,11 +28,11 @@ class RecoveryJourneyTest {
     @Before fun setup() {
         require(pkg in setOf("com.poyal.yeobaek", "com.poyal.yeobaek.debug", "com.poyal.yeobaek.benchmark"))
         device.executeShellCommand("pm clear $pkg"); start(); click("connect_folder")
-        device.wait(Until.hasObject(By.pkg("com.google.android.documentsui")), 10000)
+        device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui"))), 10000)
         device.findObject(By.desc("Show roots"))?.click()
         device.findObject(By.text("Downloads"))?.click(); device.findObject(By.text("Download"))?.click()
         device.wait(Until.findObject(By.text("Yeobaek")), 10000)!!.click()
-        (device.wait(Until.findObject(By.res("com.google.android.documentsui:id/action_menu_select")), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
+        (device.wait(Until.findObject(By.res(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui:id/action_menu_select"))), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
         device.wait(Until.findObject(By.res("android:id/button1")), 5000)?.click(); node("folder_refresh")
     }
     @Test fun cacheSourceChangesAndRecordDeletion() {
@@ -69,7 +69,10 @@ class RecoveryJourneyTest {
         repeat(5) { if (!device.hasObject(By.res("folder_up"))) node("library_list").scroll(Direction.UP, .9f) }
         click("folder_up")
         find("file_비가 그친 오후.txt"); click("file_비가 그친 오후.txt"); ready()
+        val originalFontScale = device.executeShellCommand("settings get system font_scale").trim()
+        val originalShowIme = device.executeShellCommand("settings get secure show_ime_with_hard_keyboard").trim()
         try {
+            device.executeShellCommand("settings put secure show_ime_with_hard_keyboard 1")
             device.executeShellCommand("settings put system font_scale 2.0"); SystemClock.sleep(1500)
             ready(); capture("45-system-font-200"); click("reader_txt"); capture("46-large-txt-options"); click("sheet_close")
             click("reader_search"); node("search_input").click(); node("search_input").text = "골목"
@@ -77,7 +80,29 @@ class RecoveryJourneyTest {
             check(device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.inputmethod\\.latin"))), 15000)) { "검색 키보드가 표시되지 않았습니다" }
             capture("47-keyboard-search"); device.pressBack()
             node("search_submit"); click("search_submit"); node("search_next"); capture("48-large-search-results")
-        } finally { device.executeShellCommand("settings put system font_scale 1.0") }
+        } finally {
+            if (originalFontScale == "null") device.executeShellCommand("settings delete system font_scale")
+            else device.executeShellCommand("settings put system font_scale $originalFontScale")
+            if (originalShowIme == "null") device.executeShellCommand("settings delete secure show_ime_with_hard_keyboard")
+            else device.executeShellCommand("settings put secure show_ime_with_hard_keyboard $originalShowIme")
+        }
+    }
+
+    @Test fun returningToFolderRefreshesExternalChanges() {
+        click("folder_Recovery")
+        val name = "Resume-${java.util.UUID.randomUUID()}.txt"
+        val source = "/sdcard/Download/Yeobaek/Recovery/$name"
+        try {
+            device.pressHome()
+            val original = "/sdcard/Download/Yeobaek/Recovery/Original.txt"
+            val hash = device.executeShellCommand("sha256sum $original").substringBefore(' ')
+            Assert.assertTrue(hash.matches(Regex("[0-9a-f]{64}")))
+            device.executeShellCommand("cp $original $source")
+            Assert.assertEquals("합성 파일 생성 확인", hash, device.executeShellCommand("sha256sum $source").substringBefore(' '))
+            start()
+            node("file_$name")
+            capture("51-folder-refreshed-on-resume")
+        } finally { device.executeShellCommand("rm $source") }
     }
 
     @Test fun movedFileReconnectsWithoutLosingPositionOrBookmark() {
@@ -92,7 +117,7 @@ class RecoveryJourneyTest {
         Assert.assertEquals("", device.executeShellCommand("mv $source $moved").trim())
         try {
             click("nav_recent"); click("recent_Original.txt"); click("find_missing_book")
-            device.wait(Until.hasObject(By.pkg("com.google.android.documentsui")), 10000)
+            device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui"))), 10000)
             device.findObject(By.desc("Show roots"))?.click()
             device.waitForIdle()
             // Downloads in ACTION_OPEN_DOCUMENT can be the virtual download-manager root.
@@ -111,7 +136,7 @@ class RecoveryJourneyTest {
                     while (parser.eventType != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
                         if (parser.eventType == org.xmlpull.v1.XmlPullParser.START_TAG && parser.name == "node") {
                             val text = parser.getAttributeValue(null, "text").orEmpty()
-                            if (text == label || (label == "sdk_gphone" && text.contains(label))) {
+                            if (text == label || (label == android.os.Build.MODEL && text.contains(label))) {
                                 bounds = Regex("\\d+").findAll(parser.getAttributeValue(null, "bounds")).map { it.value.toInt() }.toList()
                             }
                         }
@@ -122,7 +147,7 @@ class RecoveryJourneyTest {
                 check(device.click((b[0] + b[2]) / 2, (b[1] + b[3]) / 2))
                 device.waitForIdle(); SystemClock.sleep(400)
             }
-            tapDocument("sdk_gphone")
+            tapDocument(android.os.Build.MODEL)
             tapDocument("Download")
             tapDocument("Yeobaek")
             tapDocument("Recovery")

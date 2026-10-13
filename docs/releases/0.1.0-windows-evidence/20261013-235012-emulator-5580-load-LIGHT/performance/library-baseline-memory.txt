@@ -1,0 +1,68 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 3646556 Realtime: 3646556
+
+** MEMINFO in pid 7911 [com.poyal.yeobaek] **
+                   Pss  Private  Private     Swap      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    13527    13452        0        0    17260    27092    21435     1749
+  Dalvik Heap    27826    27652        0        0    35564    51957    27381    24576
+ Dalvik Other     1484     1412        0        0     2388                           
+        Stack      632      632        0        0      640                           
+       Ashmem       13        0        0        0      608                           
+    Other dev       13        0       12        0      248                           
+     .so mmap     2018      284       68        0    40408                           
+    .jar mmap     1225        0        0        0    35764                           
+    .apk mmap     2745     2640        0        0     4040                           
+    .ttf mmap     1272        0     1032        0     1832                           
+    .dex mmap      114        0      100        0     1044                           
+    .oat mmap      455        0        0        0    11632                           
+    .art mmap     1141      520        0        0    31884                           
+   Other mmap     1704       32      764        0     5408                           
+      Unknown      571      564        0        0     1508                           
+        TOTAL    54740    47188     1976        0   190228    79049    48816    26325
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    28172                          67448
+         Native Heap:    13452                          17260
+                Code:     4124                          94836
+               Stack:      632                            640
+            Graphics:        0                              0
+       Private Other:     2784
+              System:     5576
+             Unknown:                                   10044
+ 
+           TOTAL PSS:    54740            TOTAL RSS:   190228      TOTAL SWAP (KB):        0
+ 
+ Objects
+               Views:       16         ViewRootImpl:        1
+         AppContexts:        6           Activities:        1
+              Assets:        8        AssetManagers:        0
+       Local Binders:       18        Proxy Binders:       57
+       Parcel memory:        5         Parcel count:       22
+    Death Recipients:        0             WebViews:        0
+ 
+ Native Allocations
+                         Count                       Total(kB)
+                        ------                         ------
+    Other (malloced):      499                             46
+ Other (nonmalloced):       77                             57
+   Bitmap (malloced):       15                             24
+ 
+ SQL
+         MEMORY_USED:      343
+  PAGECACHE_OVERFLOW:       83          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4       52             25     2    40     3  /data/user/0/com.poyal.yeobaek/databases/library.db
+         4        8                    0     0     0    (attached) temp
+         4       52             44     0    16     2  /data/user/0/com.poyal.yeobaek/databases/library.db (2)
+         4       52             42     2    15     2  /data/user/0/com.poyal.yeobaek/databases/library.db (3)
+         4       52             67     4    22     5  /data/user/0/com.poyal.yeobaek/databases/library.db (1)
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+              6            96           102  /data/user/0/com.poyal.yeobaek/databases/library.db

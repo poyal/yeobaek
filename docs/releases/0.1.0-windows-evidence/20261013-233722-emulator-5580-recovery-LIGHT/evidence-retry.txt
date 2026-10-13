@@ -1,0 +1,1 @@
+Instrumentation PASS; initial adb pull failed; capture-directory retry completed.

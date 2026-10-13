@@ -1,0 +1,11 @@
+{
+  "errors": 0,
+  "warnings": 23,
+  "issues": {
+    "Warning/AndroidGradlePluginVersion": 2,
+    "Warning/GradleDependency": 7,
+    "Warning/NewerVersionAvailable": 7,
+    "Warning/ObsoleteSdkInt": 1,
+    "Warning/UseKtx": 6
+  }
+}

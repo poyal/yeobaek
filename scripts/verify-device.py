@@ -6,7 +6,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
 p = argparse.ArgumentParser()
 p.add_argument('--serial', required=True)
-p.add_argument('--suite', choices=['engine', 'e2e', 'recovery', 'restore', 'load', 'soak', 'repeat', 'macro', 'profile'], required=True)
+p.add_argument('--suite', choices=['engine', 'e2e', 'recovery', 'restore', 'about', 'load', 'soak', 'repeat', 'macro', 'profile'], required=True)
 p.add_argument('--theme', choices=['LIGHT', 'DARK'], default='LIGHT')
 p.add_argument('--variant', choices=['debug', 'benchmark', 'release', 'profile'], default='debug')
 p.add_argument('--method')
@@ -14,8 +14,10 @@ args = p.parse_args()
 required_variant = {'engine':'debug', 'macro':'benchmark', 'profile':'profile'}.get(args.suite)
 if required_variant and args.variant != required_variant:
     p.error(f'{args.suite}에는 --variant {required_variant}가 필요합니다.')
-adb = os.environ.get('ADB', str(ROOT / '.tools/android-sdk/platform-tools/adb'))
+adb = os.environ.get('ADB', str(ROOT / '.tools/android-sdk/platform-tools' / ('adb.exe' if os.name == 'nt' else 'adb')))
 def command(*parts, **kwargs):
+    if kwargs.get('text'):
+        kwargs.setdefault('encoding', 'utf-8')
     return subprocess.run([adb, '-s', args.serial, *parts], check=True, **kwargs)
 def output(*parts):
     return command(*parts, capture_output=True, text=True).stdout.strip()
@@ -38,7 +40,7 @@ manifest = dict(vars(args), avd=avd, package=pkg, apk_sha256=hashlib.sha256(apk.
     fingerprint=output('shell', 'getprop', 'ro.build.fingerprint'),
     display=output('shell', 'wm', 'size'), density=output('shell', 'wm', 'density'),
     font_scale=output('shell', 'settings', 'get', 'system', 'font_scale'))
-(out/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
+(out/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
 if int(manifest['api']) <= 30 and args.suite not in ('engine', 'macro', 'profile'):
     # Android 11's external test output is inaccessible to shell after a reboot.
     # The dedicated AVD guard above prevents rooting or clearing a user's device.
@@ -49,7 +51,7 @@ command('install', '-r', str(apk))
 if args.suite == 'engine':
     command('install', '-r', 'app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk')
     runner = 'com.poyal.yeobaek.debug.test/androidx.test.runner.AndroidJUnitRunner'
-    options = []
+    options = ['-e', 'class', 'com.poyal.yeobaek.ReaderEngineTest,com.poyal.yeobaek.PersistenceTest']
 elif args.suite in ('macro', 'profile'):
     command('install', '-r', 'benchmark/build/outputs/apk/benchmark/benchmark-benchmark.apk')
     command('shell', 'rm', '-rf', '/sdcard/Android/media/com.poyal.yeobaek.benchmarks')
@@ -59,21 +61,21 @@ elif args.suite in ('macro', 'profile'):
 else:
     command('install', '-r', 'e2e/build/outputs/apk/debug/e2e-debug.apk')
     runner = 'com.poyal.yeobaek.e2e/androidx.test.runner.AndroidJUnitRunner'
-    klass = {'e2e':'ReaderJourneyTest', 'recovery':'RecoveryJourneyTest', 'restore':'RestoreJourneyTest'}.get(args.suite, 'PerformanceJourneyTest')
+    klass = {'e2e':'ReaderJourneyTest', 'recovery':'RecoveryJourneyTest', 'restore':'RestoreJourneyTest', 'about':'AboutJourneyTest'}.get(args.suite, 'PerformanceJourneyTest')
     method = args.method or dict(load='largeFilesAndLongParagraph', soak='continuousReading30Minutes', repeat='repeatedOpen100Times').get(args.suite)
     options = ['-e', 'targetPackage', pkg, '-e', 'theme', args.theme, '-e', 'class',
         f'com.poyal.yeobaek.e2e.{klass}' + (f'#{method}' if method else '')]
-    command('shell', 'rm', '-rf', '/sdcard/Android/data/com.poyal.yeobaek.e2e/files/captures', '/sdcard/Android/data/com.poyal.yeobaek.e2e/files/performance')
+    command('shell', 'rm', '-rf', '/sdcard/Android/data/com.poyal.yeobaek.e2e/files/captures', '/sdcard/Android/data/com.poyal.yeobaek.e2e/files/performance', '/sdcard/Android/data/com.poyal.yeobaek.e2e/files/about')
 print(f'Evidence: {out}', flush=True)
-with (out/'instrumentation.txt').open('w') as log:
+with (out/'instrumentation.txt').open('w', encoding='utf-8') as log:
     result = subprocess.run([adb, '-s', args.serial, 'shell', 'am', 'instrument', '-w', '-r', *options, runner], stdout=log, stderr=subprocess.STDOUT)
-raw = (out/'instrumentation.txt').read_text()
+raw = (out/'instrumentation.txt').read_text(encoding='utf-8')
 match = re.search(r'OK \((\d+) tests?\)', raw)
-expected = 1 if args.method else dict(engine=3, e2e=2, recovery=3, macro=6).get(args.suite, 1)
+expected = 1 if args.method else dict(engine=3, e2e=2, recovery=4, macro=6).get(args.suite, 1)
 actual = int(match.group(1)) if match else 0
 success = result.returncode == 0 and actual == expected and 'FAILURES!!!' not in raw and 'Process crashed' not in raw
 summary = {'status': 'PASS' if success else 'FAIL', 'exit_code': result.returncode, 'expected_tests': expected, 'passed_tests': actual}
-(out/'summary.json').write_text(json.dumps(summary, indent=2))
+(out/'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
 if args.suite not in ('engine', 'macro', 'profile'):
     if int(manifest['api']) <= 30:
         command('root')

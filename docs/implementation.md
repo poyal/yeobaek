@@ -8,6 +8,7 @@
 - Gradle 8.13, AGP 8.13.2, Kotlin 2.2.21. 전체 버전은 `gradle/libs.versions.toml`에 고정했습니다.
 - Android Studio에서 저장소를 열고 SDK 36과 Build Tools 35.0.0을 설치합니다. `local.properties`에 본인의 SDK 경로를 지정합니다.
 - CLI에서는 `JAVA_HOME`, `ANDROID_HOME`을 지정한 뒤 `scripts/build.sh`를 사용합니다. 개인 도구가 `.tools/`에 있다면 그 경로를 우선합니다. 다른 프로젝트의 소스·설정 파일은 필요하지 않습니다.
+- Windows에서는 `scripts/build.ps1`과 `gradlew.bat`를 사용합니다. `.tools/env.ps1`에 개인 환경 변수를 둘 수 있으며 SDK 경로는 `ANDROID_HOME`, `ANDROID_SDK_ROOT`, `local.properties`를 지원합니다.
 
 ```sh
 scripts/build.sh :core:txt:test :app:lintDebug :app:assembleDebug
@@ -22,6 +23,8 @@ scripts/build.sh :app:assembleRelease
 
 서명 스크립트는 최초 한 번만 키를 만들며 기존 키를 덮어쓰지 않습니다. `.tools/signing/`과 `signing.properties`는 Git에서 제외합니다. 업데이트를 위해 이 키는 별도로 보관해야 합니다. 서명 정보가 없는 환경에서는 unsigned release가 생성됩니다. APK에 서명 비밀번호를 넣지 않습니다.
 
+Windows의 대응 명령은 `.\scripts\create-signing.ps1`과 `.\scripts\build.ps1 :app:assembleRelease`입니다. 기존 배포 키가 없는 PC에서 새 키를 생성하면 과거 서명 APK를 덮어 설치할 수 없습니다. 현재 설치의 데이터를 유지해야 한다면 과거 키를 복원하여 빌드합니다.
+
 ## 모듈과 상태
 
 | 모듈/위치 | 책임 |
@@ -31,6 +34,7 @@ scripts/build.sh :app:assembleRelease
 | `AppViewModel` | 폴더 조회·열기·검색 취소, 최신 요청 반영, 세션 저장과 복구 |
 | `app/rendering` | 글꼴·폭별 화면 블록과 줄 경계, 디스크 체크포인트, 측정 LRU |
 | `app/ui` | 확정 색상·리듬 심볼·앱 화면·TXT 독서·보조 시트 |
+| `app/update` | GitHub 릴리즈 확인, APK 다운로드·검증·설치 준비, 독립된 업데이트 DataStore |
 | `:e2e` | 앱 밖의 UIAutomator 프로세스에서 SAF·PID 교체·복구·캡처·부하 검사 |
 | `:benchmark` | 최적화 빌드에 대한 FrameTimingMetric 및 열기 트레이스 |
 
@@ -54,6 +58,8 @@ SAF의 선택 폴더 하나만 기억하고 하위 폴더는 진입할 때 조�
 
 검색은 KMP로 32K 문자 창을 읽고 일치 오프셋을 디스크에 기록합니다. UI는 한 번에 100개 결과만 표시하며 256 code point까지의 정확한 부분 문자열을 지원합니다. 결과 인덱스가 32MiB를 넘으면 더 긴 검색어를 요청합니다. 검색 강조는 표시 주변 본문만 읽습니다.
 
+결과 목록의 시작 번호와 이전/다음으로 선택한 결과 번호는 별도 상태입니다. 100개 경계를 넘어 탐색해도 목록에서 누른 문장의 오프셋으로 이동합니다. 새 책 열기·독서 종료는 검색 세대를 무효화하고, 위치 이동은 이전 창의 선행 로드를 취소합니다. 폴더 화면으로 앱이 복귀하면 현재 하위 폴더를 다시 조회합니다.
+
 ## 디자인 적용
 
 `design/final/`의 색상과 확정 리듬 SVG 경로를 네이티브 리소스로 옮겼습니다. 런처는 adaptive icon과 monochrome을 제공합니다. 앱 테마는 SYSTEM/LIGHT/DARK, TXT 본문은 FOLLOW_APP/LIGHT/SEPIA/DARK로 별도 저장합니다. 본문·헤더·푸터·시스템 바는 실제 본문 색상에 맞추고 보조 시트는 앱 테마를 따릅니다. Android 11의 3버튼 탐색 영역도 앱 배경이 이어지도록 대비용 기본 scrim을 해제했습니다.
@@ -64,6 +70,16 @@ SAF의 선택 폴더 하나만 기억하고 하위 폴더는 진입할 때 조�
 
 ## 테스트 실행
 
+앱 정보·문의와 업데이트는 페리로그의 흐름을 여백의 공통 UI에 맞춰 적용했습니다. 조회 주소는 `https://api.github.com/repos/poyal/yeobaek/releases/latest`입니다. 앱 프로세스별 안내는 한 번, 자동 조회는 마지막 시도부터 24시간 간격이고 수동 확인에는 중복 요청을 막는 5초 간격만 적용합니다. 읽기·이어 읽기 확인·오류 대화상자를 가리지 않도록 업데이트 안내는 폴더·설정 화면에서 표시합니다.
+
+DownloadManager의 전송 ID와 전체 릴리즈 정보(버전·주소·크기·해시)를 연결하고, 지난 버전의 다운로드나 늦은 콜백이 새 버전의 설치 버튼을 활성화하지 못하게 합니다. Download 폴더 원본은 보존하고 설치할 바이트만 앱 전용 캐시로 복사하면서 재검증합니다. FileProvider는 이 캐시 폴더만 공유합니다. Android 설치 권한은 사용자가 설치할 때 요청합니다. release는 HTTPS만 사용하며 debug의 로컬 통합 검사에만 `127.0.0.1` HTTP를 허용합니다.
+
+Windows에서 `.\scripts\test-updates.ps1 -Serial emulator-5580`은 작은 고버전 debug 서명 APK를 만들어 에뮬레이터 내부 HTTP 서버로 내려받습니다. 실제 DownloadManager·사설 복사본·설치 화면 취소·완료 파일 보존·변조 거절과 Compose 업데이트 상태를 검사합니다. 테스트용 설치 화면을 열지만 테스트 APK를 설치하지 않습니다. `-PupdateFixture`일 때만 통합 검사 코드와 APK 자산을 포함하며 release에는 포함하지 않습니다.
+
+Windows에서 Emulator와 `system-images;android-36;default;x86_64`를 설치한 SDK 경로를 `scripts/start-emulator.ps1 -SdkPath <SDK 경로>`에 전달하면 창이 있는 전용 `yeobaek-api36` AVD를 만들고 실행합니다. AVD 데이터는 `.tools/avd/`에 있으며 기존 AVD를 초기화하지 않습니다. 개인 환경 파일의 `YEOBAEK_EMULATOR_SDK`도 지원합니다. 기본 시리얼은 `emulator-5580`입니다.
+
+샘플은 생성 후 `adb -s emulator-5580 push .tools/fixtures/Yeobaek /sdcard/Download/`로 복사합니다. 앱의 시작 폴더 선택에서 `Download/Yeobaek`을 연결합니다. `--large`를 사용하면 1,021개 합성 파일, 약 266MiB가 생성되며 1,000개 파일은 별도 하위 폴더에 있습니다. 원본 편집 복구 검사도 이 합성 폴더만 사용합니다.
+
 ```sh
 python3 scripts/generate-fixtures.py --large
 scripts/build.sh :app:assembleDebugAndroidTest :app:assembleBenchmark :e2e:assembleDebug :benchmark:assembleBenchmark
@@ -73,6 +89,7 @@ scripts/build.sh :app:assembleDebugAndroidTest :app:assembleBenchmark :e2e:assem
 
 ```sh
 python3 scripts/verify-device.py --serial emulator-5580 --suite engine
+python3 scripts/verify-device.py --serial emulator-5580 --suite about --variant release
 python3 scripts/verify-device.py --serial emulator-5580 --suite e2e --variant release --theme LIGHT
 python3 scripts/verify-device.py --serial emulator-5580 --suite e2e --variant release --theme DARK
 python3 scripts/verify-device.py --serial emulator-5580 --suite recovery --variant release

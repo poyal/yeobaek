@@ -26,7 +26,7 @@ def percentiles(values):
 
 
 def memory(path):
-    raw = path.read_text()
+    raw = path.read_text(encoding='utf-8')
     heaps = {}
     for label in ('Native', 'Dalvik'):
         match = re.search(r'^\s*' + label + r' Heap[ \t]+([\d \t]+)$', raw, re.M)
@@ -43,13 +43,13 @@ def memory(path):
 
 runs = []
 for run in args.runs:
-    result = json.loads((run / 'summary.json').read_text())
+    result = json.loads((run / 'summary.json').read_text(encoding='utf-8'))
     assert result['status'] == 'PASS', f'완료된 통과 실행만 수집합니다: {run}'
-    meta = json.loads((run / 'manifest.json').read_text())
+    meta = json.loads((run / 'manifest.json').read_text(encoding='utf-8'))
     target = args.output / run.name
     target.mkdir(parents=True, exist_ok=True)
     for name in ('summary.json', 'manifest.json', 'instrumentation.txt'):
-        (target / name).write_text((run / name).read_text().replace(str(ROOT), '<workspace>'))
+        (target / name).write_text((run / name).read_text(encoding='utf-8').replace(str(ROOT), '<workspace>'), encoding='utf-8')
     for note in (run / 'device/captures').rglob('*.txt'):
         shutil.copy2(note, target / note.name)
     entry = dict(run=run.name, suite=meta['suite'], variant=meta['variant'], api=meta['api'],
@@ -57,7 +57,7 @@ for run in args.runs:
     if meta['suite'] == 'macro':
         raw_file = next((run / 'benchmark').rglob('*benchmarkData.json'))
         shutil.copy2(raw_file, target / 'benchmarkData.json')
-        data = json.loads(raw_file.read_text())
+        data = json.loads(raw_file.read_text(encoding='utf-8'))
         benchmarks = []
         for benchmark in data['benchmarks']:
             row = dict(name=benchmark['name'], iterations=benchmark['repeatIterations'])
@@ -78,7 +78,7 @@ for run in args.runs:
         for trace in sorted((run / 'benchmark').rglob('*.perfetto-trace')):
             traces.append(dict(name=trace.name, bytes=trace.stat().st_size,
                                sha256=hashlib.sha256(trace.read_bytes()).hexdigest()))
-        (target / 'local-traces.json').write_text(json.dumps(traces, indent=2))
+        (target / 'local-traces.json').write_text(json.dumps(traces, indent=2), encoding='utf-8')
         entry['local_trace_count'] = len(traces)
     if meta['suite'] in ('load', 'repeat', 'soak'):
         folder = next((run / 'device/performance').iterdir())
@@ -89,15 +89,15 @@ for run in args.runs:
                 shutil.copy2(f, raw_target / f.name)
         entry['memory'] = {f.stem.removesuffix('-memory'): memory(f) for f in sorted(folder.glob('*-memory.txt'))}
         if meta['suite'] == 'load':
-            entry['open_ready_ms_single_sample'] = {name: int(ms) for name, ms in (line.split('\t') for line in (folder / 'open-times.tsv').read_text().splitlines())}
+            entry['open_ready_ms_single_sample'] = {name: int(ms) for name, ms in (line.split('\t') for line in (folder / 'open-times.tsv').read_text(encoding='utf-8').splitlines())}
             entry['heap_delta_50mib_mib'] = round(entry['memory']['050MiB']['combined_heap_alloc_mib'] - entry['memory']['library-baseline']['combined_heap_alloc_mib'], 3)
         if meta['suite'] == 'repeat':
-            entry['open_ready_ms'] = percentiles([int(line.split('\t')[1]) for line in (folder / 'reopen.tsv').read_text().splitlines()])
+            entry['open_ready_ms'] = percentiles([int(line.split('\t')[1]) for line in (folder / 'reopen.tsv').read_text(encoding='utf-8').splitlines()])
         if meta['suite'] == 'soak':
-            entry['soak'] = {key: int(value) for key, value in (line.split('\t') for line in (folder / 'soak.tsv').read_text().splitlines())}
+            entry['soak'] = {key: int(value) for key, value in (line.split('\t') for line in (folder / 'soak.tsv').read_text(encoding='utf-8').splitlines())}
     runs.append(entry)
 
 (args.output / 'results.json').write_text(json.dumps(dict(
     measurement='Emulator diagnostics; not physical-device acceptance. P50/P95/P99 use linear interpolation over all recorded samples. Frame samples are pooled across iterations; Heap Alloc is separate from PSS.',
-    runs=runs), ensure_ascii=False, indent=2))
+    runs=runs), ensure_ascii=False, indent=2), encoding='utf-8')
 print(f'{len(runs)} verified runs: {args.output}/results.json')

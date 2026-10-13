@@ -87,4 +87,18 @@ class TextStoreTest {
             assertEquals(text.takeLast(40), recovered.read(recovered.length - 40, 40))
         }
     }
+    @Test fun missingMetadataIsRebuiltFromTheOriginal() = temporary { dir ->
+        val text = "캐시가 불완전해도 원본으로 다시 읽습니다.\n".repeat(500)
+        val store = TextStore(dir)
+        val original = store.prepare({ text.byteInputStream() })
+        for (key in listOf("bytes", "schema", "length", "records", "charset", "hash", "version", "textHash", "indexHash")) {
+            val file = File(original.directory, "meta.properties")
+            val properties = java.util.Properties().apply { file.inputStream().use(::load); remove(key) }
+            file.outputStream().use { properties.store(it, null) }
+            val recovered = store.prepare({ text.byteInputStream() })
+            assertEquals("missing $key", original.version, recovered.version)
+            assertEquals(text.length.toLong(), recovered.length)
+            assertEquals(text.takeLast(40), recovered.read(recovered.length - 40, 40))
+        }
+    }
 }

@@ -96,12 +96,12 @@ class ReaderBenchmark {
     }
     private fun MacrobenchmarkScope.connect() {
         device.findObject(By.res("connect_folder")).click()
-        device.wait(Until.hasObject(By.pkg("com.google.android.documentsui")), 15000)
+        device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui"))), 15000)
         device.wait(Until.findObject(By.desc("Show roots")), 5000)?.click()
         device.wait(Until.findObject(By.text("Downloads")), 1000)?.click()
         device.findObject(By.text("Download"))?.click()
         device.wait(Until.findObject(By.text("Yeobaek")), 5000)!!.click()
-        (device.wait(Until.findObject(By.res("com.google.android.documentsui:id/action_menu_select")), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
+        (device.wait(Until.findObject(By.res(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui:id/action_menu_select"))), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
         device.wait(Until.findObject(By.res("android:id/button1")), 5000)?.click()
         check(device.wait(Until.hasObject(By.res("folder_refresh")), 10000))
     }

@@ -22,11 +22,11 @@ class ReaderProfile {
         device.findObject(By.res("resume_decline"))?.click()
         if (device.hasObject(By.res("connect_folder"))) {
             click("connect_folder")
-            device.wait(Until.hasObject(By.pkg("com.google.android.documentsui")), 10000)
+            device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui"))), 10000)
             device.findObject(By.desc("Show roots"))?.click()
             device.findObject(By.text("Downloads"))?.click(); device.findObject(By.text("Download"))?.click()
             device.wait(Until.findObject(By.text("Yeobaek")), 10000)!!.click()
-            (device.wait(Until.findObject(By.res("com.google.android.documentsui:id/action_menu_select")), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
+            (device.wait(Until.findObject(By.res(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui:id/action_menu_select"))), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
             device.wait(Until.findObject(By.res("android:id/button1")), 5000)?.click()
         }
         node("folder_refresh")

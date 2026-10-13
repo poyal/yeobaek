@@ -55,7 +55,7 @@ class ReaderJourneyTest {
     }
     private fun connect() {
         click("connect_folder")
-        device.wait(Until.hasObject(By.pkg("com.google.android.documentsui")), 15000)
+        device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui"))), 15000)
         capture("02-system-folder-picker")
         val roots = device.findObject(By.desc("Show roots")) ?: device.findObject(By.desc("표시 위치"))
         roots?.click()
@@ -63,7 +63,7 @@ class ReaderJourneyTest {
         downloads?.click()
         device.findObject(By.text("Download"))?.click()
         text(folder).click()
-        val select = device.wait(Until.findObject(By.res("com.google.android.documentsui:id/action_menu_select")), 5000)
+        val select = device.wait(Until.findObject(By.res(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui:id/action_menu_select"))), 5000)
             ?: device.findObject(By.text("USE THIS FOLDER")) ?: device.findObject(By.text("이 폴더 사용"))
             ?: throw AssertionError("폴더 선택 버튼 없음")
         select.click()

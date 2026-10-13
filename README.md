@@ -1,6 +1,8 @@
 # 여백 · yeobaek
 
-Android에서 기기의 TXT 파일을 연속 스크롤로 읽는 앱입니다. **종이의 여백** 화면과 **리듬** 아이콘을 라이트·다크 모드로 구현했습니다. Android 11 이상을 지원하며, 현재 버전은 개인 검증용 TXT MVP입니다. 에뮬레이터 프레임 목표는 미달이며 실물 성능·TalkBack 인수는 남아 있습니다.
+Android에서 기기의 TXT 파일을 연속 스크롤로 읽는 앱입니다. **종이의 여백** 화면과 **리듬** 아이콘을 라이트·다크 모드로 구현했습니다. Android 11 이상을 지원하는 개인용 TXT MVP입니다. 과거 에뮬레이터 프레임 목표는 미달이며 실물 성능·TalkBack 인수는 남아 있습니다.
+
+**[최신 APK 다운로드](https://github.com/poyal/yeobaek/releases/latest)** · [릴리즈 안내](docs/releases/v0.1.0.md) · [문의·오류 신고](https://github.com/poyal/yeobaek/issues)
 
 ## 사용하기
 
@@ -14,6 +16,10 @@ Android에서 기기의 TXT 파일을 연속 스크롤로 읽는 앱입니다. *
 8. 글자가 깨지면 **책 정보 → 글자가 깨져 보이나요?**에서 인코딩을 미리 보고 적용합니다. 파일을 옮겨 접근할 수 없으면 **파일 다시 찾기**로 기록을 재연결합니다.
 
 앱 설정의 **폴더와 저장 공간**에서는 시작 폴더 변경·연결 해제·읽기 캐시 정리를 제공합니다. 최근 읽기의 **독서 기록 관리**는 위치와 책갈피만 삭제합니다. 원본 파일은 유지됩니다.
+
+**설정 → 앱 정보·문의**에서 제작자, 이메일, GitHub, 오류 신고와 변경 내역을 확인할 수 있습니다. **설정 → 업데이트**에서는 최신 공개 버전을 확인하고 APK를 Download 폴더에 저장합니다. 새 실행의 자동 확인은 하루 한 번이며 수동 확인도 가능합니다. 공개 릴리즈가 없거나 연결에 실패하면 그 상태를 안내합니다.
+
+다운로드한 APK는 크기·SHA-256을 확인하고, 설치 직전에 앱 ID·버전·서명을 검증합니다. **업데이트 설치**에서 Android의 ‘이 출처의 앱 설치 허용’을 켠 다음 설치 버튼을 다시 누릅니다. 앱을 삭제하지 않고 같은 서명의 새 APK로 업데이트해야 독서 기록이 유지됩니다. 설치가 취소되거나 끝나도 다운로드한 APK는 자동 삭제하지 않습니다. 업데이트 통신에 본문·책갈피·읽기 기록은 포함하지 않습니다.
 
 ## 지원 범위
 
@@ -33,7 +39,17 @@ scripts/create-signing.sh
 scripts/build.sh :app:assembleRelease
 ```
 
+Windows PowerShell에서는 다음 명령을 사용합니다. 개인 JDK·SDK 경로를 `.tools/env.ps1`에 두면 빌드 스크립트가 읽습니다.
+
+```powershell
+.\scripts\build.ps1 :core:txt:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+.\scripts\create-signing.ps1
+.\scripts\build.ps1 :app:assembleRelease
+```
+
 산출물은 `app/build/outputs/apk/debug/app-debug.apk`와 `app/build/outputs/apk/release/app-release.apk`입니다. 서명 키와 비밀번호는 Git에 포함하지 않습니다. 같은 앱을 업데이트하려면 생성한 키를 보존해야 합니다.
+
+다른 PC에서 새로 만든 키는 기존 APK의 서명과 다릅니다. 기존 설치를 업데이트하려면 원래 키와 `signing.properties`를 먼저 복원합니다. 키 없이 release를 빌드하면 설치할 수 없는 `app-release-unsigned.apk`가 생성됩니다.
 
 전용 AVD의 E2E, 30분 연속 스크롤, 100회 재열기, 1/10/50/100MiB 부하, Macrobenchmark 명령은 [구현·실행 문서](docs/implementation.md)에 있습니다. 실제 화면과 실행 결과는 [0.1.0 검증 기록](docs/releases/0.1.0-verification.md)을 확인해 주세요. 에뮬레이터 측정과 실물 기기의 성능 인수는 구분합니다.
 

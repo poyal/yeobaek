@@ -24,11 +24,18 @@ data class UiState(
     val searchQuery: String = "", val searching: Boolean = false, val searchResult: SearchResult? = null,
     val searchHits: List<Pair<Long, String>> = emptyList(), val searchIndex: Long = 0,
     val searchError: String? = null, val searchScanned: Float = 0f,
-)
+    val searchPageStart: Long = 0,
+) {
+    fun searchHitIndex(row: Int): Long {
+        require(row in searchHits.indices)
+        return searchPageStart + row
+    }
+}
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val container = application as YeobaekApplication
     val prefs = container.preferences
+    val updates = container.updates
     private val dao = container.database.library()
     private val folders = container.folders
     private val store = container.texts
@@ -86,7 +93,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun action(block: suspend () -> Unit) { viewModelScope.launch { block() } }
+    fun action(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            try { block() }
+            catch (e: CancellationException) { throw e }
+            catch (e: Exception) { _ui.update { it.copy(error = message(e)) } }
+        }
+    }
     fun screen(value: String) { _ui.update { it.copy(screen = value, sheet = null) } }
     fun sheet(value: String?) {
         if (value == "search" && searchOrigin == null) searchOrigin = latest?.offset ?: 0
@@ -140,6 +153,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val entry = ui.value.path.lastOrNull() ?: return loadRoot(app.value.tree)
         navigate(ui.value.path, entry)
     }
+    fun foreground() {
+        if (ui.value.reader == null && !ui.value.folderBusy) refresh()
+    }
     fun enter(entry: DocumentEntry) {
         if (entry.directory) navigate(ui.value.path + entry, entry)
         else if (entry.txt || ui.value.showAll) open(entry)
@@ -159,6 +175,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun disconnect() = action {
+        cancelOpen()
         folderJob?.cancelAndJoin()
         val old = app.value.tree
         prefs.setFolder("", "")
@@ -267,12 +284,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private fun showReader(opened: OpenBook) {
         activeSession = 0; sequence = 0; latest = opened.initial; dirty = false; searchOrigin = null
         _locator.value = opened.initial?.offset ?: 0
-        searchJob?.cancel(); marksJob?.cancel(); _seek.value = null
+        cancelSearch(); marksJob?.cancel(); _seek.value = null
         _progress.value = if (opened.document.length == 0L) 0f else ((opened.initial?.offset ?: 0).toFloat() / opened.document.length)
-        _ui.update { it.copy(reader = opened, sheet = null, info = null, missingBook = null, preparing = null, error = null, changed = null, searchHits = emptyList(), searchResult = null, searchQuery = "") }
+        _ui.update { it.copy(reader = opened, sheet = null, info = null, missingBook = null, preparing = null, error = null, changed = null, searchHits = emptyList(), searchResult = null, searchQuery = "", searchPageStart = 0) }
         marksJob = viewModelScope.launch { dao.bookmarks(opened.book.id).collect { _bookmarks.value = it } }
     }
-    fun cancelOpen() { ++openGeneration; openJob?.cancel(); endOpenTrace(); _ui.update { it.copy(preparing = null) } }
+    fun cancelOpen() { ++entryRequest; ++openGeneration; openJob?.cancel(); endOpenTrace(); _ui.update { it.copy(preparing = null) } }
     fun readerReady(token: String) {
         if (activeSession != 0L || activationToken == token) return
         val opened = ui.value.reader?.takeIf { it.token == token } ?: return
@@ -285,6 +302,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 if (ui.value.reader?.token != token) { dao.consumeRevision(revision); return@launch }
                 activeSession = revision
                 dirty = true; flushPosition()
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                _ui.update { it.copy(error = "독서 기록을 시작하지 못했습니다. 저장 공간을 확인하고 책을 다시 열어 주세요.") }
             } finally { if (activationToken == token) activationToken = null }
         }
     }
@@ -311,11 +331,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             }
             dao.save(p.copy(before = context.first, after = context.second, session = session, sequence = seq))
         } catch (e: CancellationException) { throw e }
-        catch (e: Exception) { _ui.update { it.copy(error = "읽던 위치를 저장하지 못했습니다. 저장 공간을 확인해 주세요.") } }
+        catch (e: Exception) {
+            if (activeSession == session && ui.value.reader?.token == reader.token) dirty = true
+            _ui.update { it.copy(error = "읽던 위치를 저장하지 못했습니다. 저장 공간을 확인해 주세요.") }
+        }
     }
     fun background() = action { flushPosition() }
     fun closeReader() = action {
-        cancelOpen(); searchJob?.cancel(); idleSave?.cancel()
+        cancelOpen(); cancelSearch(); idleSave?.cancel()
         flushPosition(); dao.consumeCandidate(); activeSession = 0; marksJob?.cancel()
         _ui.update { it.copy(reader = null, sheet = null, searchResult = null, searchHits = emptyList(), searchQuery = "") }
         latest = null; searchOrigin = null; _seek.value = null
@@ -350,7 +373,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         searchJob?.cancel(); val generation = ++searchGeneration
         val previousResult = ui.value.searchResult
         viewModelScope.launch(Dispatchers.IO) { previousResult?.file?.delete() }
-        _ui.update { it.copy(searchQuery = query, searching = query.isNotBlank(), searchError = null, searchHits = emptyList(), searchResult = null, searchIndex = 0, searchScanned = 0f) }
+        _ui.update { it.copy(searchQuery = query, searching = query.isNotBlank(), searchError = null, searchHits = emptyList(), searchResult = null, searchIndex = 0, searchScanned = 0f, searchPageStart = 0) }
         if (query.isBlank()) return
         if (query.codePointCount(0, query.length) > 256) { _ui.update { it.copy(searching = false, searchError = "검색어는 256자까지 입력할 수 있습니다.") }; return }
         val reader = ui.value.reader ?: return
@@ -393,11 +416,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun moreSearch() = action {
         val result = ui.value.searchResult ?: return@action
         val doc = ui.value.reader?.document ?: return@action
-        val start = (ui.value.searchIndex / 100 + 1) * 100
+        val start = ui.value.searchPageStart + 100
         if (start >= result.count) return@action
         try {
             val hits = withContext(Dispatchers.IO) { result.page(start).map { it to doc.excerpt(it) } }
-            if (ui.value.searchResult == result) _ui.update { it.copy(searchIndex = start, searchHits = hits) }
+            if (ui.value.searchResult == result) _ui.update { it.copy(searchIndex = start, searchPageStart = start, searchHits = hits) }
         } catch (e: CancellationException) { throw e }
         catch (e: Exception) { if (ui.value.searchResult == result) _ui.update { it.copy(searchError = message(e)) } }
     }

@@ -27,12 +27,12 @@ class PerformanceJourneyTest {
         device.findObject(By.res("nav_folder"))?.click()
         if (device.hasObject(By.res("connect_folder"))) {
             click("connect_folder")
-            device.wait(Until.hasObject(By.pkg("com.google.android.documentsui")), 10000)
+            device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui"))), 10000)
             device.findObject(By.desc("Show roots"))?.click()
             device.findObject(By.text("Downloads"))?.click()
             device.findObject(By.text("Download"))?.click()
             device.wait(Until.findObject(By.text("Yeobaek")), 10000)!!.click()
-            (device.wait(Until.findObject(By.res("com.google.android.documentsui:id/action_menu_select")), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
+            (device.wait(Until.findObject(By.res(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui:id/action_menu_select"))), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
             device.wait(Until.findObject(By.res("android:id/button1")), 5000)?.click()
         }
         node("folder_refresh")
@@ -75,7 +75,15 @@ class PerformanceJourneyTest {
             click("reader_move")
             val slider = node("move_slider").visibleBounds
             device.click(slider.left + slider.width() * 8 / 10, slider.centerY()); click("move_apply")
-            check(device.wait(Until.gone(By.res("layout_loading")), 120000))
+            // The seek effect may start after the sheet closes. Absence of a spinner alone can
+            // still mean the old page: wait for the requested position as well as layout completion.
+            val deadline = SystemClock.elapsedRealtime() + 120000
+            fun arrived(): Boolean {
+                val percent = device.findObject(By.res("reader_percent"))?.text?.removeSuffix("%")?.toFloatOrNull()
+                return percent != null && percent in 75f..90f && !device.hasObject(By.res("layout_loading"))
+            }
+            while (!arrived() && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(100)
+            check(arrived()) { "$name: 목표 위치의 본문 배치가 완료되지 않았습니다." }
             screen(name.removeSuffix(".txt") + "-80percent")
             repeat(5) { node("reader_body").fling(Direction.UP) }
             click("reader_back")

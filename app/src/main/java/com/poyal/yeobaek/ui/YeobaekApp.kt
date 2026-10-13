@@ -27,6 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import com.poyal.yeobaek.*
 import com.poyal.yeobaek.data.*
 import com.poyal.yeobaek.txt.TextStore
@@ -41,6 +46,14 @@ import java.util.Locale
     val appColors = LocalPaper.current
     val background = if (state.reader != null && state.sheet == null && state.error == null) readerColors(txt.paper, appColors) else appColors
     val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val updateState by vm.updates.state.collectAsStateWithLifecycle()
+    LaunchedEffect(vm.updates, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            vm.updates.startSession()
+            while (isActive) { vm.updates.refreshDownload(); delay(1000) }
+        }
+    }
     SideEffect {
         val activity = context as? Activity
         if (activity != null) WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
@@ -52,7 +65,7 @@ import java.util.Locale
     val bookPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let(vm::reconnectBook) }
     val chooseFolder = { folderPicker.launch(app.tree.takeIf(String::isNotEmpty)?.let(Uri::parse)) }
     BackHandler(state.reader != null || state.screen != "folder" || state.path.size > 1 || state.sheet != null) {
-        when { state.sheet != null -> vm.sheet(null); state.reader != null -> vm.closeReader(); state.screen != "folder" -> vm.screen("folder"); else -> vm.up() }
+        when { state.sheet != null -> vm.sheet(null); state.reader != null -> vm.closeReader(); state.screen in listOf("about", "updates") -> vm.screen("settings"); state.screen != "folder" -> vm.screen("folder"); else -> vm.up() }
     }
     Surface(color = background.surface, modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
@@ -60,19 +73,27 @@ import java.util.Locale
             else {
                 when (state.screen) {
                     "settings" -> AppSettings(vm, app, chooseFolder, Modifier.weight(1f))
+                    "about" -> AboutScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
+                    "updates" -> UpdatesScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
                     "recent" -> RecentScreen(vm, books, positions, Modifier.weight(1f))
                     else -> LibraryScreen(vm, state, app, books.firstOrNull(), positions, chooseFolder, Modifier.weight(1f))
                 }
                 Rule()
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     listOf(Triple("folder", "폴더", Icons.Outlined.FolderOpen), Triple("recent", "최근 읽기", Icons.Outlined.Schedule), Triple("settings", "설정", Icons.Outlined.Tune)).forEach { (id, label, icon) ->
-                        Column(Modifier.weight(1f).clickable { vm.screen(id) }.testTag("nav_$id").semantics { selected = state.screen == id }.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(icon, null, Modifier.size(22.dp), tint = if (state.screen == id) appColors.accent else appColors.muted)
+                        val active = state.screen == id || (id == "settings" && state.screen in listOf("about", "updates"))
+                        Column(Modifier.weight(1f).clickable { vm.screen(id) }.testTag("nav_$id").semantics { selected = active }.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(icon, null, Modifier.size(22.dp), tint = if (active) appColors.accent else appColors.muted)
                             Text(label, fontSize = 11.sp, color = appColors.muted)
                         }
                     }
                 }
             }
+        }
+    }
+    if (state.reader == null && state.resume == null && state.error == null && state.preparing == null && state.sheet == null) {
+        UpdatePrompt(updateState, vm.updates::dismissPrompt) {
+            vm.updates.dismissPrompt(); vm.screen("updates"); vm.updates.download()
         }
     }
     state.resume?.let { book ->
@@ -218,7 +239,10 @@ private fun percent(book: Book, position: ReadingPosition?): String {
             SettingsRow(Icons.Outlined.TextFields, "TXT 뷰어", "글꼴 · 크기 · 간격 · 본문 색상", "settings_txt", { vm.sheet("txt") })
             Surface(color = p.alt) { Small("읽던 책, 다음에도 이어서\n\n책을 읽다가 앱을 닫으면\n다음 실행에 이어 읽기를 묻습니다.", Modifier.padding(16.dp)) }
             SettingsRow(Icons.Outlined.Storage, "폴더와 저장 공간", "연결 해제 · 읽기 캐시 정리", "settings_storage", { vm.sheet("manage") })
-            Row(verticalAlignment = Alignment.CenterVertically) { Symbol(22.dp); Small("여백 · 0.1.0", Modifier.padding(start = 8.dp)) }
+            Rule()
+            SettingsRow(Icons.Outlined.SystemUpdate, "업데이트", "현재 버전 ${BuildConfig.VERSION_NAME}", "settings_updates", { vm.screen("updates") })
+            SettingsRow(Icons.Outlined.Info, "앱 정보·문의", "제작자 · GitHub · 변경 내역", "settings_about", { vm.screen("about") })
+            Row(verticalAlignment = Alignment.CenterVertically) { Symbol(22.dp); Small("여백 · ${BuildConfig.VERSION_NAME}", Modifier.padding(start = 8.dp)) }
         }
     }
 }
@@ -289,11 +313,11 @@ private fun percent(book: Book, position: ReadingPosition?): String {
     LazyColumn(Modifier.fillMaxWidth().heightIn(max = 330.dp).testTag("search_results")) {
         itemsIndexed(state.searchHits, key = { _, hit -> hit.first }) { index, (offset, excerpt) ->
             Column(Modifier.fillMaxWidth().clickable {
-                if (state.searchResult != null) vm.searchResult(state.searchIndex / 100 * 100 + index)
+                if (state.searchResult != null) vm.searchResult(state.searchHitIndex(index))
                 else { vm.seek(offset); vm.sheet(null) }
             }.padding(vertical = 16.dp)) { Text(excerpt, fontSize = 14.sp); Rule() }
         }
-        if (state.searchResult != null && state.searchIndex / 100 * 100 + 100 < state.searchResult.count) item { TextButton(vm::moreSearch) { Text("다음 100개 결과") } }
+        if (state.searchResult != null && state.searchPageStart + 100 < state.searchResult.count) item { TextButton(vm::moreSearch) { Text("다음 100개 결과") } }
     }
 }
 @Composable private fun BookmarkSheet(vm: AppViewModel) {

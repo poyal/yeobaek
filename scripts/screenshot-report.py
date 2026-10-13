@@ -25,22 +25,22 @@ required = {
 }
 entries, evidence = [], []
 for run in args.runs:
-    result = json.loads((run/'summary.json').read_text())
+    result = json.loads((run/'summary.json').read_text(encoding='utf-8'))
     assert result['status'] == 'PASS', f'통과한 실행만 수집합니다: {run}'
-    meta = json.loads((run/'manifest.json').read_text())
+    meta = json.loads((run/'manifest.json').read_text(encoding='utf-8'))
     group = f"api{meta['api']}-{meta['suite']}-{meta['theme'].lower()}"
     if meta['suite'] == 'restore': group += '-' + run.name.split('-')[1]
     target = args.output/'screenshots'/group
     target.mkdir(parents=True, exist_ok=True)
     functional = meta['suite'] in ('e2e', 'recovery')
-    source = 'captures' if functional else 'restore' if meta['suite'] == 'restore' else 'performance'
+    source = 'captures' if functional else meta['suite'] if meta['suite'] in ('restore', 'about') else 'performance'
     files = sorted((run/'device'/source).rglob('*.png'))
     if functional:
         expected = set(range(1,39)) if meta['suite'] == 'e2e' else set(range(39,51))
         actual = {int(f.stem.split('-')[0]) for f in files if not f.name.startswith('FAIL')}
         assert expected <= actual, f'누락된 화면: {group}: {expected-actual}'
     else:
-        expected_count = {'load':15, 'soak':2, 'repeat':1, 'restore':1}[meta['suite']]
+        expected_count = {'load':15, 'soak':2, 'repeat':1, 'restore':1, 'about':20}[meta['suite']]
         assert len(files) == expected_count, f'{group}: {len(files)} != {expected_count}'
     assert not any(f.name.startswith('FAIL') for f in files), f'실패 캡처가 섞였습니다: {group}'
     for f in files:
@@ -50,19 +50,31 @@ for run in args.runs:
         number = f.stem[:2] if functional else ''
         for tag in required.get(number, []):
             assert tag in tags, f'{f.name}: 필수 요소 {tag} 누락'
+        if meta['suite'] == 'about':
+            tag = ('settings_about' if f.stem.endswith('-settings') else
+                   'about_screen' if f.stem.endswith('-about-top') else
+                   'about_releases' if f.stem.endswith('-about-links') else
+                   'update_check' if f.stem.endswith('-updates-top') else 'update_folder')
+            assert tag in tags, f'{f.name}: 필수 요소 {tag} 누락'
+            expected_color = (29,33,28) if f.stem.startswith('DARK-') else (248,245,239)
+            assert Image.open(f).convert('RGB').getpixel((5,250)) == expected_color, f'{f.name}: 앱 테마 불일치'
         if number == '06': assert 'reader_header' not in tags and 'reader_footer' not in tags
         if meta['suite'] in ('load', 'soak'):
             assert ('error_close' if f.stem == 'source-limit' else 'reader_body') in tags, f'{f.name}: 본문/제한 안내 누락'
         if meta['suite'] == 'load' and f.stem != 'source-limit':
+            assert 'layout_loading' not in tags, f'{f.name}: 본문 배치 중 캡처입니다'
             title = f.stem.removesuffix('-80percent')
             texts = {n.get('text') for n in ET.parse(xml).getroot().iter('node')}
             assert title in texts, f'{f.name}: 다른 파일의 본문을 캡처했습니다'
+            if f.stem.endswith('-80percent'):
+                percent = next(n.get('text') for n in ET.parse(xml).getroot().iter('node') if n.get('resource-id') == 'reader_percent')
+                assert 75 <= float(percent.removesuffix('%')) <= 90, f'{f.name}: 목표 위치가 아닙니다: {percent}'
         if number in ('01', '05', '15'):
             expected_color = (242,231,212) if number == '15' else (29,33,28) if meta['theme']=='DARK' else (248,245,239)
             actual_color = Image.open(f).convert('RGB').getpixel((5,250))
             assert actual_color == expected_color, f'{f.name}: 배경색 {actual_color} != {expected_color}'
         dest = target/f.name; shutil.copy2(f, dest)
-        entries.append({'group':group,'name':f.stem,'path':str(dest.relative_to(args.output)), 'sha256':hashlib.sha256(f.read_bytes()).hexdigest()})
+        entries.append({'group':group,'name':f.stem,'path':dest.relative_to(args.output).as_posix(), 'sha256':hashlib.sha256(f.read_bytes()).hexdigest()})
     evidence.append(dict(group=group, apk_sha256=meta['apk_sha256'], api=meta['api'], count=len(files), controls='PASS', source_run=run.name))
 
 for group in sorted({e['group'] for e in entries}):
@@ -76,6 +88,6 @@ for group in sorted({e['group'] for e in entries}):
         page.save(args.output/f'{group}-contact-{start//12+1}.png')
 
 cards=''.join(f'<figure><a href="{html.escape(e["path"])}"><img loading="lazy" src="{html.escape(e["path"])}" alt="{html.escape(e["name"])}"></a><figcaption>{html.escape(e["group"])} / {html.escape(e["name"])}</figcaption></figure>' for e in entries)
-(args.output/'index.html').write_text('<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>여백 실제 APK 화면 검수</title><style>body{background:#f8f5ef;color:#30372f;font:15px system-ui;margin:32px}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}figure{margin:0}img{width:100%;height:520px;object-fit:contain;object-position:top;background:#e3e8d7}figcaption{padding:12px 0;overflow-wrap:anywhere}a{color:inherit}</style><h1>여백 실제 APK 화면 검수</h1><p>실제 자동 검사에서 촬영한 화면입니다. 각 이미지를 누르면 원본 크기로 확인할 수 있습니다. 필수 화면·조작 요소·대표 배경색을 자동 대조하고, 별도 검수 기록에서 잘림과 구성을 확인합니다.</p><main>'+cards+'</main></html>')
-(args.output/'manifest.json').write_text(json.dumps({'runs':evidence,'screens':entries},ensure_ascii=False,indent=2))
+(args.output/'index.html').write_text('<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>여백 실제 APK 화면 검수</title><style>body{background:#f8f5ef;color:#30372f;font:15px system-ui;margin:32px}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}figure{margin:0}img{width:100%;height:520px;object-fit:contain;object-position:top;background:#e3e8d7}figcaption{padding:12px 0;overflow-wrap:anywhere}a{color:inherit}</style><h1>여백 실제 APK 화면 검수</h1><p>실제 자동 검사에서 촬영한 화면입니다. 각 이미지를 누르면 원본 크기로 확인할 수 있습니다. 필수 화면·조작 요소·대표 배경색을 자동 대조하고, 별도 검수 기록에서 잘림과 구성을 확인합니다.</p><main>'+cards+'</main></html>', encoding='utf-8')
+(args.output/'manifest.json').write_text(json.dumps({'runs':evidence,'screens':entries},ensure_ascii=False,indent=2), encoding='utf-8')
 print(f'{len(entries)} screenshots verified: {args.output}/index.html')

@@ -22,5 +22,6 @@ class MainActivity : ComponentActivity() {
             YeobaekTheme(app.theme) { YeobaekApp(vm) }
         }
     }
+    override fun onResume() { super.onResume(); model?.foreground() }
     override fun onStop() { model?.background(); super.onStop() }
 }

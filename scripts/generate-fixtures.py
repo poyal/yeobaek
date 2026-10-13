@@ -54,5 +54,5 @@ if args.large:
     for number in range(1000):
         save(f'천개 폴더/책 {number:04}.txt', f'책 {number}\n검사용 본문입니다.\n'.encode())
 
-(root.parent/'fixtures.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
+(root.parent/'fixtures.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
 print(f'{len(manifest)} fixtures: {root}')

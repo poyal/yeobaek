@@ -108,7 +108,8 @@ import java.util.Locale
                 catch (e: Exception) { failure = e.message ?: "본문을 배치하지 못했습니다." }
                 finally { loading = false }
             }
-            LaunchedEffect(engine) {
+            // A seek cancels pending prefetch before replacing the visible window.
+            LaunchedEffect(engine, seek?.serial) {
                 snapshotFlow { Triple(list.firstVisibleItemIndex, list.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0, loading) }
                     .distinctUntilChanged().collect { (first, last, busy) ->
                         if (busy || blocks.isEmpty() || failure != null) return@collect

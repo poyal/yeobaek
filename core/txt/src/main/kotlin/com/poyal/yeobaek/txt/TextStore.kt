@@ -180,7 +180,7 @@ class TextDocument(val directory: File) {
 
     fun validate(check: () -> Unit = {}) {
         if (meta.getProperty("schema") != "1" || length !in 0..TextStore.MAX_CANONICAL || records !in 0..(TextStore.MAX_INDEX / 24).toInt()
-            || text.length() != meta.getProperty("bytes").toLong() || index.length() != records * 24L
+            || text.length() != required("bytes").toLong() || index.length() != records * 24L
             || (records == 0) != (length == 0L))
             throw TextFailure("캐시를 다시 준비해야 합니다.")
         if (records > 0) RandomAccessFile(index, "r").use { f ->
