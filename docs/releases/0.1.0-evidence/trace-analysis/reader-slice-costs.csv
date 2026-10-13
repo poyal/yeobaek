@@ -1,0 +1,31 @@
+"thread","name","samples","inclusive_ms","avg_ms","max_ms"
+"RenderThread","Drawing  0.00  0.00 720.00 1600.00",1279,12385.600000,9.684000,166.287000
+"RenderThread","flush commands",1279,7627.400000,5.964000,79.763000
+"GPU completion","waitForever",1271,6353.900000,4.999000,53.278000
+"obaek.benchmark","traversal",1710,5665.300000,3.313000,202.592000
+"obaek.benchmark","draw-VRI[MainActivity]",1710,5621.900000,3.288000,202.562000
+"obaek.benchmark","postAndWait",1710,5295.500000,3.097000,188.712000
+"RenderThread","eglSwapBuffersWithDamageKHR",1279,4455.900000,3.484000,115.075000
+"RenderThread","dequeueBuffer - VRI[MainActivity]#0(BLAST Consumer)0",1279,2834.700000,2.216000,112.149000
+"RenderThread","dequeueBuffer",1279,2799.700000,2.189000,112.139000
+"HWC release","waitForever",289,1828.100000,6.326000,83.177000
+"obaek.benchmark","animation",1462,705.800000,0.483000,14.457000
+"obaek.benchmark","input",1476,671.000000,0.455000,10.538000
+"obaek.benchmark","VRI[MainActivity]",1476,663.800000,0.450000,10.534000
+"RenderThread","queueBuffer",2558,663.400000,0.259000,13.423000
+"obaek.benchmark","AndroidOwner:onTouch",1274,294.800000,0.231000,10.095000
+"obaek.benchmark","dispatchInputEvent MotionEvent ACTION_MOVE deviceId=-1 source=0x1002 historySize=0",533,286.300000,0.537000,10.415000
+"obaek.benchmark","Record View#draw()",1710,263.400000,0.154000,8.550000
+"obaek.benchmark","dispatchInputEvent MotionEvent ACTION_MOVE deviceId=-1 source=0x1002 historySize=1",545,239.100000,0.439000,7.787000
+"obaek.benchmark","Choreographer#scheduleVsyncLocked",1744,232.800000,0.134000,9.977000
+"obaek.benchmark","AndroidOwner:measureAndLayout",1314,224.900000,0.171000,10.029000
+"obaek.benchmark","Choreographer#doFrame 1833207",1,207.500000,207.489000,207.489000
+"obaek.benchmark","AIDL::cpp::IDisplayEventConnection::requestNextVsync::cppClient",1744,206.400000,0.118000,9.962000
+"RenderThread","onFrameAvailable - VRI[MainActivity]#0(f:0,a:1)",1064,180.800000,0.170000,7.064000
+"RenderThread","DrawFrames 1833199",1,166.300000,166.314000,166.314000
+"binder:27419_1","releaseBufferCallbackLocked",346,128.000000,0.370000,9.040000
+"obaek.benchmark","Recomposer:recompose",1209,127.000000,0.105000,9.342000
+"binder:27419_4","releaseBufferCallbackLocked",505,125.700000,0.249000,7.988000
+"binder:27419_1","releaseBuffer",346,123.400000,0.357000,9.028000
+"RenderThread","auto skgpu::ganesh::OpsTask::onExecute(GrOpFlushState *)::(anonymous class)::operator()() const",1279,117.000000,0.092000,5.810000
+"binder:27419_4","releaseBufferCallback - VRI[MainActivity]#0(f:0,a:2)",433,113.500000,0.262000,7.990000

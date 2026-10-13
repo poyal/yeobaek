@@ -1,0 +1,57 @@
+Applications Graphics Acceleration Info:
+Uptime: 624359 Realtime: 624359
+
+** Graphics info for pid 5893 [com.poyal.yeobaek.benchmark] **
+
+Stats since: 517607475288ns
+Total frames rendered: 1374
+Janky frames: 1363 (99.20%)
+50th percentile: 61ms
+90th percentile: 109ms
+95th percentile: 150ms
+99th percentile: 300ms
+Number Missed Vsync: 643
+Number High input latency: 189
+Number Slow UI thread: 712
+Number Slow bitmap uploads: 39
+Number Slow issue draw commands: 1156
+Number Frame deadline missed: 1176
+HISTOGRAM: 5ms=0 6ms=0 7ms=0 8ms=0 9ms=0 10ms=0 11ms=1 12ms=1 13ms=2 14ms=3 15ms=1 16ms=5 17ms=3 18ms=1 19ms=5 20ms=10 21ms=6 22ms=4 23ms=4 24ms=4 25ms=5 26ms=8 27ms=9 28ms=4 29ms=8 30ms=19 31ms=17 32ms=32 34ms=31 36ms=31 38ms=35 40ms=34 42ms=32 44ms=45 46ms=47 48ms=83 53ms=74 57ms=68 61ms=78 65ms=73 69ms=82 73ms=64 77ms=53 81ms=49 85ms=47 89ms=27 93ms=34 97ms=40 101ms=24 105ms=18 109ms=17 113ms=13 117ms=7 121ms=10 125ms=4 129ms=10 133ms=2 150ms=52 200ms=11 250ms=11 300ms=5 350ms=8 400ms=2 450ms=0 500ms=0 550ms=0 600ms=0 650ms=0 700ms=1 750ms=0 800ms=0 850ms=0 900ms=0 950ms=0 1000ms=0 1050ms=0 1100ms=0 1150ms=0 1200ms=0 1250ms=0 1300ms=0 1350ms=0 1400ms=0 1450ms=0 1500ms=0 1550ms=0 1600ms=0 1650ms=0 1700ms=0 1750ms=0 1800ms=0 1850ms=0 1900ms=0 1950ms=0 2000ms=0 2050ms=0 2100ms=0 2150ms=0 2200ms=0 2250ms=0 2300ms=0 2350ms=0 2400ms=0 2450ms=0 2500ms=0 2550ms=0 2600ms=0 2650ms=0 2700ms=0 2750ms=0 2800ms=0 2850ms=0 2900ms=0 2950ms=0 3000ms=0 3050ms=0 3100ms=0 3150ms=0 3200ms=0 3250ms=0 3300ms=0 3350ms=0 3400ms=0 3450ms=0 3500ms=0 3550ms=0 3600ms=0 3650ms=0 3700ms=0 3750ms=0 3800ms=0 3850ms=0 3900ms=0 3950ms=0 4000ms=0 4050ms=0 4100ms=0 4150ms=0 4200ms=0 4250ms=0 4300ms=0 4350ms=0 4400ms=0 4450ms=0 4500ms=0 4550ms=0 4600ms=0 4650ms=0 4700ms=0 4750ms=0 4800ms=0 4850ms=0 4900ms=0 4950ms=0
+50th gpu percentile: 20ms
+90th gpu percentile: 4950ms
+95th gpu percentile: 4950ms
+99th gpu percentile: 4950ms
+GPU HISTOGRAM: 1ms=0 2ms=0 3ms=0 4ms=0 5ms=1 6ms=12 7ms=15 8ms=25 9ms=34 10ms=47 11ms=54 12ms=63 13ms=47 14ms=50 15ms=51 16ms=56 17ms=69 18ms=54 19ms=64 20ms=54 21ms=44 22ms=45 23ms=47 24ms=48 25ms=41 4950ms=398
+Font Cache (CPU):
+  Size: 373.47 kB 
+  Glyph Count: 55 
+CPU Caches:
+GPU Caches:
+  Other:
+    Other: 51.67 KB (1 entry)
+  Image:
+    Texture: 112.99 KB (57 entries)
+  Scratch:
+    Buffer Object: 144.00 KB (4 entries)
+    Texture: 4.25 MB (129 entries)
+Other Caches:
+                         Current / Maximum
+  Layers Total           0.00 KB (numLayers = 0)
+Total GPU memory usage:
+  4768888 bytes, 4.55 MB (411.57 KB is purgeable)
+
+
+Pipeline=Skia (OpenGL)
+Profile data in ms:
+
+	com.poyal.yeobaek.benchmark/com.poyal.yeobaek.MainActivity/android.view.ViewRootImpl@bfea2c8 (visibility=0)
+View hierarchy:
+
+  com.poyal.yeobaek.benchmark/com.poyal.yeobaek.MainActivity/android.view.ViewRootImpl@bfea2c8
+  10 views, 15.77 kB of render nodes
+
+
+Total ViewRootImpl   : 1
+Total attached Views : 10
+Total RenderNode     : 15.77 kB (used) / 39.84 kB (capacity)
+

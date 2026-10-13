@@ -1,0 +1,15 @@
+{
+  "serial": "emulator-5582",
+  "suite": "engine",
+  "theme": "LIGHT",
+  "variant": "debug",
+  "method": null,
+  "avd": "yeobaek-api30",
+  "package": "com.poyal.yeobaek.debug",
+  "apk_sha256": "ae01a4a7a8c79762584b42ace20d63b83b4f763d52b45d33138d403150a0b537",
+  "api": "30",
+  "fingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+  "display": "Physical size: 1080x2280",
+  "density": "Physical density: 440\nOverride density: 320",
+  "font_scale": "1.0"
+}

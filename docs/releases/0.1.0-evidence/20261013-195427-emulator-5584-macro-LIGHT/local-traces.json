@@ -1,0 +1,502 @@
+[
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter000_2026-10-13-11-15-38.perfetto-trace",
+    "bytes": 61038039,
+    "sha256": "1a929822820a8cedbbca016ca282c5b06e0df7b3664ce6628bf4e14ab10a9dd2"
+  },
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter001_2026-10-13-11-16-15.perfetto-trace",
+    "bytes": 60695279,
+    "sha256": "267979c72da55bd6acbb36704a5d38665d9e3d03487948a6cbcb184d3d8e57a5"
+  },
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter002_2026-10-13-11-16-52.perfetto-trace",
+    "bytes": 60924793,
+    "sha256": "f27b0d59ccc00f5d28ea62245d655f3d11a49dcb160ded0d48c00a143e96ffdc"
+  },
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter003_2026-10-13-11-17-31.perfetto-trace",
+    "bytes": 60032701,
+    "sha256": "039b89e7c5e6f0d1eaaa4ec4107f454bd9b5193eefb4c34cf8ab8ff6fc89651d"
+  },
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter004_2026-10-13-11-18-08.perfetto-trace",
+    "bytes": 60722292,
+    "sha256": "991a301c9b258eed7c991ce6842a547cbf9030ab6ec75049864228df18dc2eea"
+  },
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter005_2026-10-13-11-18-45.perfetto-trace",
+    "bytes": 60324030,
+    "sha256": "a9c8c3c73464497fa23b719b69d4fa747010c1920de143208492e88ecb7fb6bf"
+  },
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter006_2026-10-13-11-19-22.perfetto-trace",
+    "bytes": 60424661,
+    "sha256": "c163518eafed8eea1871df51d4306fee95d552d4f434ac2bd10b2258b8cad3fc"
+  },
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter007_2026-10-13-11-20-00.perfetto-trace",
+    "bytes": 61289830,
+    "sha256": "6a0dde5da91fec18417ec7ff1e1d1792e0ad2940f1d211b18de2183c01e04b8d"
+  },
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter008_2026-10-13-11-20-38.perfetto-trace",
+    "bytes": 60182290,
+    "sha256": "65d9dacdfab234a48e57c583f407c6f1d454a3434f87edeb626309d192bcef11"
+  },
+  {
+    "name": "ReaderBenchmark_scroll10MiB_iter009_2026-10-13-11-21-15.perfetto-trace",
+    "bytes": 60000219,
+    "sha256": "dc9f47763f9435f4cdc72b2045745a00d4d24e9e727ff81e42e592ab48e9ca40"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter000_2026-10-13-11-21-57.perfetto-trace",
+    "bytes": 60048014,
+    "sha256": "beba23dfaed2bb65be235ea60d88968a34d0e04bee3c1d082cc58cde210b6187"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter001_2026-10-13-11-22-34.perfetto-trace",
+    "bytes": 60066867,
+    "sha256": "1b9307d188b100588cef0538f126631096ae970bb9716ec08db98aadea8c9b26"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter002_2026-10-13-11-23-12.perfetto-trace",
+    "bytes": 58922573,
+    "sha256": "d4146d8d2f65a2fa8a52df5ea13944f17c8c6351c15879c31a9471ebb75efcdc"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter003_2026-10-13-11-23-49.perfetto-trace",
+    "bytes": 59604412,
+    "sha256": "15865e2344325eb3502e8f996b3f347781d90dee40161c09de8f0c27ea9e2c00"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter004_2026-10-13-11-24-26.perfetto-trace",
+    "bytes": 59816241,
+    "sha256": "c03a1b45d2a1fc1dd1f47c975db8ce63982d2a7787c1da10fab7269e9540ecb0"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter005_2026-10-13-11-25-03.perfetto-trace",
+    "bytes": 59199671,
+    "sha256": "4e2d426a198be9c5e102a469a9bf352cc87383e0f91763b644c047db88a8a4cb"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter006_2026-10-13-11-25-40.perfetto-trace",
+    "bytes": 59623675,
+    "sha256": "42de71363fa82d8aa4a056e4da37d15a71463e3b7749b49ce356b4a33d68062a"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter007_2026-10-13-11-26-18.perfetto-trace",
+    "bytes": 60242659,
+    "sha256": "795c6c8cefc0ead7f899746eeacda839d14fe6887e4ab68b88323530d2ef6a6f"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter008_2026-10-13-11-26-55.perfetto-trace",
+    "bytes": 59445882,
+    "sha256": "c7eaec3df6cace310e99ce8803a1c3f692dfb7c464a52c77b61e35a3439f722d"
+  },
+  {
+    "name": "ReaderBenchmark_scroll50MiB_iter009_2026-10-13-11-27-33.perfetto-trace",
+    "bytes": 60755962,
+    "sha256": "b91a47dc3c59bf5098ea25b0e040c38e5f1a73fb2f5d5ce54674a23e59412cba"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter000_2026-10-13-10-58-59.perfetto-trace",
+    "bytes": 55964040,
+    "sha256": "d46e6f94cd519214833920293ccb1361a6e0a694990c56848589a55849d5ec89"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter001_2026-10-13-10-59-39.perfetto-trace",
+    "bytes": 56722867,
+    "sha256": "dbebf3cdbdb58649e330a84e6da6d21d94b034d4c0456f96d2636ace39bd8bb4"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter002_2026-10-13-11-00-19.perfetto-trace",
+    "bytes": 59337008,
+    "sha256": "f6bf968fcf2205633a9158eef810456f8d93fd8d2ef0eaec19d4037ff3950358"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter003_2026-10-13-11-00-58.perfetto-trace",
+    "bytes": 55257280,
+    "sha256": "55aad3ede75575c60ac4c57bfc6de4ebd6cae1737e649ffb4e7a4128dc08a71e"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter004_2026-10-13-11-01-37.perfetto-trace",
+    "bytes": 56983816,
+    "sha256": "021e820970eb9a757a79475e7e5c2bc5b42e095099e7728191daf0e459cedd67"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter005_2026-10-13-11-02-16.perfetto-trace",
+    "bytes": 60239135,
+    "sha256": "16e6ad1e762bf638ab3a248db3f06fa5dac44814ea822ccddb9abc880cab1955"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter006_2026-10-13-11-02-55.perfetto-trace",
+    "bytes": 59726559,
+    "sha256": "67995ddc962cb1a774fbc8b24e28cc37aae3fa866ab41f77809f228294717ac4"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter007_2026-10-13-11-03-34.perfetto-trace",
+    "bytes": 56033927,
+    "sha256": "58a6aba9d2b0641b943d92719b70d37df5e9fa7fa48f31137cd33fbf3ba44b80"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter008_2026-10-13-11-04-14.perfetto-trace",
+    "bytes": 56453463,
+    "sha256": "eaf5fbbfe803b84c4dbb49045d1e64d518244f74d0a3c1c540f7abc19b0acfe4"
+  },
+  {
+    "name": "ReaderBenchmark_scrollLongParagraph_iter009_2026-10-13-11-04-53.perfetto-trace",
+    "bytes": 57705967,
+    "sha256": "860ddd0ed134ffd97f619c57509767d610984d07187f9b8ba761f4074bf10ed9"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter000_2026-10-13-11-09-03.perfetto-trace",
+    "bytes": 59626639,
+    "sha256": "36b13ca1297740acd0a16a47672518e6ef3b732d62f95363c3efc55959b3ba03"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter001_2026-10-13-11-09-42.perfetto-trace",
+    "bytes": 60618420,
+    "sha256": "9d574c7609c1479a86eaac977be93058e265d8fa9445e5b28120b585344166ff"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter002_2026-10-13-11-10-21.perfetto-trace",
+    "bytes": 58935194,
+    "sha256": "fdf2b952b49ed67112fd97f95e2586ff056452caf627e1e4b96df22a37614a17"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter003_2026-10-13-11-11-00.perfetto-trace",
+    "bytes": 60068719,
+    "sha256": "1c91fed36ea527c52829b61cf53139abfda630a6f33c6c441bed44a8939b07f9"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter004_2026-10-13-11-11-40.perfetto-trace",
+    "bytes": 60203482,
+    "sha256": "47b0e6436dad1e5d51cac7111f45579267466319ea55f7fcdda65df13282757d"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter005_2026-10-13-11-12-19.perfetto-trace",
+    "bytes": 60207622,
+    "sha256": "d2d572af7d62b48fedccea6193cc626f5ff7728835b4f1113e8f937625cb750c"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter006_2026-10-13-11-12-58.perfetto-trace",
+    "bytes": 61013661,
+    "sha256": "530f085c985e4232ee80b28863e997010f6e0bf0c7125cf7065ac800aa4b912c"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter007_2026-10-13-11-13-37.perfetto-trace",
+    "bytes": 60810088,
+    "sha256": "9cffd76a5b69ef18873966109e293d28ba52dec9e38b5f1368ba09888829fbcb"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter008_2026-10-13-11-14-16.perfetto-trace",
+    "bytes": 60259892,
+    "sha256": "14bdb114ec09692b7b6eba6bc8bb3f072962bc52e951bd6d56ca3639feca7432"
+  },
+  {
+    "name": "ReaderBenchmark_scrollManyEmptyLines_iter009_2026-10-13-11-14-56.perfetto-trace",
+    "bytes": 60637396,
+    "sha256": "838d73d8a676b40767ec6c4eced8a41785ccc07e6ef4196ff929d818f8159f6b"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter000_2026-10-13-10-54-43.perfetto-trace",
+    "bytes": 2980835,
+    "sha256": "534d0e2b9546f140e21e23b3fc40a0bfaee588141a182552c4958a709549781a"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter001_2026-10-13-10-54-51.perfetto-trace",
+    "bytes": 2923245,
+    "sha256": "3ce17d96636e7247732ba5070f3b7386fa42ea0ff74ab3e9f8fc9d6c4c509756"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter002_2026-10-13-10-54-59.perfetto-trace",
+    "bytes": 2756835,
+    "sha256": "4686c6c1747ced713bc4e564739cb5fb9eba747109d584ec39ecb3c02fbbcb5c"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter003_2026-10-13-10-55-09.perfetto-trace",
+    "bytes": 3209378,
+    "sha256": "662b281f87f0bcc9778c6690490ebd080f79cd617c96cf8d3a5f6a1a91097e76"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter004_2026-10-13-10-55-18.perfetto-trace",
+    "bytes": 3193586,
+    "sha256": "0299a79d0e4304aa0b3875144506dae5e6b8f9c50f738b025ecb62e031b2c8d8"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter005_2026-10-13-10-55-25.perfetto-trace",
+    "bytes": 2702793,
+    "sha256": "ddf0ac1660df75f2a03e5a5c93ceccb12927bee3927f792f9b89d3c862c8d2f4"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter006_2026-10-13-10-55-33.perfetto-trace",
+    "bytes": 2586283,
+    "sha256": "a88206188f7e717fb62b6154132d9a42c804425be282a3cec17891091a62d2fb"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter007_2026-10-13-10-55-40.perfetto-trace",
+    "bytes": 2605210,
+    "sha256": "976b25b0249e19a2712864b60c74f9a225be9540fb1a20d0ac402e8202b3471a"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter008_2026-10-13-10-55-48.perfetto-trace",
+    "bytes": 2629150,
+    "sha256": "2f0f5ae7ebf335c5c7ee63c377f018fc47835bfb330aa060a01c7df92cdee212"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter009_2026-10-13-10-55-55.perfetto-trace",
+    "bytes": 2478595,
+    "sha256": "fcbdb14d4452a057ffc350ab4a5549befce56339b3d331035c9d6344af6de7c4"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter010_2026-10-13-10-56-03.perfetto-trace",
+    "bytes": 2423914,
+    "sha256": "3f413049746b7d73f1331be78913be343b14f211b8377ef0892c3cc108b028c6"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter011_2026-10-13-10-56-11.perfetto-trace",
+    "bytes": 2926579,
+    "sha256": "e3643ecf98f35baee5e29ea287f568649f19c4cf138bf8b596d8f7b5c80bb8d2"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter012_2026-10-13-10-56-18.perfetto-trace",
+    "bytes": 3102395,
+    "sha256": "eed8217d78ffb7aa060da4cca5704e6212ea9af10054ec24e79123abe61feff0"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter013_2026-10-13-10-56-25.perfetto-trace",
+    "bytes": 2331451,
+    "sha256": "11cc8762aa32abf24524134a38782daa30146917589e49dbbd159a0b08c5cb40"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter014_2026-10-13-10-56-33.perfetto-trace",
+    "bytes": 2653875,
+    "sha256": "b968052ac88908f541192758dff6f31d1e20094c29485260fb90b9f1087718d7"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter015_2026-10-13-10-56-40.perfetto-trace",
+    "bytes": 2438898,
+    "sha256": "f94f8982dbbb7c9fa76a1c0b03666f0e7e08e8d39d65a6ce679382fbd2848d59"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter016_2026-10-13-10-56-46.perfetto-trace",
+    "bytes": 2289440,
+    "sha256": "887814415ec3ddf640f3b769ed06bd2542321d24de1d13e28d5dc58d444bdbd9"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter017_2026-10-13-10-56-53.perfetto-trace",
+    "bytes": 2761250,
+    "sha256": "03116992f73f0eee5588a12c8f994bde5d30234cd0617d058e9c163b6da8f452"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter018_2026-10-13-10-57-01.perfetto-trace",
+    "bytes": 2703191,
+    "sha256": "142ccf52233dd01a97d39c85c82abbacafe72a85c1b3c8e7d9b45ea927e96a0d"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter019_2026-10-13-10-57-08.perfetto-trace",
+    "bytes": 2426080,
+    "sha256": "92e246af349641da3b450130e49e131ba7f4bbcfd2b22c06ab5062c1a9518b24"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter020_2026-10-13-10-57-14.perfetto-trace",
+    "bytes": 2459901,
+    "sha256": "fcfdb19b843a30263f4f8e113315ea98286814b09fe2dcc1133907c80922332d"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter021_2026-10-13-10-57-21.perfetto-trace",
+    "bytes": 2439125,
+    "sha256": "7cb99dc06a1e950430e81019c42929a62a4f38b5cc746fb4e737dd991189c8c3"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter022_2026-10-13-10-57-28.perfetto-trace",
+    "bytes": 2458262,
+    "sha256": "8ef4e0a50242098e4bb7a3b1551290f5d32aa9d2922018cb3e5d0f7a63c009de"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter023_2026-10-13-10-57-36.perfetto-trace",
+    "bytes": 2878406,
+    "sha256": "0657a750ceb26f9e9f458a54f5b56fcf2ab4e753bb1a642a4ae07198280d9317"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter024_2026-10-13-10-57-43.perfetto-trace",
+    "bytes": 2403407,
+    "sha256": "eb2e879f455e793a5aabe2d8f31e9bc0df1e772b5f438458e8a6bd3a23b52e05"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter025_2026-10-13-10-57-49.perfetto-trace",
+    "bytes": 2288371,
+    "sha256": "d59c59de4e85b4c74e5ad874f02bb78b4db28743d547e2bdbd2511be96524933"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter026_2026-10-13-10-57-56.perfetto-trace",
+    "bytes": 2434346,
+    "sha256": "adffbc03490ab0d4cfec924c3cffb841facdf807761cc05df407f66ddb31beab"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter027_2026-10-13-10-58-03.perfetto-trace",
+    "bytes": 2614420,
+    "sha256": "ff90a42b757a351f049976f78b955538e970fd033414445aef3bacfee945d53c"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter028_2026-10-13-10-58-10.perfetto-trace",
+    "bytes": 2532662,
+    "sha256": "d2b07af600a55128eaef61dbbc097531ff8cfeb2964e8fce07685e1eea32ed09"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiBWithoutProfile_iter029_2026-10-13-10-58-17.perfetto-trace",
+    "bytes": 2572147,
+    "sha256": "a4d2f156640f08ad1cf152bdaea80bbc596cb86bb834df1b3429e6159356de37"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter000_2026-10-13-11-05-09.perfetto-trace",
+    "bytes": 2693203,
+    "sha256": "55b9b9259add719d1a89614821c6984fdb95ede5b89ec89b3bdaea380543888e"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter001_2026-10-13-11-05-16.perfetto-trace",
+    "bytes": 2506056,
+    "sha256": "b44ce0820fd081de04c29c4095e94be03039b965dc0b54b4c5c52ea504d2c4d5"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter002_2026-10-13-11-05-23.perfetto-trace",
+    "bytes": 2473839,
+    "sha256": "ff5791a42c4c7b0aa4540899c032373f73ce07f4172bd423d6676eff8b05f41f"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter003_2026-10-13-11-05-29.perfetto-trace",
+    "bytes": 2485196,
+    "sha256": "7f1c66a0674554526eb3287fd45b9025e648afb18fe06c987d428597ed8fe2db"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter004_2026-10-13-11-05-35.perfetto-trace",
+    "bytes": 2536269,
+    "sha256": "15274122652233becaa49544012ad7a514b3c6f6f789b1fa6c85a2011c17f67a"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter005_2026-10-13-11-05-43.perfetto-trace",
+    "bytes": 2236237,
+    "sha256": "24a344301f0689820428c77cfa712af25806688c55e5312c8e330ebc05fa31af"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter006_2026-10-13-11-05-49.perfetto-trace",
+    "bytes": 2382210,
+    "sha256": "cc000247980a62ddf4ca73a34d296be91753899eb42831b10dd9fd1337020e26"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter007_2026-10-13-11-05-56.perfetto-trace",
+    "bytes": 2458498,
+    "sha256": "148f5f0bd1d981e00743178fc38fe49c2755efb7e133d68e9d1089b1382a7a25"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter008_2026-10-13-11-06-03.perfetto-trace",
+    "bytes": 2612712,
+    "sha256": "610607217afde866e84982fe994c5b12b1d3257475e00d87426f4889507ca7a4"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter009_2026-10-13-11-06-10.perfetto-trace",
+    "bytes": 2576048,
+    "sha256": "086d0a99a202f694774a8e6e6303efbfd172458915726eab25de6d39a00f9b64"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter010_2026-10-13-11-06-16.perfetto-trace",
+    "bytes": 2661427,
+    "sha256": "4937a0f87449ff9943b2710b81c450a38b812f23722b1410640782e3601bf03f"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter011_2026-10-13-11-06-23.perfetto-trace",
+    "bytes": 2555828,
+    "sha256": "d54ad1e8f93de1f935862df3ccfd1fcf32ca044ecea4fba6ffe207484c178ffb"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter012_2026-10-13-11-06-29.perfetto-trace",
+    "bytes": 2603991,
+    "sha256": "cec052111a8f5b73126c5614d96cbbf548acd0b76ab62c96a375a56333c4fc88"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter013_2026-10-13-11-06-35.perfetto-trace",
+    "bytes": 2604487,
+    "sha256": "c9c9bfbcaa8dd6c5402687360950fa9201390ac53643bd266dd912dee10aff5c"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter014_2026-10-13-11-06-42.perfetto-trace",
+    "bytes": 2750906,
+    "sha256": "297a0a9cef1e5aafd4f7853caa9e19c6c5bf2ed14f13e17688ae6471c19f8907"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter015_2026-10-13-11-06-48.perfetto-trace",
+    "bytes": 2356337,
+    "sha256": "8bde336d7866545013fd86306ff916d40e7298ec4129c7b1be0f439f8560e596"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter016_2026-10-13-11-06-55.perfetto-trace",
+    "bytes": 2393878,
+    "sha256": "77141ec6e73b4be57a004fe3bfb2d9fa51a7475387d0318d7cad230676d4f81a"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter017_2026-10-13-11-07-02.perfetto-trace",
+    "bytes": 2199091,
+    "sha256": "8edf204b1b05b9c483fb4049fad37e2aa100063145e6eb360eff6e3e959bf0f8"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter018_2026-10-13-11-07-08.perfetto-trace",
+    "bytes": 2351280,
+    "sha256": "04be1d152d2a87f7586e799a94c4a60a26452850e24c10dd41789263d057ea8e"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter019_2026-10-13-11-07-15.perfetto-trace",
+    "bytes": 2453323,
+    "sha256": "913a838c3a15373ebdd11685d7779f218334cb03101d2d4c3f56349548dfd51e"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter020_2026-10-13-11-07-21.perfetto-trace",
+    "bytes": 2522610,
+    "sha256": "8aaf9239f9024db6d07ee6851b6824955aeee1ea09a50f07122bf7b33ba35067"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter021_2026-10-13-11-07-28.perfetto-trace",
+    "bytes": 2523906,
+    "sha256": "a14ea0a8e0369c3aad3306ad76a05062cc87f14f7d1e98b51839bb2abacb5718"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter022_2026-10-13-11-07-34.perfetto-trace",
+    "bytes": 2398399,
+    "sha256": "5650ff70b45dc032f7d38636add1c64a02955e2b9ddf92f9da5c6fe2394c1ba0"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter023_2026-10-13-11-07-41.perfetto-trace",
+    "bytes": 2799533,
+    "sha256": "e3162f7c085dde5832ef2d619a111ee6eaa8455b1a542f02e338e092ffbd02c1"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter024_2026-10-13-11-07-47.perfetto-trace",
+    "bytes": 2621787,
+    "sha256": "e37e4203312b2cddfa2b3a4b040f0758a19f5b50295b65a936484e0191eeae07"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter025_2026-10-13-11-07-54.perfetto-trace",
+    "bytes": 2592911,
+    "sha256": "5541d93059bf2fbf998729348230f9962af1ba98f110ba44c8ed0a11850be0e0"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter026_2026-10-13-11-08-00.perfetto-trace",
+    "bytes": 2538664,
+    "sha256": "b75847631f6b735412b72073912d42acea82bdabf2d2c36dfd5f3cc9d90af911"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter027_2026-10-13-11-08-07.perfetto-trace",
+    "bytes": 2357455,
+    "sha256": "626ab9afb3c762f61d506bdb5aac17bfd20fe17655292babe4b464daef242d07"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter028_2026-10-13-11-08-13.perfetto-trace",
+    "bytes": 2601990,
+    "sha256": "78aaf6767c44b6c63fc03388f3df0ec1562172d84f30c9c54bbfec4b74dc60da"
+  },
+  {
+    "name": "ReaderBenchmark_warmOpen10MiB_iter029_2026-10-13-11-08-21.perfetto-trace",
+    "bytes": 2502810,
+    "sha256": "b79bf81ec0d966042fdb66cb90e29f39eb3e383269b7f56acde44ef79e326cda"
+  }
+]

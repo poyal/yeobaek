@@ -1,0 +1,2 @@
+# Keep Android's raw instrumentation and dumpsys formatting in verification evidence.
+docs/releases/*-evidence/**/*.txt whitespace=-blank-at-eol,-blank-at-eof

@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "version_code": 1,
+  "application_id": "com.poyal.yeobaek",
+  "min_sdk": 30,
+  "target_sdk": 36,
+  "sha256": "20de2b9143f9340a48ec893cdf1fe13d0e045beb46a76df69e32089097bdc351",
+  "bytes": 23107216,
+  "signer_sha256": "beac64e1dbd49e115aa6374be015f2ebdc754d85cb2dc4905c87b36aa7aa73d7",
+  "source_manifest_sha256": "9bfc4c51459d74dc4d795c285a156dd46ec8db0287ee8a6d378a2491a21828d4"
+}

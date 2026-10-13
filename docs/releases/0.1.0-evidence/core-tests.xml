@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="com.poyal.yeobaek.txt.TextStoreTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-13T10:00:18.291Z" time="0.238">
+  <properties />
+  <testcase name="sameMetadataDifferentContentDifferentVersion" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.045" />
+  <testcase name="matchesAcrossEveryBlockAndOverlaps" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.041" />
+  <testcase name="corruptedNumericMetadataIsRebuiltBeforeLayout" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.023" />
+  <testcase name="encodingsNormalizationAndBoundaryReads" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.078" />
+  <testcase name="koreanLegacyEncoding" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.018" />
+  <testcase name="cancellationAndCorruptedCacheRecoverWithoutSourceChanges" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.019" />
+  <testcase name="rejectsLateTruncationAndUtf32" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.004" />
+  <testcase name="emptyAndWhitespaceRemainDistinct" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.009" />
+  <system-out />
+  <system-err />
+</testsuite>

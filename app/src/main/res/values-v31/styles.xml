@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.Yeobaek" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">#F8F5EF</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_symbol</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#536348</item>
+        <item name="android:windowBackground">#F8F5EF</item>
+        <item name="android:colorAccent">#536348</item>
+    </style>
+</resources>
