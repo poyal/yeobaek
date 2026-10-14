@@ -1,6 +1,6 @@
 # TXT·PDF·이미지 구현 구조와 실행
 
-2026-10-14. 이 문서는 실제 코드의 구조입니다. 제품 요구는 [plan.md](../plan.md), 현재 후보의 실행 결과·서명 인계는 [0.2.0 릴리즈 전 검증](releases/0.2.0-verification.md)을 따릅니다. [공개 0.1.0 검증 기록](releases/0.1.0-verification.md)은 당시 산출물의 이력입니다.
+2026-10-14. 이 문서는 실제 코드의 구조입니다. 제품 요구는 [plan.md](../plan.md), 배포 APK의 실행 결과·서명·업데이트 검사는 [0.2.0 릴리즈 검증](releases/0.2.0-verification.md)을 따릅니다. [공개 0.1.0 검증 기록](releases/0.1.0-verification.md)은 당시 산출물의 이력입니다.
 
 ## 실행 환경
 

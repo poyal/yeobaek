@@ -2,9 +2,9 @@
 
 Android에서 기기의 TXT·PDF와 이미지 폴더·압축파일을 읽는 앱입니다. **종이의 여백** 화면과 **리듬** 아이콘을 라이트·다크 모드로 구현했습니다. Android 11 이상을 지원하는 개인용 독서 앱입니다. 과거 에뮬레이터 프레임 목표는 미달이며 실물 성능·TalkBack 인수는 남아 있습니다.
 
-**[최신 공개 APK 다운로드](https://github.com/poyal/yeobaek/releases/latest)** · [공개 v0.1.0 안내](docs/releases/v0.1.0.md) · [0.2.0 릴리즈 준비·검증](docs/releases/0.2.0-verification.md) · [문의·오류 신고](https://github.com/poyal/yeobaek/issues)
+**[최신 공개 APK 다운로드](https://github.com/poyal/yeobaek/releases/latest)** · [v0.2.0 변경 사항](docs/releases/v0.2.0.md) · [0.2.0 릴리즈 검증](docs/releases/0.2.0-verification.md) · [문의·오류 신고](https://github.com/poyal/yeobaek/issues)
 
-현재 소스는 **0.2.0 준비 버전**입니다. 아래 PDF·이미지 기능과 화면 변경은 공개 v0.1.0에 포함되지 않습니다.
+현재 공개 버전은 **v0.2.0**입니다. PDF·이미지 뷰어와 완독 후 다음 항목 읽기, 공통 메뉴 개편을 포함합니다. 기존 v0.1.0과 같은 서명으로 배포하며, 앱을 삭제하지 않고 업데이트하면 독서 기록과 설정이 유지됩니다.
 
 ## 사용하기
 
@@ -61,7 +61,7 @@ Windows PowerShell에서는 다음 명령을 사용합니다. 개인 JDK·SDK �
 
 다른 PC에서 새로 만든 키는 기존 APK의 서명과 다릅니다. 기존 설치를 업데이트하려면 원래 키와 `signing.properties`를 먼저 복원합니다. 키 없이 release를 빌드하면 설치할 수 없는 `app-release-unsigned.apk`가 생성됩니다.
 
-전용 AVD의 E2E, 30분 연속 스크롤, 100회 재열기, 1/10/50/100MiB 부하, Macrobenchmark 명령은 [구현·실행 문서](docs/implementation.md)에 있습니다. 실제 화면과 실행 결과는 [0.1.0 검증 기록](docs/releases/0.1.0-verification.md)을 확인해 주세요. 에뮬레이터 측정과 실물 기기의 성능 인수는 구분합니다.
+전용 AVD의 E2E, 30분 연속 스크롤, 100회 재열기, 1/10/50/100MiB 부하, Macrobenchmark 명령은 [구현·실행 문서](docs/implementation.md)에 있습니다. 이번 배포 APK의 실제 화면·업데이트·실행 결과는 [0.2.0 검증 기록](docs/releases/0.2.0-verification.md), 이전 성능 측정은 [0.1.0 검증 기록](docs/releases/0.1.0-verification.md)을 확인해 주세요. 에뮬레이터 측정과 실물 기기의 성능 인수는 구분합니다.
 
 PDF는 별도로 실제 이미지가 들어 있는 100MiB·300MiB 문서를 생성하여 확대·반전·스크롤·검색·재열기와 앱/렌더러 메모리를 검사합니다. [실행 방법](docs/implementation.md#대용량-pdf-부하-검사)과 [Android 11·16 검증 결과](docs/pdf-load-verification.md)를 참고해 주세요. 대용량 자료는 APK에 포함하지 않습니다.
 

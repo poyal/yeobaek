@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "flow": [
+    "image folder",
+    "TXT",
+    "PDF",
+    "CBZ",
+    "exit"
+  ],
+  "rar5": true,
+  "solid_7z": true,
+  "rar4": true,
+  "pdf_search_results": 3,
+  "image_paged": true,
+  "inversion_round_trip": [
+    "PDF",
+    "image"
+  ],
+  "bookmarks": [
+    "PDF",
+    "image"
+  ],
+  "apk_sha256": "2f95baf898ede189d590d7ce7cc5cf4bdb79b4abeb796067abd1b07a0447efef"
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.poyal.yeobaek.ReadingEndTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-14T12:18:26.965Z" hostname="POYAL" time="0.03">
+  <properties/>
+  <testcase name="restoredEndAndSettingsChangesDoNotAnnounceUntilReaderAdvances" classname="com.poyal.yeobaek.ReadingEndTest" time="0.0"/>
+  <testcase name="identityIsTheDocumentIdEvenWhenNamesAreEqual" classname="com.poyal.yeobaek.ReadingEndTest" time="0.004"/>
+  <testcase name="imageFoldersAreBooksButEmptyFoldersAndLooseImagePagesAreNotNextBooks" classname="com.poyal.yeobaek.ReadingEndTest" time="0.001"/>
+  <testcase name="nextUsesNaturalFolderOrderAcrossFormatsAndSkipsUnsupportedFiles" classname="com.poyal.yeobaek.ReadingEndTest" time="0.024"/>
+  <testcase name="noWrappingOrGuessingWhenCurrentEntryIsMissing" classname="com.poyal.yeobaek.ReadingEndTest" time="0.001"/>
+  <testcase name="completionWaitsForBothRenderAndGestureAndConsumesTheIntent" classname="com.poyal.yeobaek.ReadingEndTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
