@@ -46,7 +46,7 @@ class RecoveryJourneyTest {
             click("reader_move"); val slider = node("move_slider").visibleBounds
             device.click(slider.centerX(), slider.centerY()); click("move_apply"); ready()
             val before = percent(); click("reader_bookmark"); click("reader_back")
-            click("nav_settings"); find("settings_storage", "app_settings"); click("settings_storage"); click("clear_cache")
+            click("nav_settings"); click("settings_general"); find("clear_cache", "general_settings_options"); click("clear_cache"); click("page_back")
             click("nav_recent"); click("recent_Original.txt"); ready()
             Assert.assertEquals(before, percent(), 1f); capture("39-cache-rebuilt")
             click("reader_bookmarks"); node("bookmark_delete"); click("sheet_close"); click("reader_back")
@@ -74,7 +74,7 @@ class RecoveryJourneyTest {
         try {
             device.executeShellCommand("settings put secure show_ime_with_hard_keyboard 1")
             device.executeShellCommand("settings put system font_scale 2.0"); SystemClock.sleep(1500)
-            ready(); capture("45-system-font-200"); click("reader_txt"); capture("46-large-txt-options"); click("sheet_close")
+            ready(); capture("45-system-font-200"); click("reader_txt"); capture("46-large-txt-options"); click("page_back")
             click("reader_search"); node("search_input").click(); node("search_input").text = "골목"
             node("search_input").click()
             check(device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.inputmethod\\.latin"))), 15000)) { "검색 키보드가 표시되지 않았습니다" }

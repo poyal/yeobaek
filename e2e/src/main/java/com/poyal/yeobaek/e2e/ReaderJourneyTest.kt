@@ -51,7 +51,7 @@ class ReaderJourneyTest {
         throw AssertionError("스크롤 후에도 요소 없음: $tag")
     }
     private fun chooseTheme() {
-        click("nav_settings"); click("theme_$mode"); click("nav_folder")
+        click("nav_settings"); click("settings_general"); click("theme_$mode"); click("page_back"); click("nav_folder")
     }
     private fun connect() {
         click("connect_folder")
@@ -105,8 +105,8 @@ class ReaderJourneyTest {
         click("reader_txt"); capture("13-txt-settings")
         click("font_larger"); Assert.assertEquals("19", node("font_size").text)
         val options = node("txt_options"); options.scroll(Direction.DOWN, .5f)
-        click("paper_SEPIA"); capture("14-txt-paper"); click("sheet_close"); capture("15-sepia-reader")
-        click("reader_txt"); node("txt_options").scroll(Direction.DOWN, .7f); click("txt_reset"); click("sheet_close")
+        click("paper_SEPIA"); capture("14-txt-paper"); click("page_back"); capture("15-sepia-reader")
+        click("reader_txt"); node("txt_options").scroll(Direction.DOWN, .7f); click("txt_reset"); click("page_back")
         click("reader_search"); capture("16-search-empty")
         node("search_input").text = "골목"
         click("search_submit")
@@ -140,7 +140,7 @@ class ReaderJourneyTest {
         click("reader_back"); click("nav_recent"); capture("24-recent")
         click("manage_비가 그친 오후.txt"); capture("25-delete-confirm"); click("sheet_close")
         click("nav_settings"); capture("26-app-settings")
-        scrollTo("settings_storage", "app_settings"); node("settings_storage").click(); capture("27-storage"); click("disconnect"); capture("28-disconnect-confirm"); click("sheet_close")
+        click("settings_general"); scrollTo("disconnect", "general_settings_options"); capture("27-storage"); click("disconnect"); capture("28-disconnect-confirm"); click("disconnect_cancel"); click("page_back")
         click("nav_folder"); capture("29-library-continue")
         device.executeShellCommand("am force-stop $pkg"); launch(); node("folder_refresh")
         Assert.assertFalse("명시적으로 나왔을 때는 확인하지 않아야 합니다", device.hasObject(By.res("resume_accept")))

@@ -1,0 +1,91 @@
+{
+  "serial": "emulator-5580",
+  "avd": "yeobaek-api36",
+  "api": "36",
+  "fingerprint": "google/sdk_gphone64_arm64/emu64a:16/BE2A.250530.026.F3/13894323:userdebug/dev-keys",
+  "apk_sha256": "5d0ebee433d574ecbab45fe4ae0d650bf99fe6eb33362ea042522a9644f00a5f",
+  "test_apk_sha256": "0261109950ddcba27f92c981846be73559992a63e570758dfd5fd64fd1ca0233",
+  "fixtures": {
+    "generator": "yeobaek-image-load-v1",
+    "fixtures": [
+      {
+        "file": "100MiB.zip",
+        "bytes": 105997950,
+        "sha256": "38dc7e14ff07fd87be6a8b4d82263b879bf34bfd034c87c38eb4a305bee9659f",
+        "pages": 19,
+        "target_mib": 100
+      },
+      {
+        "file": "300MiB.zip",
+        "bytes": 318001481,
+        "sha256": "db0b489b685a2e473aac2f88b15bc1ae2aa81d248c0e715532cc055e09771c8c",
+        "pages": 57,
+        "target_mib": 300
+      },
+      {
+        "file": "1024MiB.zip",
+        "bytes": 1076789723,
+        "sha256": "15ecb6fa322aac76660a88c10e904e3d972d145e335377de3e7767e7786aef09",
+        "pages": 193,
+        "target_mib": 1024
+      },
+      {
+        "file": "300MiB-normal.7z",
+        "bytes": 316967125,
+        "sha256": "6b7199370dbc2f9978da2b00773dcfe6071d555d7d86bfe32730dc095d35214b",
+        "pages": 57,
+        "solid": false,
+        "target_mib": 300
+      },
+      {
+        "file": "300MiB-normal.rar",
+        "bytes": 314703242,
+        "sha256": "3528b219dc60345ecd607664cdaf729d6f72c5f0cf6a93cd914acd16c946d703",
+        "pages": 57,
+        "solid": false,
+        "target_mib": 300
+      },
+      {
+        "file": "300MiB-solid.7z",
+        "bytes": 316971091,
+        "sha256": "54d71ad0280ec70254acadae51bc6432aee8aa31e396b85ecb4d571d698cbb9f",
+        "pages": 57,
+        "solid": true,
+        "target_mib": 300
+      },
+      {
+        "file": "300MiB-solid.rar",
+        "bytes": 314703355,
+        "sha256": "fe9e821a04d40f6e6e6cecd68223ad90fdef2f8d27d5977b5faf6bc8aae85793",
+        "pages": 57,
+        "solid": true,
+        "target_mib": 300
+      },
+      {
+        "file": "dimensions.zip",
+        "bytes": 249910,
+        "sha256": "c3ccf80eb9c447f745812acd36a5a2645b3f20db9ce7dc0f3dacbfd4caa88075",
+        "pages": 2
+      }
+    ]
+  },
+  "cases": [
+    "100MiB.zip",
+    "300MiB.zip",
+    "1024MiB.zip",
+    "300MiB-normal.7z",
+    "300MiB-normal.rar",
+    "300MiB-solid.7z",
+    "300MiB-solid.rar",
+    "dimensions.zip",
+    "folder-1000",
+    "folder-10000"
+  ],
+  "thresholds": {
+    "app_pss_mib": 384,
+    "worker_pss_mib": 512,
+    "combined_pss_mib": 768,
+    "case_timeout_seconds": 1200,
+    "viewport_timeout_seconds": 90
+  }
+}

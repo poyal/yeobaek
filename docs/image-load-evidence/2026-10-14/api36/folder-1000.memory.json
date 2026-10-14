@@ -1,0 +1,47 @@
+[
+  {
+    "elapsed_s": 0.002,
+    "app_pss_kib": 0,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 2.037,
+    "app_pss_kib": 111146,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 4.581,
+    "app_pss_kib": 120673,
+    "worker_pss_kib": 65291
+  },
+  {
+    "elapsed_s": 6.809,
+    "app_pss_kib": 133595,
+    "worker_pss_kib": 47342
+  },
+  {
+    "elapsed_s": 9.007,
+    "app_pss_kib": 146064,
+    "worker_pss_kib": 52860
+  },
+  {
+    "elapsed_s": 11.348,
+    "app_pss_kib": 114514,
+    "worker_pss_kib": 49287
+  },
+  {
+    "elapsed_s": 13.573,
+    "app_pss_kib": 127686,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 15.692,
+    "app_pss_kib": 106978,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 17.953,
+    "app_pss_kib": 132276,
+    "worker_pss_kib": 0
+  }
+]

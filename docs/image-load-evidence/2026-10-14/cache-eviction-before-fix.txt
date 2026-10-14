@@ -1,0 +1,64 @@
+Evidence: /Users/poyal/Workspace/personal/yeobaek/.tools/verification/20261014-162643-emulator-5580-image-load
+Running 100MiB.zip
+PASS 100MiB.zip: first 917ms, PSS 162.35/65.32MiB
+Running 300MiB.zip
+PASS 300MiB.zip: first 1022ms, PSS 160.88/68.74MiB
+Running 1024MiB.zip
+Traceback (most recent call last):
+  File "/Users/poyal/Workspace/personal/yeobaek/scripts/verify-image-load.py", line 105, in <module>
+    assert 'OK (1 test)' in text, text[-8000:]
+           ^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 
+com.poyal.yeobaek.ImageLoadTest:
+Error in largeImagesRemainBoundedAcrossModesAndReopens(com.poyal.yeobaek.ImageLoadTest):
+java.io.FileNotFoundException: /data/user/0/com.poyal.yeobaek.debug/cache/image-load-cache/images/15ecb6fa322aac76660a88c10e904e3d972d145e335377de3e7767e7786aef09: open failed: ENOENT (No such file or directory)
+	at libcore.io.IoBridge.open(IoBridge.java:574)
+	at java.io.FileInputStream.<init>(FileInputStream.java:179)
+	at com.poyal.yeobaek.image.ImageStore$copy$3.invokeSuspend(ImageSource.kt:44)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:124)
+	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:820)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+Caused by: android.system.ErrnoException: open failed: ENOENT (No such file or directory)
+	at libcore.io.Linux.open(Native Method)
+	at libcore.io.ForwardingOs.open(ForwardingOs.java:568)
+	at libcore.io.BlockGuardOs.open(BlockGuardOs.java:274)
+	at libcore.io.ForwardingOs.open(ForwardingOs.java:568)
+	at android.app.ActivityThread$AndroidOs.open(ActivityThread.java:8953)
+	at libcore.io.IoBridge.open(IoBridge.java:560)
+	... 10 more
+
+
+Time: 39.305
+There was 1 failure:
+1) largeImagesRemainBoundedAcrossModesAndReopens(com.poyal.yeobaek.ImageLoadTest)
+java.io.FileNotFoundException: /data/user/0/com.poyal.yeobaek.debug/cache/image-load-cache/images/15ecb6fa322aac76660a88c10e904e3d972d145e335377de3e7767e7786aef09: open failed: ENOENT (No such file or directory)
+	at libcore.io.IoBridge.open(IoBridge.java:574)
+	at java.io.FileInputStream.<init>(FileInputStream.java:179)
+	at com.poyal.yeobaek.image.ImageStore$copy$3.invokeSuspend(ImageSource.kt:44)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:124)
+	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:820)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+Caused by: android.system.ErrnoException: open failed: ENOENT (No such file or directory)
+	at libcore.io.Linux.open(Native Method)
+	at libcore.io.ForwardingOs.open(ForwardingOs.java:568)
+	at libcore.io.BlockGuardOs.open(BlockGuardOs.java:274)
+	at libcore.io.ForwardingOs.open(ForwardingOs.java:568)
+	at android.app.ActivityThread$AndroidOs.open(ActivityThread.java:8953)
+	at libcore.io.IoBridge.open(IoBridge.java:560)
+	... 10 more
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+

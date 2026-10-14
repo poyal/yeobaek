@@ -1,2 +1,8 @@
 # Keep Android's raw instrumentation and dumpsys formatting in verification evidence.
 docs/releases/*-evidence/**/*.txt whitespace=-blank-at-eol,-blank-at-eof
+docs/image-load-evidence/**/*.txt whitespace=-blank-at-eol,-blank-at-eof
+docs/image-load-evidence/**/*.log whitespace=-blank-at-eol,-blank-at-eof
+docs/pdf-load-evidence/**/*.txt whitespace=-blank-at-eol,-blank-at-eof
+# Preserve upstream license text and the exact bytes of synthetic document fixtures.
+app/src/main/assets/licenses/** whitespace=-blank-at-eol,-blank-at-eof
+app/src/androidTest/assets/** binary

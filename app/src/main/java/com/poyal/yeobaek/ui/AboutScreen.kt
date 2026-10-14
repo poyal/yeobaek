@@ -71,6 +71,10 @@ import java.time.format.DateTimeFormatter
             Small("책과 독서 기록은 기기에 보관해요. 업데이트 확인·다운로드에만 GitHub를 사용하며, 본문·책갈피·읽기 기록은 전송하지 않아요.")
             Rule()
             Small("본문 글꼴 · Noto Serif KR\nSIL Open Font License 1.1\n폰트 라이선스 원문은 앱에 함께 포함되어 있어요.")
+            Rule()
+            Small("PDF 엔진 · PdfiumAndroidKt 2.0.0 · PDFium\nApache License 2.0 · BSD 및 구성요소별 라이선스\n라이선스 원문은 앱에 함께 포함되어 있어요.")
+            Rule()
+            Small("이미지 압축 엔진 · libarchive-android 1.1.6\n이미지 회전 정보 · AndroidX ExifInterface 1.4.1\nApache License 2.0 · BSD 및 구성요소별 라이선스\n라이선스 원문은 앱에 함께 포함되어 있어요.")
         }
     }
 }

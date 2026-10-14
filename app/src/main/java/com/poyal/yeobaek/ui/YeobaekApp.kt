@@ -17,13 +17,16 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,16 +38,37 @@ import kotlinx.coroutines.isActive
 import com.poyal.yeobaek.*
 import com.poyal.yeobaek.data.*
 import com.poyal.yeobaek.txt.TextStore
+import com.poyal.yeobaek.pdf.*
+import com.poyal.yeobaek.image.*
 import java.util.Locale
 
 @Composable fun YeobaekApp(vm: AppViewModel) {
     val state by vm.ui.collectAsStateWithLifecycle()
     val app by vm.app.collectAsStateWithLifecycle()
     val txt by vm.txt.collectAsStateWithLifecycle()
+    val image by vm.image.collectAsStateWithLifecycle()
+    val imagePositions by vm.imagePositions.collectAsStateWithLifecycle()
+    val pdf by vm.pdf.collectAsStateWithLifecycle()
+    val pdfPositions by vm.pdfPositions.collectAsStateWithLifecycle()
     val books by vm.books.collectAsStateWithLifecycle()
-    val positions = if (state.reader == null || state.resume != null) vm.positions.collectAsStateWithLifecycle().value else emptyList()
+    val textPositions = if (!state.hasReader || state.resume != null) vm.positions.collectAsStateWithLifecycle().value else emptyList()
+    val positions = textPositions + pdfPositions.mapNotNull { p -> books.find { it.id == p.bookId && it.version == p.version }?.let { book ->
+        ReadingPosition(book.id, book.version, (p.locator().progress(book.pageCount ?: 1) * book.length).toLong(), completed = p.completed)
+    } }
+    val allPositions = positions + imagePositions.mapNotNull { p -> books.find { it.id == p.bookId && it.version == p.version }?.let { book ->
+        ReadingPosition(book.id, book.version, (p.locator().progress(book.pageCount ?: 1) * book.length * 1000).toLong(), completed = p.completed)
+    } }
+    val displayBooks = books.map { if (it.format.startsWith("IMAGE_")) it.copy(length = it.length * 1000) else it }
     val appColors = LocalPaper.current
-    val background = if (state.reader != null && state.sheet == null && state.error == null) readerColors(txt.paper, appColors) else appColors
+    val showingTxtSettings = state.screen == "txt_settings"
+    val showingGeneralSettings = state.screen == "general_settings"
+    val showingPdfSettings = state.screen == "pdf_settings"
+    val showingImageSettings = state.screen == "image_settings"
+    val showingImagePages = state.screen == "image_pages" && state.imageReader != null
+    val showingViewerSettings = state.screen == "viewer_settings"
+    val showingSettingsPage = showingTxtSettings || showingGeneralSettings || showingPdfSettings || showingViewerSettings || showingImageSettings
+    val pageState = rememberSaveableStateHolder()
+    val background = if (state.reader != null && !showingSettingsPage && state.sheet == null && state.error == null) readerColors(txt.paper, appColors) else if (state.pdfReader != null && !showingSettingsPage && state.sheet == null && state.error == null) pdfColors(pdf, appColors) else appColors
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val updateState by vm.updates.state.collectAsStateWithLifecycle()
@@ -63,87 +87,120 @@ import java.util.Locale
     }
     val folderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { it?.let(vm::connect) }
     val bookPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let(vm::reconnectBook) }
+    val imageFolderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { it?.let(vm::reconnectImageFolder) }
     val chooseFolder = { folderPicker.launch(app.tree.takeIf(String::isNotEmpty)?.let(Uri::parse)) }
-    BackHandler(state.reader != null || state.screen != "folder" || state.path.size > 1 || state.sheet != null) {
-        when { state.sheet != null -> vm.sheet(null); state.reader != null -> vm.closeReader(); state.screen in listOf("about", "updates") -> vm.screen("settings"); state.screen != "folder" -> vm.screen("folder"); else -> vm.up() }
+    BackHandler(state.hasReader || state.screen != "folder" || state.path.size > 1 || state.sheet != null) {
+        when { state.sheet != null -> vm.sheet(null); showingTxtSettings -> vm.closeTxtSettings(); showingPdfSettings -> vm.closePdfSettings(); showingImageSettings -> vm.closeImageSettings(); showingImagePages -> vm.closeImagePages(); showingGeneralSettings || showingViewerSettings -> vm.screen("settings"); state.hasReader -> vm.closeReader(); state.screen in listOf("about", "updates") -> vm.screen("settings"); state.screen != "folder" -> vm.screen("folder"); else -> vm.up() }
     }
     Surface(color = background.surface, modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-            if (state.reader != null) ReaderScreen(vm, state.reader!!, txt, Modifier.weight(1f))
-            else {
-                when (state.screen) {
-                    "settings" -> AppSettings(vm, app, chooseFolder, Modifier.weight(1f))
-                    "about" -> AboutScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
-                    "updates" -> UpdatesScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
-                    "recent" -> RecentScreen(vm, books, positions, Modifier.weight(1f))
-                    else -> LibraryScreen(vm, state, app, books.firstOrNull(), positions, chooseFolder, Modifier.weight(1f))
-                }
-                Rule()
-                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                    listOf(Triple("folder", "폴더", Icons.Outlined.FolderOpen), Triple("recent", "최근 읽기", Icons.Outlined.Schedule), Triple("settings", "설정", Icons.Outlined.Tune)).forEach { (id, label, icon) ->
-                        val active = state.screen == id || (id == "settings" && state.screen in listOf("about", "updates"))
-                        Column(Modifier.weight(1f).clickable { vm.screen(id) }.testTag("nav_$id").semantics { selected = active }.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(icon, null, Modifier.size(22.dp), tint = if (active) appColors.accent else appColors.muted)
-                            Text(label, fontSize = 11.sp, color = appColors.muted)
+            pageState.SaveableStateProvider(if (showingSettingsPage) state.screen else "main") {
+                if (showingTxtSettings) TxtSettingsScreen(vm, txt)
+                else if (showingPdfSettings) PdfSettingsScreen(vm, pdf)
+                else if (showingImageSettings) ImageSettingsScreen(vm, image)
+                else if (showingImagePages) ImagePagesScreen(vm, state.imageReader!!, image)
+                else if (showingViewerSettings) ViewerSettingsScreen(vm)
+                else if (showingGeneralSettings) GeneralSettingsScreen(vm, app, chooseFolder)
+                else if (state.imageReader != null) ImageReaderScreen(vm, state.imageReader!!, image, Modifier.weight(1f))
+                else if (state.pdfReader != null) PdfReaderScreen(vm, state.pdfReader!!, pdf, Modifier.weight(1f))
+                else if (state.reader != null) ReaderScreen(vm, state.reader!!, txt, Modifier.weight(1f))
+                else {
+                    when (state.screen) {
+                        "settings" -> AppSettings(vm, Modifier.weight(1f))
+                        "about" -> AboutScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
+                        "updates" -> UpdatesScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
+                        "recent" -> RecentScreen(vm, displayBooks, allPositions, Modifier.weight(1f))
+                        else -> LibraryScreen(vm, state, app, displayBooks.firstOrNull(), allPositions, chooseFolder, Modifier.weight(1f))
+                    }
+                    Rule()
+                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        listOf(Triple("folder", "홈", Icons.Outlined.Home), Triple("recent", "최근 읽기", Icons.Outlined.Schedule), Triple("settings", "설정", Icons.Outlined.Tune)).forEach { (id, label, icon) ->
+                            val active = state.screen == id || (id == "settings" && state.screen in listOf("about", "updates"))
+                            Column(Modifier.weight(1f).clickable { vm.screen(id) }.testTag("nav_$id").semantics { selected = active }.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(icon, null, Modifier.size(22.dp), tint = if (active) appColors.accent else appColors.muted)
+                                Text(label, fontSize = 11.sp, color = appColors.muted)
+                            }
                         }
                     }
                 }
             }
         }
     }
-    if (state.reader == null && state.resume == null && state.error == null && state.preparing == null && state.sheet == null) {
+    if (!state.hasReader && !showingSettingsPage && state.resume == null && state.error == null && state.preparing == null && state.sheet == null) {
         UpdatePrompt(updateState, vm.updates::dismissPrompt) {
             vm.updates.dismissPrompt(); vm.screen("updates"); vm.updates.download()
         }
     }
     state.resume?.let { book ->
-        val p = positions.firstOrNull { it.bookId == book.id && it.version == book.version }
+        val p = allPositions.firstOrNull { it.bookId == book.id && it.version == book.version }
         AlertDialog(shape = RoundedCornerShape(8.dp), modifier = Modifier.semantics { testTagsAsResourceId = true }, onDismissRequest = { vm.chooseResume(false) }, icon = { Icon(Icons.Outlined.MenuBook, null) },
             title = { Heading("이어서\n읽으시겠습니까?") },
             text = { Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Surface(color = appColors.alt, shape = RoundedCornerShape(4.dp)) { Column(Modifier.fillMaxWidth().padding(16.dp)) { Filename(book.name); Small("마지막 읽은 위치 · ${percent(book, p)}") } }
-                Small("마지막으로 읽던 문장부터\n이야기를 이어갈 수 있어요.")
+                Surface(color = appColors.alt, shape = RoundedCornerShape(4.dp)) { Column(Modifier.fillMaxWidth().padding(16.dp)) { Filename(book.name); Small("마지막 읽은 위치 · ${percent(displayBooks.find { it.id == book.id } ?: book, p)}") } }
+                Small("마지막으로 읽던 위치부터\n이야기를 이어갈 수 있어요.")
             } },
             confirmButton = { PaperButton("이어서 읽기", "resume_accept", onClick = { vm.chooseResume(true) }) },
             dismissButton = { PaperButton("폴더 보기", "resume_decline", outlined = true, onClick = { vm.chooseResume(false) }) }, containerColor = appColors.raised)
     }
+    if (state.hasReader && !showingSettingsPage && !showingImagePages && state.sheet == null && state.error == null && state.preparing == null) {
+        state.readingEnd?.let { ReadingEndDialog(it, vm::readNext, vm::exitReadingEnd, vm::dismissReadingEnd) }
+    }
     state.preparing?.let { phase ->
         AlertDialog(shape = RoundedCornerShape(8.dp), modifier = Modifier.semantics { testTagsAsResourceId = true }, onDismissRequest = vm::cancelOpen, title = { Text(phase) }, text = { Column(verticalArrangement = Arrangement.spacedBy(16.dp)) { LinearProgressIndicator(Modifier.fillMaxWidth()); Small("원본 파일은 그대로 두고 읽을 준비를 하고 있어요.") } },
-            confirmButton = { TextButton(vm::cancelOpen, Modifier.testTag("prepare_cancel")) { Text("취소") } })
+            confirmButton = { PaperButton("취소", "prepare_cancel", outlined = true, onClick = vm::cancelOpen) })
     }
     state.changed?.let { change ->
         AlertDialog(shape = RoundedCornerShape(8.dp), modifier = Modifier.semantics { testTagsAsResourceId = true }, onDismissRequest = { vm.acceptChange(false) }, title = { Text("본문이 달라졌어요") },
             text = { Text(if (change.exact) "같은 문장을 찾았습니다. 새 본문으로 이어 읽을까요? 이전 위치와 책갈피도 보관합니다." else "같은 문장을 찾지 못했습니다. 비슷한 진행률로 이동할까요? 이전 위치와 책갈피는 보관합니다.") },
-            confirmButton = { TextButton({ vm.acceptChange(true) }, Modifier.testTag("change_accept")) { Text("새 본문 열기") } }, dismissButton = { TextButton({ vm.acceptChange(false) }) { Text("취소") } })
+            confirmButton = { PaperButton("새 본문 열기", "change_accept", onClick = { vm.acceptChange(true) }) }, dismissButton = { PaperButton("취소", "change_cancel", outlined = true, onClick = { vm.acceptChange(false) }) })
+    }
+    state.changedPdf?.let {
+        AlertDialog(onDismissRequest = { vm.acceptPdfChange("cancel") }, title = { Text("PDF가 변경되었어요") },
+            text = { Text("처음부터 읽거나 이전 페이지로 이동할 수 있습니다. 이전 위치와 책갈피는 보관합니다.") },
+            confirmButton = { PaperButton("이전 페이지로", "pdf_change_resume", onClick = { vm.acceptPdfChange("resume") }) },
+            dismissButton = { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PaperButton("취소", "pdf_change_cancel", outlined = true, onClick = { vm.acceptPdfChange("cancel") })
+                PaperButton("처음부터", "pdf_change_first", outlined = true, onClick = { vm.acceptPdfChange("first") })
+            } })
+    }
+    state.changedImages?.let {
+        AlertDialog(onDismissRequest = { vm.acceptImageChange("cancel") }, title = { Text("이미지 구성이 변경되었어요") },
+            text = { Text("처음부터 읽거나 이전 페이지 번호로 이동할 수 있습니다. 이전 위치와 책갈피는 보관합니다.") },
+            confirmButton = { PaperButton("이전 페이지로", "image_change_resume", onClick = { vm.acceptImageChange("resume") }) },
+            dismissButton = { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PaperButton("취소", "image_change_cancel", outlined = true, onClick = { vm.acceptImageChange("cancel") })
+                PaperButton("처음부터", "image_change_first", outlined = true, onClick = { vm.acceptImageChange("first") })
+            } })
     }
     state.error?.let { error ->
         AlertDialog(shape = RoundedCornerShape(8.dp), modifier = Modifier.semantics { testTagsAsResourceId = true }, onDismissRequest = vm::clearError, title = { Text("잠시 확인해 주세요") }, text = { Text(error) },
-            confirmButton = { TextButton(vm::clearError, Modifier.testTag("error_close")) { Text("확인") } },
+            confirmButton = { PaperButton("확인", "error_close", onClick = vm::clearError) },
             dismissButton = {
-                if (state.missingBook != null) TextButton({ vm.clearError(); bookPicker.launch(arrayOf("*/*")) }, Modifier.testTag("find_missing_book")) { Text("파일 다시 찾기") }
-                else if (state.failedEntry != null && error.contains("인코딩")) TextButton({ vm.clearError(); vm.sheet("encoding") }, Modifier.testTag("error_encoding")) { Text("인코딩 선택") }
+                if (state.missingBook?.format == "IMAGE_FOLDER") PaperButton("폴더 다시 찾기", "find_missing_folder", outlined = true, onClick = { vm.clearError(); imageFolderPicker.launch(null) })
+                else if (state.missingBook != null) PaperButton("파일 다시 찾기", "find_missing_book", outlined = true, onClick = { vm.clearError(); bookPicker.launch(arrayOf("*/*")) })
+                else if (state.failedEntry != null && error.contains("인코딩")) PaperButton("인코딩 선택", "error_encoding", outlined = true, onClick = { vm.clearError(); vm.sheet("encoding") })
             })
     }
     state.sheet?.let { kind ->
         ModalBottomSheet(onDismissRequest = { vm.sheet(null) }, containerColor = appColors.surface, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), modifier = Modifier.testTag("sheet_$kind").semantics { testTagsAsResourceId = true }) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp).imePadding()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) { Small(if (kind in listOf("txt", "move", "encoding")) "TXT 전용" else "여백"); Text(when (kind) { "txt" -> "읽기 설정"; "move" -> "읽기 위치 이동"; "search" -> "본문 검색"; "bookmarks" -> "책갈피"; "encoding" -> "인코딩 선택"; "info" -> "책 정보"; "manage" -> "폴더와 저장 공간"; else -> "독서 기록 관리" }, fontFamily = Serif, fontSize = 24.sp) }
+                    Column(Modifier.weight(1f)) { Small(if (kind in listOf("move", "encoding")) "TXT 전용" else "여백"); Text(when (kind) { "move", "pdf_move" -> "읽기 위치 이동"; "search", "pdf_search" -> "본문 검색"; "bookmarks", "pdf_bookmarks", "image_bookmarks" -> "책갈피"; "encoding" -> "인코딩 선택"; "info" -> "책 정보"; else -> "독서 기록 관리" }, fontFamily = Serif, fontSize = 24.sp) }
                     Tool(Icons.Outlined.Close, "닫기", "sheet_close", onClick = { vm.sheet(null) })
                 }
                 Spacer(Modifier.height(20.dp))
                 when (kind) {
-                    "txt" -> TxtSettings(vm, txt)
+                    "pdf_move", "pdf_search", "pdf_bookmarks" -> PdfSheet(vm, kind)
+                    "image_bookmarks" -> ImageBookmarksSheet(vm)
                     "move" -> MoveSheet(vm.progress.collectAsStateWithLifecycle().value, vm::seekPercent) { vm.sheet(null) }
                     "search" -> SearchSheet(vm, state)
                     "bookmarks" -> BookmarkSheet(vm)
                     "encoding" -> EncodingSheet(vm)
                     "info" -> InfoSheet(vm, state)
-                    "manage" -> ManageSheet(vm, chooseFolder)
                     else -> if (kind.startsWith("forget:")) books.find { it.id == kind.removePrefix("forget:") }?.let { book ->
                         Small("${book.name}\n읽기 위치와 책갈피를 지웁니다. 원본 파일은 그대로 유지됩니다.")
                         Spacer(Modifier.height(20.dp))
-                        PaperButton("독서 기록 삭제", "forget_confirm", Modifier.fillMaxWidth(), onClick = { vm.forget(book) })
+                        PaperButton("독서 기록 삭제", "forget_confirm", Modifier.fillMaxWidth(), destructive = true, onClick = { vm.forget(book) })
                     }
                 }
             }
@@ -163,7 +220,6 @@ private fun percent(book: Book, position: ReadingPosition?): String {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Symbol(); Text("여백", Modifier.padding(start = 8.dp), fontFamily = Serif, fontSize = 31.sp)
                 Text("이야기가 머무는 곳", Modifier.weight(1f).padding(start = 12.dp), fontSize = 9.sp, color = p.muted)
-                Tool(Icons.Outlined.Tune, "앱 설정", "library_settings", onClick = { vm.screen("settings") })
             }
             Spacer(Modifier.height(24.dp))
         }
@@ -177,8 +233,7 @@ private fun percent(book: Book, position: ReadingPosition?): String {
                 Surface(onClick = { vm.openBook(recent) }, color = p.soft, shape = RoundedCornerShape(4.dp), border = BorderStroke(1.dp, p.line), modifier = Modifier.fillMaxWidth().testTag("continue_card")) {
                     Column(Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Outlined.MenuBook, null, Modifier.size(16.dp), tint = p.accent); Small("다시 펼치는 이야기", Modifier.padding(start = 8.dp)) }
-                        Text(recent.name.removeSuffix(".txt"), Modifier.padding(vertical = 12.dp), fontFamily = Serif, fontSize = 23.sp, maxLines = 2)
-                        Small(position?.after?.replace('\n', ' ')?.takeIf { it.isNotBlank() } ?: "마지막으로 읽던 문장부터 이어 읽어요.")
+                        Text(if (recent.format == "IMAGE_FOLDER") recent.name else recent.name.substringBeforeLast(".", recent.name), Modifier.fillMaxWidth().padding(vertical = 12.dp), fontFamily = Serif, fontSize = 23.sp, lineHeight = 32.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) { Text(percent(recent, position), Modifier.weight(1f), color = p.accent, fontWeight = FontWeight.SemiBold, fontSize = 14.sp); Icon(Icons.Outlined.ChevronRight, null, Modifier.size(20.dp)) }
                         LinearProgressIndicator(progress = { if (recent.length > 0) ((position?.offset ?: 0).toFloat() / recent.length).coerceIn(0f, 1f) else 0f }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(2.dp), color = p.accent, trackColor = p.line)
                     }
@@ -188,11 +243,20 @@ private fun percent(book: Book, position: ReadingPosition?): String {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (state.path.size > 1) Tool(Icons.Outlined.ArrowUpward, "상위 폴더", "folder_up", onClick = vm::up) else Icon(Icons.Outlined.FolderOpen, null, Modifier.size(18.dp), tint = p.accent)
-                    Small(state.path.joinToString(" / ") { it.name }.ifEmpty { app.label }, Modifier.weight(1f).padding(start = 8.dp))
+                    Text(state.path.joinToString(" / ") { it.name }.ifEmpty { app.label }, Modifier.weight(1f).padding(start = 8.dp), color = p.muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Tool(Icons.Outlined.Refresh, "새로고침", "folder_refresh", onClick = vm::refresh)
                 }
                 Rule()
-                Row(verticalAlignment = Alignment.CenterVertically) { Text("폴더와 파일", Modifier.weight(1f), fontSize = 13.sp); TextButton(vm::showAll, Modifier.testTag("show_all")) { Text(if (state.showAll) "TXT만 보기" else "모든 파일", fontSize = 11.sp) } }
+                Row(Modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("폴더와 파일", Modifier.weight(1f), fontSize = 13.sp)
+                    Tool(
+                        if (state.showAll) Icons.Outlined.FilterAltOff else Icons.Outlined.FilterAlt,
+                        if (state.showAll) "읽을 수 있는 파일만 보기" else "모든 파일 보기",
+                        "show_all",
+                        Modifier.semantics { stateDescription = if (state.showAll) "모든 파일 표시 중" else "TXT·PDF·이미지·압축파일 표시 중" },
+                        onClick = vm::showAll
+                    )
+                }
                 if (state.folderBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
             }
             if (state.folderError != null) item { EmptyState("폴더를 다시 연결해 주세요.", state.folderError) { PaperButton("폴더 다시 연결", "reconnect_folder", onClick = chooseFolder) } }
@@ -201,18 +265,18 @@ private fun percent(book: Book, position: ReadingPosition?): String {
                 items(folders.chunked(2), key = { it.first().uri }) { row ->
                     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         row.forEach { entry -> Surface(onClick = { vm.enter(entry) }, color = p.alt, shape = RoundedCornerShape(4.dp), modifier = Modifier.weight(1f).testTag("folder_${entry.name}")) {
-                            Row(Modifier.padding(12.dp).heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Outlined.Folder, null, Modifier.size(19.dp), tint = p.accent); Filename(entry.name, Modifier.padding(start = 8.dp)) }
+                            Row(Modifier.fillMaxWidth().padding(12.dp).heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Outlined.Folder, null, Modifier.size(19.dp), tint = p.accent); Filename(entry.name, Modifier.weight(1f).padding(start = 8.dp)) }
                         } }
                         if (row.size == 1) Spacer(Modifier.weight(1f))
                     }
                 }
-                val files = state.entries.filter { !it.directory && (state.showAll || it.txt) }
-                if (files.isEmpty() && folders.isEmpty() && !state.folderBusy) item { EmptyState("아직 책이 없어요.", "이 폴더에 TXT 파일을 넣고 새로고침해 주세요.") }
+                val files = state.entries.filter { !it.directory && (state.showAll || it.supported) }
+                if (files.isEmpty() && folders.isEmpty() && !state.folderBusy) item { EmptyState("아직 책이 없어요.", "이 폴더에 TXT·PDF·이미지 또는 압축파일을 넣고 새로고침해 주세요.") }
                 items(files, key = { it.uri }) { file ->
                     Column {
                         Row(Modifier.fillMaxWidth().clickable { vm.enter(file) }.testTag("file_${file.name}").heightIn(min = 72.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.Description, null, Modifier.size(24.dp), tint = p.accent)
-                            Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 12.dp)) { Filename(file.name); Small(if (file.txt) "TXT · ${(file.size ?: 0) / 1024} KB" else "지원 여부 확인 필요") }
+                            Icon(if (file.image) Icons.Outlined.Image else if (file.archive) Icons.Outlined.FolderZip else Icons.Outlined.Description, null, Modifier.size(24.dp), tint = p.accent)
+                            Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 12.dp)) { Filename(file.name); Small(if (file.supported) "${file.formatLabel} · ${(file.size ?: 0) / 1024} KB" else "지원 여부 확인 필요") }
                             Tool(Icons.Outlined.MoreHoriz, "${file.name} 정보", "file_info_${file.name}", onClick = { vm.info(file) })
                         }; Rule()
                     }
@@ -222,23 +286,14 @@ private fun percent(book: Book, position: ReadingPosition?): String {
     }
 }
 
-@Composable private fun AppSettings(vm: AppViewModel, app: AppPreferences, chooseFolder: () -> Unit, modifier: Modifier) {
-    val p = LocalPaper.current
+@Composable private fun AppSettings(vm: AppViewModel, modifier: Modifier) {
     Column(modifier) {
         PageHeader("설정") { vm.screen("folder") }
         Column(Modifier.verticalScroll(rememberScrollState()).testTag("app_settings").padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Small("나에게 맞는 여백"); Heading("읽는 자리를\n정해 보세요.")
-            Spacer(Modifier.height(12.dp)); Text("앱 설정", fontSize = 13.sp)
-            Surface(color = p.alt, shape = RoundedCornerShape(4.dp), border = BorderStroke(1.dp, p.line)) { SettingsRow(Icons.Outlined.FolderOpen, "시작 폴더", app.label.ifEmpty { "선택하지 않음" }, "settings_folder", chooseFolder) }
-            Small("앱을 새로 열 때 이 폴더에서 시작합니다.")
-            Text("앱 테마", fontSize = 13.sp)
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { AppTheme.entries.forEach { theme ->
-                Choice(when (theme) { AppTheme.SYSTEM -> "기기 설정"; AppTheme.LIGHT -> "라이트"; AppTheme.DARK -> "다크" }, app.theme == theme, "theme_${theme.name}", Modifier.weight(1f)) { vm.action { vm.prefs.setTheme(theme) } }
-            } }
-            Spacer(Modifier.height(12.dp)); Small("뷰어 설정 · 파일 형식별로 적용"); Rule()
-            SettingsRow(Icons.Outlined.TextFields, "TXT 뷰어", "글꼴 · 크기 · 간격 · 본문 색상", "settings_txt", { vm.sheet("txt") })
-            Surface(color = p.alt) { Small("읽던 책, 다음에도 이어서\n\n책을 읽다가 앱을 닫으면\n다음 실행에 이어 읽기를 묻습니다.", Modifier.padding(16.dp)) }
-            SettingsRow(Icons.Outlined.Storage, "폴더와 저장 공간", "연결 해제 · 읽기 캐시 정리", "settings_storage", { vm.sheet("manage") })
+            Spacer(Modifier.height(12.dp)); Rule()
+            SettingsRow(Icons.Outlined.Tune, "일반 설정", "앱 테마 · 폴더와 저장 공간", "settings_general", { vm.screen("general_settings") })
+            SettingsRow(Icons.Outlined.TextFields, "뷰어 설정", "TXT · PDF", "settings_viewer", { vm.screen("viewer_settings") })
             Rule()
             SettingsRow(Icons.Outlined.SystemUpdate, "업데이트", "현재 버전 ${BuildConfig.VERSION_NAME}", "settings_updates", { vm.screen("updates") })
             SettingsRow(Icons.Outlined.Info, "앱 정보·문의", "제작자 · GitHub · 변경 내역", "settings_about", { vm.screen("about") })
@@ -246,6 +301,34 @@ private fun percent(book: Book, position: ReadingPosition?): String {
         }
     }
 }
+
+@Composable private fun GeneralSettingsScreen(vm: AppViewModel, app: AppPreferences, chooseFolder: () -> Unit) {
+    Column(Modifier.fillMaxSize().testTag("general_settings_screen")) {
+        PageHeader("일반 설정") { vm.screen("settings") }
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).testTag("general_settings_options").padding(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
+            GeneralSettingsSection("앱 테마", Icons.Outlined.Palette, Modifier.testTag("theme_settings")) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { AppTheme.entries.forEach { theme ->
+                    Choice(when (theme) { AppTheme.SYSTEM -> "기기 설정"; AppTheme.LIGHT -> "라이트"; AppTheme.DARK -> "다크" }, app.theme == theme, "theme_${theme.name}", Modifier.weight(1f)) { vm.action { vm.prefs.setTheme(theme) } }
+                } }
+            }
+            StorageSettings(vm, app, chooseFolder)
+        }
+    }
+}
+
+@Composable private fun GeneralSettingsSection(title: String, icon: ImageVector, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    val p = LocalPaper.current
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(icon, null, Modifier.size(20.dp), tint = p.accent)
+            Text(title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        }
+        Surface(color = p.raised, shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, p.line)) {
+            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), content = content)
+        }
+    }
+}
+
 @Composable private fun RecentScreen(vm: AppViewModel, books: List<Book>, positions: List<ReadingPosition>, modifier: Modifier) {
     val p = LocalPaper.current
     Column(modifier) { PageHeader("최근 읽기") { vm.screen("folder") }
@@ -265,9 +348,17 @@ private fun percent(book: Book, position: ReadingPosition?): String {
     }
 }
 
-@Composable private fun TxtSettings(vm: AppViewModel, prefs: TxtPreferences) {
+@Composable private fun TxtSettingsScreen(vm: AppViewModel, prefs: TxtPreferences) {
+    Column(Modifier.fillMaxSize().testTag("txt_settings_screen")) {
+        PageHeader("읽기 설정", vm::closeTxtSettings)
+        TxtSettings(vm, prefs, Modifier.weight(1f).fillMaxWidth())
+    }
+}
+
+@Composable private fun TxtSettings(vm: AppViewModel, prefs: TxtPreferences, modifier: Modifier = Modifier) {
     val colors = readerColors(prefs.paper, LocalPaper.current)
-    Column(Modifier.verticalScroll(rememberScrollState()).testTag("txt_options"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(modifier.verticalScroll(rememberScrollState()).testTag("txt_options").padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Small("TXT 전용")
         Surface(color = colors.surface, border = BorderStroke(1.dp, LocalPaper.current.line), shape = RoundedCornerShape(4.dp)) {
             Text("어떤 이야기는\n잠시 머물러도 좋았다.", Modifier.fillMaxWidth().padding(20.dp), fontFamily = if (prefs.serif) Serif else androidx.compose.ui.text.font.FontFamily.SansSerif, fontSize = prefs.size.sp, lineHeight = (prefs.size * prefs.line).sp, color = colors.ink)
         }
@@ -276,14 +367,15 @@ private fun percent(book: Book, position: ReadingPosition?): String {
             Choice("고딕", !prefs.serif, "font_sans", Modifier.weight(1f)) { vm.action { vm.prefs.setFont(false) } }
             Choice("명조", prefs.serif, "font_serif", Modifier.weight(1f)) { vm.action { vm.prefs.setFont(true) } }
         }
-        Row(verticalAlignment = Alignment.CenterVertically) { Text("글자 크기", Modifier.weight(1f), fontSize = 13.sp); Tool(Icons.Outlined.Remove, "글자 작게", "font_smaller", onClick = { vm.action { vm.prefs.setSize(prefs.size - 1) } }); Text(prefs.size.toInt().toString(), Modifier.testTag("font_size")); Tool(Icons.Outlined.Add, "글자 크게", "font_larger", onClick = { vm.action { vm.prefs.setSize(prefs.size + 1) } }) }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Text("글자 크기", Modifier.weight(1f), fontSize = 13.sp); Tool(Icons.Outlined.Remove, "글자 작게", "font_smaller", outlined = true, onClick = { vm.action { vm.prefs.setSize(prefs.size - 1) } }); Text(prefs.size.toInt().toString(), Modifier.testTag("font_size")); Tool(Icons.Outlined.Add, "글자 크게", "font_larger", outlined = true, onClick = { vm.action { vm.prefs.setSize(prefs.size + 1) } }) }
         OptionSlider("줄간격", prefs.line, 1.3f..2.1f, "line_spacing") { vm.action { vm.prefs.setLine(it) } }
         OptionSlider("좌우 여백", prefs.margin, 16f..40f, "text_margin") { vm.action { vm.prefs.setMargin(it) } }
         Text("본문 색상", fontSize = 13.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { TxtPaper.entries.forEach { paper ->
             Choice(when (paper) { TxtPaper.FOLLOW_APP -> "앱 테마"; TxtPaper.LIGHT -> "라이트"; TxtPaper.SEPIA -> "세피아"; TxtPaper.DARK -> "다크" }, prefs.paper == paper, "paper_${paper.name}", Modifier.weight(1f)) { vm.action { vm.prefs.setPaper(paper) } }
         } }
-        TextButton({ vm.action { vm.prefs.resetTxt() } }, Modifier.testTag("txt_reset")) { Text("TXT 설정 기본값 복원", fontSize = 12.sp) }
+        Rule()
+        PaperButton("TXT 설정 기본값 복원", "txt_reset", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { vm.action { vm.prefs.resetTxt() } })
         Small("시작 폴더와 독서 기록은 유지됩니다.")
     }
 }
@@ -303,12 +395,19 @@ private fun percent(book: Book, position: ReadingPosition?): String {
 @Composable private fun SearchSheet(vm: AppViewModel, state: UiState) {
     var query by rememberSaveable { mutableStateOf(state.searchQuery) }
     OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().testTag("search_input"), label = { Text("본문에서 찾을 문장") }, singleLine = true)
-    Row { TextButton({ vm.search(query) }, Modifier.testTag("search_submit")) { Text("검색") }; if (state.searching) TextButton(vm::cancelSearch, Modifier.testTag("search_cancel")) { Text("검색 취소") }; TextButton(vm::returnFromSearch, Modifier.testTag("search_return")) { Text("원래 위치로") } }
+    FlowRow(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        PaperButton("검색", "search_submit", onClick = { vm.search(query) })
+        if (state.searching) PaperButton("검색 취소", "search_cancel", outlined = true, onClick = vm::cancelSearch)
+        PaperButton("원래 위치로", "search_return", outlined = true, onClick = vm::returnFromSearch)
+    }
     if (state.searching) { LinearProgressIndicator(progress = { state.searchScanned }, modifier = Modifier.fillMaxWidth()); Small("본문에서 찾고 있어요.") }
     state.searchError?.let { Text(it, color = LocalPaper.current.danger) }
     state.searchResult?.let { result ->
         Small(if (result.count == 0L) "검색 결과가 없습니다." else "${result.count}개의 문장 · ${state.searchIndex + 1}번째")
-        Row { TextButton({ vm.searchResult(state.searchIndex - 1) }, enabled = state.searchIndex > 0, modifier = Modifier.testTag("search_previous")) { Text("이전") }; TextButton({ vm.searchResult(state.searchIndex + 1) }, enabled = state.searchIndex + 1 < result.count, modifier = Modifier.testTag("search_next")) { Text("다음") } }
+        Row(Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PaperButton("이전", "search_previous", Modifier.weight(1f), outlined = true, enabled = state.searchIndex > 0, onClick = { vm.searchResult(state.searchIndex - 1) })
+            PaperButton("다음", "search_next", Modifier.weight(1f), outlined = true, enabled = state.searchIndex + 1 < result.count, onClick = { vm.searchResult(state.searchIndex + 1) })
+        }
     }
     LazyColumn(Modifier.fillMaxWidth().heightIn(max = 330.dp).testTag("search_results")) {
         itemsIndexed(state.searchHits, key = { _, hit -> hit.first }) { index, (offset, excerpt) ->
@@ -317,14 +416,14 @@ private fun percent(book: Book, position: ReadingPosition?): String {
                 else { vm.seek(offset); vm.sheet(null) }
             }.padding(vertical = 16.dp)) { Text(excerpt, fontSize = 14.sp); Rule() }
         }
-        if (state.searchResult != null && state.searchPageStart + 100 < state.searchResult.count) item { TextButton(vm::moreSearch) { Text("다음 100개 결과") } }
+        if (state.searchResult != null && state.searchPageStart + 100 < state.searchResult.count) item { PaperButton("다음 100개 결과", "search_more", Modifier.fillMaxWidth(), outlined = true, onClick = vm::moreSearch) }
     }
 }
 @Composable private fun BookmarkSheet(vm: AppViewModel) {
     val marks by vm.bookmarks.collectAsStateWithLifecycle()
     if (marks.isEmpty()) EmptyState("접어 둔 문장이 없어요.", "독서 화면 위쪽의 책갈피를 눌러 남겨 보세요.")
     else LazyColumn(Modifier.heightIn(max = 430.dp).testTag("bookmark_list")) { items(marks, key = { it.id }) { mark ->
-        Row(verticalAlignment = Alignment.CenterVertically) { Text(mark.excerpt.ifEmpty { "빈 문장" }, Modifier.weight(1f).clickable { vm.openBookmark(mark) }.padding(vertical = 16.dp), fontSize = 14.sp); Tool(Icons.Outlined.DeleteOutline, "책갈피 삭제", "bookmark_delete", onClick = { vm.deleteBookmark(mark.id) }) }; Rule()
+        Row(verticalAlignment = Alignment.CenterVertically) { Text(mark.excerpt.ifEmpty { "빈 문장" }, Modifier.weight(1f).clickable { vm.openBookmark(mark) }.padding(vertical = 16.dp, horizontal = 8.dp), fontSize = 14.sp); Tool(Icons.Outlined.DeleteOutline, "책갈피 삭제", "bookmark_delete", destructive = true, onClick = { vm.deleteBookmark(mark.id) }) }; Rule()
     } }
 }
 @Composable private fun EncodingSheet(vm: AppViewModel) {
@@ -348,13 +447,32 @@ private fun percent(book: Book, position: ReadingPosition?): String {
         Small("원본 파일은 기기의 폴더에 그대로 있습니다.")
     }
 }
-@Composable private fun ManageSheet(vm: AppViewModel, chooseFolder: () -> Unit) {
+@Composable private fun StorageSettings(vm: AppViewModel, app: AppPreferences, chooseFolder: () -> Unit) {
+    val p = LocalPaper.current
     var confirm by remember { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Small("읽기 캐시는 다시 만들 수 있습니다. 독서 위치와 책갈피는 캐시 정리로 지워지지 않습니다.")
-        PaperButton("읽기 캐시 정리", "clear_cache", Modifier.fillMaxWidth(), true, onClick = vm::clearCache)
-        PaperButton("시작 폴더 변경", "change_folder", Modifier.fillMaxWidth(), true, onClick = chooseFolder)
-        if (confirm) { Small("폴더 연결을 해제할까요? 독서 기록과 원본 파일은 유지됩니다."); PaperButton("연결 해제 확인", "disconnect_confirm", Modifier.fillMaxWidth(), onClick = vm::disconnect) }
-        else TextButton({ confirm = true }, Modifier.testTag("disconnect")) { Text("폴더 연결 해제") }
+    GeneralSettingsSection("폴더와 저장 공간", Icons.Outlined.FolderOpen, Modifier.testTag("storage_settings")) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth().clickable(onClick = chooseFolder).testTag("settings_folder").heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f).padding(end = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("시작 폴더", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Text(app.label.ifEmpty { "선택하지 않음" }, color = p.accent, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Icon(Icons.Outlined.ChevronRight, "시작 폴더 변경", Modifier.size(20.dp), tint = p.muted)
+            }
+            Small("앱을 새로 열 때 이 폴더에서 시작합니다.")
+        }
+        Rule()
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            PaperButton("읽기 캐시 정리", "clear_cache", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = vm::clearCache)
+            Small("읽기 캐시만 정리합니다. 원본 파일과 독서 위치, 책갈피는 유지됩니다.")
+        }
+        Rule()
+        if (confirm) {
+            Small("폴더 연결을 해제할까요? 독서 기록과 원본 파일은 유지됩니다.")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PaperButton("취소", "disconnect_cancel", Modifier.weight(1f), true, onClick = { confirm = false })
+                PaperButton("연결 해제 확인", "disconnect_confirm", Modifier.weight(1f), destructive = true, onClick = { confirm = false; vm.disconnect() })
+            }
+        } else PaperButton("폴더 연결 해제", "disconnect", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { confirm = true })
     }
 }

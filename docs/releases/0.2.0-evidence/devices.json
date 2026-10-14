@@ -1,0 +1,26 @@
+[
+  {
+    "serial": "emulator-5582",
+    "avd": "yeobaek-release-api30",
+    "api": "30",
+    "abi": "arm64-v8a",
+    "fingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+    "display": "Physical size: 1080x2280\nOverride size: 720x1600",
+    "density": "Physical density: 440\nOverride density: 320",
+    "page_size": "4096",
+    "gpu": "swiftshader",
+    "font_scale_at_sample": "null"
+  },
+  {
+    "serial": "emulator-5580",
+    "avd": "yeobaek-api36",
+    "api": "36",
+    "abi": "arm64-v8a",
+    "fingerprint": "google/sdk_gphone64_arm64/emu64a:16/BE2A.250530.026.F3/13894323:userdebug/dev-keys",
+    "display": "Physical size: 1080x2400\nOverride size: 720x1600",
+    "density": "Physical density: 420\nOverride density: 320",
+    "page_size": "4096",
+    "gpu": "swiftshader",
+    "font_scale_at_sample": "1.0"
+  }
+]

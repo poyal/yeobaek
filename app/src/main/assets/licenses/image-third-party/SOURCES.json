@@ -1,0 +1,18 @@
+{
+  "library": "https://github.com/zhanghai/libarchive-android/tree/v1.1.6",
+  "version": "1.1.6",
+  "dependencies": {
+    "bzip2": "6a8690fc8d26c815e798c588f796eabe9d684cf0",
+    "libarchive": "9525f90ca4bd14c7b335e2f8c84a4607b0af6bdf",
+    "lz4": "ebb370ca83af193212df4dcbadcc5d87bc0de2f0",
+    "mbedtls": "2fc8413bfcb51354c8e679141b17b3f1a5942561",
+    "xz": "a522a226545730551f7e7c2685fab27cf567746c",
+    "zstd": "f8745da6ff1ad1e7bab384bd1f9d742439278e99"
+  },
+  "notes": [
+    "libarchive-android 1.1.6 binary from Maven Central; original upstream JNI sources and submodule revisions listed above.",
+    "AndroidX ExifInterface 1.4.1: Apache License 2.0 (text included).",
+    "zlib: Android NDK platform libz; supplemental zlib 1.3.1 license included.",
+    "Only native libraries are packaged; the RAR and 7-Zip command-line fixture generators are not distributed in the APK."
+  ]
+}

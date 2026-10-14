@@ -1,0 +1,744 @@
+[
+  {
+    "phase": "start",
+    "uptime_ms": 1258521,
+    "fixture": {
+      "file": "100MiB-mixed.pdf",
+      "bytes": 111961021,
+      "pages": 12,
+      "searchable": true,
+      "image_width": 2048,
+      "image_height": 2816,
+      "unique_images": 12,
+      "image_stream_bytes": 111954333,
+      "sha256": "fdbffc9159d605901ab458add4e40625540efb5b18526eb3c2ff48bd54477d4a",
+      "target_mib": 100
+    },
+    "api": 30,
+    "heap_limit_bytes": 201326592,
+    "cycles": 30,
+    "reopens": 10
+  },
+  {
+    "phase": "open_trial",
+    "uptime_ms": 1259818,
+    "trial": 0,
+    "prepare_ms": 479,
+    "metadata_ms": 631,
+    "first_tile_ms": 112,
+    "total_ms": 1222,
+    "memory": {
+      "app_pss_kib": 79522,
+      "renderer_pss_kib": 169193,
+      "java_used_bytes": 3244584,
+      "native_allocated_bytes": 15703344,
+      "app_fds": 78
+    }
+  },
+  {
+    "phase": "open_trial",
+    "uptime_ms": 1260175,
+    "trial": 1,
+    "prepare_ms": 142,
+    "metadata_ms": 60,
+    "first_tile_ms": 113,
+    "total_ms": 315,
+    "memory": {
+      "app_pss_kib": 79396,
+      "renderer_pss_kib": 168507,
+      "java_used_bytes": 3058400,
+      "native_allocated_bytes": 15706752,
+      "app_fds": 78
+    }
+  },
+  {
+    "phase": "open_trial",
+    "uptime_ms": 1260505,
+    "trial": 2,
+    "prepare_ms": 132,
+    "metadata_ms": 53,
+    "first_tile_ms": 103,
+    "total_ms": 288,
+    "memory": {
+      "app_pss_kib": 79615,
+      "renderer_pss_kib": 168522,
+      "java_used_bytes": 3308256,
+      "native_allocated_bytes": 15717232,
+      "app_fds": 78
+    }
+  },
+  {
+    "phase": "copy_cancelled",
+    "uptime_ms": 1260512,
+    "partial_files": 0
+  },
+  {
+    "phase": "first_viewport",
+    "uptime_ms": 1261271,
+    "ms": 636,
+    "memory": {
+      "app_pss_kib": 96433,
+      "renderer_pss_kib": 183028,
+      "java_used_bytes": 3876088,
+      "native_allocated_bytes": 28097792,
+      "app_fds": 84
+    }
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1264211,
+    "cycle": 0,
+    "page": 0,
+    "ms": 2861,
+    "memory": {
+      "app_pss_kib": 126092,
+      "renderer_pss_kib": 187054,
+      "java_used_bytes": 4231376,
+      "native_allocated_bytes": 57190640,
+      "app_fds": 83
+    },
+    "cache_bytes": 25007072,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 56
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1267260,
+    "cycle": 1,
+    "page": 7,
+    "ms": 2969,
+    "memory": {
+      "app_pss_kib": 129725,
+      "renderer_pss_kib": 183595,
+      "java_used_bytes": 4497296,
+      "native_allocated_bytes": 60345328,
+      "app_fds": 83
+    },
+    "cache_bytes": 25081792,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 124
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1269460,
+    "cycle": 2,
+    "page": 2,
+    "ms": 2129,
+    "memory": {
+      "app_pss_kib": 122535,
+      "renderer_pss_kib": 185900,
+      "java_used_bytes": 4228720,
+      "native_allocated_bytes": 53027120,
+      "app_fds": 83
+    },
+    "cache_bytes": 24315904,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 163
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1270694,
+    "cycle": 3,
+    "page": 9,
+    "ms": 1164,
+    "memory": {
+      "app_pss_kib": 120291,
+      "renderer_pss_kib": 185353,
+      "java_used_bytes": 4320768,
+      "native_allocated_bytes": 50596384,
+      "app_fds": 83
+    },
+    "cache_bytes": 24908704,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 190
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1273044,
+    "cycle": 4,
+    "page": 4,
+    "ms": 2263,
+    "memory": {
+      "app_pss_kib": 122404,
+      "renderer_pss_kib": 185756,
+      "java_used_bytes": 4162152,
+      "native_allocated_bytes": 52709296,
+      "app_fds": 83
+    },
+    "cache_bytes": 25036800,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 231
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1274427,
+    "cycle": 5,
+    "page": 11,
+    "ms": 1317,
+    "memory": {
+      "app_pss_kib": 129663,
+      "renderer_pss_kib": 186108,
+      "java_used_bytes": 4367552,
+      "native_allocated_bytes": 59913024,
+      "app_fds": 81
+    },
+    "cache_bytes": 24840192,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 266
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1277910,
+    "cycle": 6,
+    "page": 6,
+    "ms": 3413,
+    "memory": {
+      "app_pss_kib": 116233,
+      "renderer_pss_kib": 190002,
+      "java_used_bytes": 4099744,
+      "native_allocated_bytes": 46290224,
+      "app_fds": 83
+    },
+    "cache_bytes": 25092096,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 325
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1280093,
+    "cycle": 7,
+    "page": 1,
+    "ms": 2104,
+    "memory": {
+      "app_pss_kib": 135994,
+      "renderer_pss_kib": 189207,
+      "java_used_bytes": 4517456,
+      "native_allocated_bytes": 66172640,
+      "app_fds": 83
+    },
+    "cache_bytes": 25036800,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 368
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1282260,
+    "cycle": 8,
+    "page": 8,
+    "ms": 2091,
+    "memory": {
+      "app_pss_kib": 129318,
+      "renderer_pss_kib": 186259,
+      "java_used_bytes": 4384056,
+      "native_allocated_bytes": 59401568,
+      "app_fds": 83
+    },
+    "cache_bytes": 24315904,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 408
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1284761,
+    "cycle": 9,
+    "page": 3,
+    "ms": 2455,
+    "memory": {
+      "app_pss_kib": 125074,
+      "renderer_pss_kib": 186376,
+      "java_used_bytes": 4527088,
+      "native_allocated_bytes": 54912288,
+      "app_fds": 83
+    },
+    "cache_bytes": 24531872,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 446
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1286677,
+    "cycle": 10,
+    "page": 10,
+    "ms": 1825,
+    "memory": {
+      "app_pss_kib": 122482,
+      "renderer_pss_kib": 186527,
+      "java_used_bytes": 4210656,
+      "native_allocated_bytes": 52471824,
+      "app_fds": 83
+    },
+    "cache_bytes": 24250368,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 497
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1289277,
+    "cycle": 11,
+    "page": 5,
+    "ms": 2532,
+    "memory": {
+      "app_pss_kib": 122766,
+      "renderer_pss_kib": 186530,
+      "java_used_bytes": 4301584,
+      "native_allocated_bytes": 52625792,
+      "app_fds": 83
+    },
+    "cache_bytes": 24756160,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 555
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1291945,
+    "cycle": 12,
+    "page": 0,
+    "ms": 2609,
+    "memory": {
+      "app_pss_kib": 120414,
+      "renderer_pss_kib": 186507,
+      "java_used_bytes": 4304544,
+      "native_allocated_bytes": 50409536,
+      "app_fds": 83
+    },
+    "cache_bytes": 24948672,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 601
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1294044,
+    "cycle": 13,
+    "page": 7,
+    "ms": 2026,
+    "memory": {
+      "app_pss_kib": 121538,
+      "renderer_pss_kib": 187651,
+      "java_used_bytes": 4133480,
+      "native_allocated_bytes": 51476016,
+      "app_fds": 83
+    },
+    "cache_bytes": 25036800,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 649
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1296285,
+    "cycle": 14,
+    "page": 2,
+    "ms": 2135,
+    "memory": {
+      "app_pss_kib": 112806,
+      "renderer_pss_kib": 186567,
+      "java_used_bytes": 4000144,
+      "native_allocated_bytes": 42590416,
+      "app_fds": 81
+    },
+    "cache_bytes": 24315904,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 688
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1298078,
+    "cycle": 15,
+    "page": 9,
+    "ms": 1736,
+    "memory": {
+      "app_pss_kib": 130418,
+      "renderer_pss_kib": 190251,
+      "java_used_bytes": 4432640,
+      "native_allocated_bytes": 60240864,
+      "app_fds": 81
+    },
+    "cache_bytes": 24246208,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 730
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1300961,
+    "cycle": 16,
+    "page": 4,
+    "ms": 2808,
+    "memory": {
+      "app_pss_kib": 134403,
+      "renderer_pss_kib": 186457,
+      "java_used_bytes": 4501888,
+      "native_allocated_bytes": 64698912,
+      "app_fds": 83
+    },
+    "cache_bytes": 25081792,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 789
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1302311,
+    "cycle": 17,
+    "page": 11,
+    "ms": 1286,
+    "memory": {
+      "app_pss_kib": 113743,
+      "renderer_pss_kib": 186709,
+      "java_used_bytes": 4062976,
+      "native_allocated_bytes": 44182880,
+      "app_fds": 81
+    },
+    "cache_bytes": 24840192,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 825
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1304784,
+    "cycle": 18,
+    "page": 6,
+    "ms": 2383,
+    "memory": {
+      "app_pss_kib": 112619,
+      "renderer_pss_kib": 186701,
+      "java_used_bytes": 3992328,
+      "native_allocated_bytes": 43185296,
+      "app_fds": 83
+    },
+    "cache_bytes": 24681376,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 859
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1306828,
+    "cycle": 19,
+    "page": 1,
+    "ms": 1980,
+    "memory": {
+      "app_pss_kib": 128735,
+      "renderer_pss_kib": 186665,
+      "java_used_bytes": 4394648,
+      "native_allocated_bytes": 59191952,
+      "app_fds": 83
+    },
+    "cache_bytes": 25036800,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 900
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1309028,
+    "cycle": 20,
+    "page": 8,
+    "ms": 2142,
+    "memory": {
+      "app_pss_kib": 119655,
+      "renderer_pss_kib": 186719,
+      "java_used_bytes": 4324304,
+      "native_allocated_bytes": 50001280,
+      "app_fds": 83
+    },
+    "cache_bytes": 24315904,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 939
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1312344,
+    "cycle": 21,
+    "page": 3,
+    "ms": 3235,
+    "memory": {
+      "app_pss_kib": 114738,
+      "renderer_pss_kib": 182515,
+      "java_used_bytes": 3979912,
+      "native_allocated_bytes": 44220096,
+      "app_fds": 83
+    },
+    "cache_bytes": 24780800,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 1001
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1313627,
+    "cycle": 22,
+    "page": 10,
+    "ms": 1229,
+    "memory": {
+      "app_pss_kib": 114033,
+      "renderer_pss_kib": 186795,
+      "java_used_bytes": 4096872,
+      "native_allocated_bytes": 44388720,
+      "app_fds": 83
+    },
+    "cache_bytes": 25036800,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 1032
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1315744,
+    "cycle": 23,
+    "page": 5,
+    "ms": 2048,
+    "memory": {
+      "app_pss_kib": 131543,
+      "renderer_pss_kib": 186764,
+      "java_used_bytes": 4449576,
+      "native_allocated_bytes": 61968400,
+      "app_fds": 83
+    },
+    "cache_bytes": 24315904,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 1071
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1318344,
+    "cycle": 24,
+    "page": 0,
+    "ms": 2540,
+    "memory": {
+      "app_pss_kib": 123887,
+      "renderer_pss_kib": 186763,
+      "java_used_bytes": 4582712,
+      "native_allocated_bytes": 54057856,
+      "app_fds": 83
+    },
+    "cache_bytes": 24247200,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 1122
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1320927,
+    "cycle": 25,
+    "page": 7,
+    "ms": 2519,
+    "memory": {
+      "app_pss_kib": 143807,
+      "renderer_pss_kib": 186790,
+      "java_used_bytes": 4604232,
+      "native_allocated_bytes": 74428688,
+      "app_fds": 83
+    },
+    "cache_bytes": 24641536,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 1188
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1323694,
+    "cycle": 26,
+    "page": 2,
+    "ms": 2713,
+    "memory": {
+      "app_pss_kib": 116007,
+      "renderer_pss_kib": 186838,
+      "java_used_bytes": 4165512,
+      "native_allocated_bytes": 46335616,
+      "app_fds": 83
+    },
+    "cache_bytes": 24756160,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 1247
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1324945,
+    "cycle": 27,
+    "page": 9,
+    "ms": 1195,
+    "memory": {
+      "app_pss_kib": 118986,
+      "renderer_pss_kib": 185362,
+      "java_used_bytes": 4237680,
+      "native_allocated_bytes": 49480384,
+      "app_fds": 81
+    },
+    "cache_bytes": 25037664,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 1274
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1327144,
+    "cycle": 28,
+    "page": 4,
+    "ms": 2121,
+    "memory": {
+      "app_pss_kib": 112882,
+      "renderer_pss_kib": 186529,
+      "java_used_bytes": 4000296,
+      "native_allocated_bytes": 43332256,
+      "app_fds": 83
+    },
+    "cache_bytes": 25036800,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 1318
+  },
+  {
+    "phase": "cycle",
+    "uptime_ms": 1328444,
+    "cycle": 29,
+    "page": 11,
+    "ms": 1232,
+    "memory": {
+      "app_pss_kib": 114790,
+      "renderer_pss_kib": 186823,
+      "java_used_bytes": 4109600,
+      "native_allocated_bytes": 45243968,
+      "app_fds": 83
+    },
+    "cache_bytes": 24840192,
+    "cache_limit_bytes": 25165824,
+    "rendered_tiles": 1355
+  },
+  {
+    "phase": "search_complete",
+    "uptime_ms": 1328444,
+    "ms": 6048,
+    "matches": 12,
+    "scanned_pages": 12,
+    "no_text": false
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1329093,
+    "iteration": 0,
+    "ms": 163,
+    "memory": {
+      "app_pss_kib": 129404,
+      "renderer_pss_kib": 169883,
+      "java_used_bytes": 5084528,
+      "native_allocated_bytes": 59336448,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1329281,
+    "iteration": 1,
+    "ms": 156,
+    "memory": {
+      "app_pss_kib": 129596,
+      "renderer_pss_kib": 169843,
+      "java_used_bytes": 5358960,
+      "native_allocated_bytes": 59345376,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1329464,
+    "iteration": 2,
+    "ms": 150,
+    "memory": {
+      "app_pss_kib": 129780,
+      "renderer_pss_kib": 169859,
+      "java_used_bytes": 5617008,
+      "native_allocated_bytes": 59353856,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1329659,
+    "iteration": 3,
+    "ms": 163,
+    "memory": {
+      "app_pss_kib": 88412,
+      "renderer_pss_kib": 169835,
+      "java_used_bytes": 4079848,
+      "native_allocated_bytes": 18174368,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1329848,
+    "iteration": 4,
+    "ms": 154,
+    "memory": {
+      "app_pss_kib": 88584,
+      "renderer_pss_kib": 169851,
+      "java_used_bytes": 4354280,
+      "native_allocated_bytes": 18182752,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1330039,
+    "iteration": 5,
+    "ms": 157,
+    "memory": {
+      "app_pss_kib": 88764,
+      "renderer_pss_kib": 169835,
+      "java_used_bytes": 4612328,
+      "native_allocated_bytes": 18191552,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1330229,
+    "iteration": 6,
+    "ms": 156,
+    "memory": {
+      "app_pss_kib": 88952,
+      "renderer_pss_kib": 169859,
+      "java_used_bytes": 4886760,
+      "native_allocated_bytes": 18200352,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1330418,
+    "iteration": 7,
+    "ms": 154,
+    "memory": {
+      "app_pss_kib": 89144,
+      "renderer_pss_kib": 169839,
+      "java_used_bytes": 5144808,
+      "native_allocated_bytes": 18208960,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1330602,
+    "iteration": 8,
+    "ms": 153,
+    "memory": {
+      "app_pss_kib": 89344,
+      "renderer_pss_kib": 169855,
+      "java_used_bytes": 5419240,
+      "native_allocated_bytes": 18217632,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "reopen",
+    "uptime_ms": 1330796,
+    "iteration": 9,
+    "ms": 162,
+    "memory": {
+      "app_pss_kib": 88396,
+      "renderer_pss_kib": 169835,
+      "java_used_bytes": 4080304,
+      "native_allocated_bytes": 18174496,
+      "app_fds": 81
+    }
+  },
+  {
+    "phase": "pass",
+    "uptime_ms": 1330871,
+    "cycles": 30,
+    "cycle_p95_ms": 3235,
+    "reopens": 10,
+    "reopen_p95_ms": 163,
+    "source_unchanged": true
+  }
+]

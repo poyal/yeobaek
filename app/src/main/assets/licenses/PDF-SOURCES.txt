@@ -1,0 +1,16 @@
+PdfiumAndroidKt 2.0.0
+https://github.com/johngray1965/PdfiumAndroidKt/tree/2.0.0
+Original work Copyright 2015 Bekket McClane
+Modified work Copyright 2016 Bartosz Schiller
+Modified work Copyright 2023-2026 John Gray
+Apache License 2.0: PdfiumAndroidKt-APACHE-2.0.txt
+
+PDFium: https://pdfium.googlesource.com/pdfium/
+Copyright 2014 The PDFium Authors
+PDFium-LICENSE.txt
+
+Supplemental component notices distributed with the PDFium binary package:
+https://github.com/bblanchon/pdfium-binaries/releases/tag/chromium/8100
+Files in pdfium-third-party/ are verbatim notices from that distribution.
+The app uses the native binary bundled by PdfiumAndroidKt 2.0.0, not this
+supplemental package's executable binary.

@@ -1,0 +1,52 @@
+{
+  "lib/arm64-v8a/libandroidx.graphics.path.so": [
+    16384,
+    16384,
+    16384
+  ],
+  "lib/arm64-v8a/libarchive-jni.so": [
+    16384,
+    16384,
+    16384
+  ],
+  "lib/arm64-v8a/libdatastore_shared_counter.so": [
+    16384,
+    16384,
+    16384
+  ],
+  "lib/arm64-v8a/libpdfium.so": [
+    16384,
+    16384,
+    16384
+  ],
+  "lib/arm64-v8a/libpdfiumandroid.so": [
+    16384,
+    16384,
+    16384
+  ],
+  "lib/x86_64/libandroidx.graphics.path.so": [
+    16384,
+    16384,
+    16384
+  ],
+  "lib/x86_64/libarchive-jni.so": [
+    16384,
+    16384,
+    16384
+  ],
+  "lib/x86_64/libdatastore_shared_counter.so": [
+    16384,
+    16384,
+    16384
+  ],
+  "lib/x86_64/libpdfium.so": [
+    16384,
+    16384,
+    16384
+  ],
+  "lib/x86_64/libpdfiumandroid.so": [
+    16384,
+    16384,
+    16384
+  ]
+}

@@ -1,0 +1,15 @@
+
+com.poyal.yeobaek.ImageEngineTest:.....
+com.poyal.yeobaek.ImagePersistenceTest:..
+com.poyal.yeobaek.ImageViewTest:.
+com.poyal.yeobaek.PdfEngineTest:......
+com.poyal.yeobaek.PdfPersistenceTest:..
+com.poyal.yeobaek.PdfViewTest:.
+com.poyal.yeobaek.ReaderEngineTest:..
+com.poyal.yeobaek.PersistenceTest:.
+
+Time: 24.508
+
+OK (20 tests)
+
+

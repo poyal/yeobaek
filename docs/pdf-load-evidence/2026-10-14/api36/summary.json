@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "elapsed_s": 478.16,
+  "sample_count": 227,
+  "peak_pss_kib": {
+    "app": 133770,
+    "renderer": 397592
+  },
+  "peak_combined_pss_kib": 520361,
+  "sampled_memory_limits_pass": true
+}

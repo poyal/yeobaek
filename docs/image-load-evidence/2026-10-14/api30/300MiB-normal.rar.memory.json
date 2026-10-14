@@ -1,0 +1,122 @@
+[
+  {
+    "elapsed_s": 0.002,
+    "app_pss_kib": 0,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 2.039,
+    "app_pss_kib": 125810,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 4.15,
+    "app_pss_kib": 107431,
+    "worker_pss_kib": 65421
+  },
+  {
+    "elapsed_s": 6.3,
+    "app_pss_kib": 131001,
+    "worker_pss_kib": 84038
+  },
+  {
+    "elapsed_s": 8.477,
+    "app_pss_kib": 153799,
+    "worker_pss_kib": 70956
+  },
+  {
+    "elapsed_s": 10.815,
+    "app_pss_kib": 149013,
+    "worker_pss_kib": 85201
+  },
+  {
+    "elapsed_s": 13.214,
+    "app_pss_kib": 145127,
+    "worker_pss_kib": 88396
+  },
+  {
+    "elapsed_s": 15.441,
+    "app_pss_kib": 127926,
+    "worker_pss_kib": 79513
+  },
+  {
+    "elapsed_s": 17.695,
+    "app_pss_kib": 129642,
+    "worker_pss_kib": 82240
+  },
+  {
+    "elapsed_s": 19.934,
+    "app_pss_kib": 126212,
+    "worker_pss_kib": 76974
+  },
+  {
+    "elapsed_s": 22.117,
+    "app_pss_kib": 137342,
+    "worker_pss_kib": 60204
+  },
+  {
+    "elapsed_s": 24.294,
+    "app_pss_kib": 131340,
+    "worker_pss_kib": 80078
+  },
+  {
+    "elapsed_s": 26.523,
+    "app_pss_kib": 128784,
+    "worker_pss_kib": 82985
+  },
+  {
+    "elapsed_s": 28.678,
+    "app_pss_kib": 153855,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 30.774,
+    "app_pss_kib": 118343,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 32.879,
+    "app_pss_kib": 115325,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 34.967,
+    "app_pss_kib": 114197,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 37.05,
+    "app_pss_kib": 114271,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 39.186,
+    "app_pss_kib": 114550,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 41.284,
+    "app_pss_kib": 114922,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 43.367,
+    "app_pss_kib": 113981,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 45.508,
+    "app_pss_kib": 114489,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 47.59,
+    "app_pss_kib": 114561,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 49.671,
+    "app_pss_kib": 115031,
+    "worker_pss_kib": 0
+  }
+]

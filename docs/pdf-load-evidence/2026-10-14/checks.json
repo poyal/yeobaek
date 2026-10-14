@@ -1,0 +1,40 @@
+{
+  "core": {
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "app": {
+    "tests": 19,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "lint": {
+    "Fatal": 0,
+    "Error": 0,
+    "Warning": 35
+  },
+  "release": {
+    "bytes": 41993673,
+    "sha256": "00ab8c0528c811786921af38ce0df5dbb674ff6687fff569ac74016ba6ed1d2c",
+    "build": "PASS",
+    "zip_alignment_16kb": "PASS",
+    "installed_on": "emulator-5580"
+  },
+  "regression": {
+    "api30": {
+      "tests": 10,
+      "status": "PASS",
+      "apk_sha256": "94300c39c82ea6f0169e5be951063e5ff597fb03ce9e77dfacaf81077f1d4bfb",
+      "test_apk_sha256": "735552ac577598eee599499766cce626ad528035556727f46e13a693cb4a3e0d"
+    },
+    "api36": {
+      "tests": 10,
+      "status": "PASS",
+      "apk_sha256": "94300c39c82ea6f0169e5be951063e5ff597fb03ce9e77dfacaf81077f1d4bfb",
+      "test_apk_sha256": "f167145aa13ec1353e760caf784d64a86837bc2999c90349daf0756d0d250137"
+    }
+  }
+}

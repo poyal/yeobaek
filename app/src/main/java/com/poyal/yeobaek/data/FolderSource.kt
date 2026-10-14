@@ -10,6 +10,11 @@ import java.util.Locale
 
 data class DocumentEntry(val id: String, val uri: String, val name: String, val directory: Boolean, val size: Long?, val modified: Long?, val mime: String) {
     val txt get() = name.endsWith(".txt", true) || mime == "text/plain"
+    val pdf get() = name.endsWith(".pdf", true) || mime == "application/pdf"
+    val image get() = com.poyal.yeobaek.image.ImageFormats.image(name) || mime in setOf("image/jpeg", "image/png", "image/webp", "image/bmp", "image/gif")
+    val archive get() = com.poyal.yeobaek.image.ImageFormats.archive(name) || mime in setOf("application/zip", "application/x-rar-compressed", "application/vnd.rar", "application/x-7z-compressed")
+    val supported get() = txt || pdf || image || archive
+    val formatLabel get() = when { pdf -> "PDF"; image -> "이미지"; archive -> "압축 이미지"; else -> "TXT" }
 }
 class FolderSource(private val resolver: ContentResolver) {
     private val projection = arrayOf(
@@ -45,6 +50,32 @@ class FolderSource(private val resolver: ContentResolver) {
         list(uri.toString(), entry.id)
         resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         return entry
+    }
+    /** Resolve from the document itself so recent/resumed books do not use an unrelated UI folder. */
+    fun parentPath(uri: String, knownPath: List<DocumentEntry>): List<DocumentEntry> {
+        val document = Uri.parse(uri)
+        val id = DocumentsContract.getDocumentId(document)
+        if (DocumentsContract.isTreeUri(document)) {
+            val rootId = DocumentsContract.getTreeDocumentId(document)
+            if (id == rootId) return emptyList()
+            val ids = try { DocumentsContract.findDocumentPath(resolver, document)?.path }
+                catch (_: UnsupportedOperationException) { null }
+                catch (_: IllegalArgumentException) { null }
+            val rootIndex = ids?.indexOf(rootId) ?: -1
+            if (ids != null && rootIndex >= 0 && ids.lastOrNull() == id) {
+                return ids.subList(rootIndex, ids.lastIndex).map {
+                    info(DocumentsContract.buildDocumentUriUsingTree(document, it).toString())
+                }
+            }
+        }
+        // Some providers do not implement findDocumentPath. Verify membership before falling back.
+        for (index in knownPath.indices.reversed()) {
+            val parent = knownPath[index]
+            if (key(parent.uri) != key(uri) && list(parent.uri, parent.id).any { key(it.uri) == key(uri) }) {
+                return knownPath.take(index + 1)
+            }
+        }
+        throw java.io.IOException("문서가 있는 폴더를 확인하지 못했습니다.")
     }
     fun release(uri: String) {
         runCatching { resolver.releasePersistableUriPermission(Uri.parse(uri), Intent.FLAG_GRANT_READ_URI_PERMISSION) }

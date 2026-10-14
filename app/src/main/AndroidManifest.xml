@@ -5,6 +5,10 @@
         android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher"
         android:label="여백" android:theme="@style/Theme.Yeobaek" android:supportsRtl="true">
+        <service android:name=".pdf.PdfRenderService" android:exported="false"
+            android:process=":pdf" android:isolatedProcess="true" />
+        <service android:name=".image.ImageWorkerService" android:exported="false"
+            android:process=":image" android:isolatedProcess="true" />
         <provider android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.updates" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />

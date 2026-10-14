@@ -19,6 +19,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.nestedscroll.*
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -51,6 +53,13 @@ import java.util.Locale
     var blocks by remember(opened.token) { mutableStateOf<List<TextBlock>>(emptyList()) }
     var loading by remember(opened.token) { mutableStateOf(true) }
     var failure by remember(opened.token) { mutableStateOf<String?>(null) }
+    var forwardIntent by remember(opened.token) { mutableStateOf(false) }
+    val endScroll = remember(opened.token) { object : NestedScrollConnection {
+        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+            if (source == NestedScrollSource.UserInput && available.y != 0f) forwardIntent = available.y < 0f
+            return Offset.Zero
+        }
+    } }
     val density = LocalDensity.current
     val textMeasurer = rememberTextMeasurer(cacheSize = 0)
     val style = TextStyle(fontFamily = if (prefs.serif) Serif else FontFamily.SansSerif,
@@ -89,6 +98,7 @@ import java.util.Locale
                 try {
                     val newSeek = seek?.takeIf { it.serial != consumedSeek }
                     val target = (newSeek?.offset ?: anchor).coerceIn(0, opened.document.length)
+                    forwardIntent = newSeek != null && target == opened.document.length
                     val next = engine.around(target)
                     blocks = next
                     val index = next.indexOfLast { it.start <= target }.coerceAtLeast(0)
@@ -146,11 +156,25 @@ import java.util.Locale
                         vm.position(anchor, key, fraction, complete)
                     }
             }
+            LaunchedEffect(engine) {
+                snapshotFlow {
+                    Triple(!loading && failure == null && opened.document.length > 0 &&
+                        blocks.lastOrNull()?.end == opened.document.length && !list.canScrollForward,
+                        list.isScrollInProgress, forwardIntent)
+                }.collect { (complete, scrolling, advancing) ->
+                    if (!loading) vm.readingProgress(opened.token, complete)
+                    if (complete && !scrolling && advancing) {
+                        forwardIntent = false
+                        vm.position(anchor, layoutKey, fraction, true)
+                        vm.readingFinished(opened.token)
+                    }
+                }
+            }
             if (opened.document.length == 0L) Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                 EmptyState("빈 문서입니다.", "파일에 표시할 본문이 없습니다.")
             } else LazyColumn(
                 state = list,
-                modifier = Modifier.fillMaxSize().testTag("reader_body")
+                modifier = Modifier.fillMaxSize().testTag("reader_body").nestedScroll(endScroll)
                     .semantics { customActions = listOf(CustomAccessibilityAction(if (chrome) "독서 메뉴 숨기기" else "독서 메뉴 표시") { chrome = !chrome; true }) }
                     .onKeyEvent { if (it.type == KeyEventType.KeyUp && it.key == Key.Enter) { chrome = !chrome; true } else false }
                     .pointerInput(opened.token) { detectTapGestures(onTap = { chrome = !chrome }, onLongPress = {}) },
@@ -176,14 +200,13 @@ import java.util.Locale
             }
             AnimatedVisibility(chrome, Modifier.align(Alignment.BottomCenter), enter = fadeIn(), exit = fadeOut()) {
                 Surface(color = colors.surface) {
-                    Column { Rule(); Row(Modifier.fillMaxWidth().testTag("reader_footer")) {
-                        listOf(Triple("search", "검색", Icons.Outlined.Search), Triple("bookmarks", "책갈피", Icons.Outlined.BookmarkBorder), Triple("txt", "읽기 설정", Icons.Outlined.TextFields), Triple("info", "책 정보", Icons.Outlined.MoreHoriz), Triple("move", "이동", Icons.Outlined.SwapHoriz)).forEach { (id, label, icon) ->
-                            Column(Modifier.weight(1f).clickable { vm.sheet(id) }.testTag("reader_$id").heightIn(min = 64.dp).padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                Icon(icon, label, Modifier.size(22.dp), tint = colors.ink)
-                                Text(if (id == "txt" && density.fontScale > 1.3f) "읽기\n설정" else label, fontSize = 10.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, color = colors.ink, maxLines = 2)
-                            }
-                        }
-                    } }
+                    ReaderToolbar(listOf(
+                        ReaderToolbarItem(ReaderAction.MOVE, "reader_move") { vm.sheet("move") },
+                        ReaderToolbarItem(ReaderAction.BOOKMARKS, "reader_bookmarks") { vm.sheet("bookmarks") },
+                        ReaderToolbarItem(ReaderAction.SEARCH, "reader_search") { vm.sheet("search") },
+                        ReaderToolbarItem(ReaderAction.INFO, "reader_info") { vm.sheet("info") },
+                        ReaderToolbarItem(ReaderAction.SETTINGS, "reader_txt", onClick = vm::openTxtSettings),
+                    ), Modifier.testTag("reader_footer"))
                 }
             }
             if (loading) Surface(Modifier.align(Alignment.Center), color = colors.surface.copy(alpha = .95f), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)) {

@@ -1,0 +1,47 @@
+{
+  "serial": "emulator-5582",
+  "avd": "yeobaek-api30",
+  "api": "30",
+  "fingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+  "display": "Physical size: 1080x2280",
+  "density": "Physical density: 440\nOverride density: 320",
+  "apk_sha256": "94300c39c82ea6f0169e5be951063e5ff597fb03ce9e77dfacaf81077f1d4bfb",
+  "test_apk_sha256": "735552ac577598eee599499766cce626ad528035556727f46e13a693cb4a3e0d",
+  "fixtures": {
+    "generator": "yeobaek-pdf-load-v1",
+    "fixtures": [
+      {
+        "file": "100MiB-mixed.pdf",
+        "bytes": 111961021,
+        "pages": 12,
+        "searchable": true,
+        "image_width": 2048,
+        "image_height": 2816,
+        "unique_images": 12,
+        "image_stream_bytes": 111954333,
+        "sha256": "fdbffc9159d605901ab458add4e40625540efb5b18526eb3c2ff48bd54477d4a",
+        "target_mib": 100
+      },
+      {
+        "file": "300MiB-scan.pdf",
+        "bytes": 317234913,
+        "pages": 34,
+        "searchable": false,
+        "image_width": 2048,
+        "image_height": 2816,
+        "unique_images": 34,
+        "image_stream_bytes": 317218186,
+        "sha256": "33ef940226f848e9cc873b32d47ccb0760185c56987daf4dbc5444e5a383e1cd",
+        "target_mib": 300
+      }
+    ]
+  },
+  "thresholds": {
+    "app_pss_mib": 384,
+    "renderer_pss_mib": 512,
+    "combined_pss_mib": 768,
+    "warm_to_late_growth_mib": 96,
+    "app_fd_growth": 24,
+    "viewport_timeout_seconds": 30
+  }
+}

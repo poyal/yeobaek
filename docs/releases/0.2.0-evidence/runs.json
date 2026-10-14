@@ -1,0 +1,124 @@
+[
+  {
+    "label": "e2e-light",
+    "run_id": "20261014-185805-emulator-5582-e2e-LIGHT",
+    "summary": {
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 2,
+      "passed_tests": 2
+    },
+    "tests": [
+      "sourceFailureEmptyEncodingAndSettingIsolation",
+      "completeReadingJourneyAndScreens"
+    ],
+    "case_results": {
+      "sourceFailureEmptyEncodingAndSettingIsolation": "PASS",
+      "completeReadingJourneyAndScreens": "PASS"
+    }
+  },
+  {
+    "label": "recovery",
+    "run_id": "20261014-190116-emulator-5582-recovery-LIGHT",
+    "summary": {
+      "status": "FAIL",
+      "exit_code": 0,
+      "expected_tests": 4,
+      "passed_tests": 0
+    },
+    "tests": [
+      "movedFileReconnectsWithoutLosingPositionOrBookmark",
+      "returningToFolderRefreshesExternalChanges",
+      "largeSystemFontKeyboardAndThousandFiles",
+      "cacheSourceChangesAndRecordDeletion"
+    ],
+    "case_results": {
+      "movedFileReconnectsWithoutLosingPositionOrBookmark": "FAIL",
+      "returningToFolderRefreshesExternalChanges": "PASS",
+      "largeSystemFontKeyboardAndThousandFiles": "PASS",
+      "cacheSourceChangesAndRecordDeletion": "PASS"
+    }
+  },
+  {
+    "label": "recovery-retry",
+    "run_id": "20261014-190336-emulator-5582-recovery-LIGHT",
+    "summary": {
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 1,
+      "passed_tests": 1
+    },
+    "tests": [
+      "movedFileReconnectsWithoutLosingPositionOrBookmark"
+    ],
+    "case_results": {
+      "movedFileReconnectsWithoutLosingPositionOrBookmark": "PASS"
+    }
+  },
+  {
+    "label": "e2e-dark",
+    "run_id": "20261014-190408-emulator-5582-e2e-DARK",
+    "summary": {
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 2,
+      "passed_tests": 2
+    },
+    "tests": [
+      "sourceFailureEmptyEncodingAndSettingIsolation",
+      "completeReadingJourneyAndScreens"
+    ],
+    "case_results": {
+      "sourceFailureEmptyEncodingAndSettingIsolation": "PASS",
+      "completeReadingJourneyAndScreens": "PASS"
+    }
+  },
+  {
+    "label": "restore-overinstall",
+    "run_id": "20261014-190628-emulator-5582-restore-LIGHT",
+    "summary": {
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 1,
+      "passed_tests": 1
+    },
+    "tests": [
+      "folderThemePositionAndBookmarksSurvive"
+    ],
+    "case_results": {
+      "folderThemePositionAndBookmarksSurvive": "PASS"
+    }
+  },
+  {
+    "label": "restore-reboot",
+    "run_id": "20261014-190658-emulator-5582-restore-LIGHT",
+    "summary": {
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 1,
+      "passed_tests": 1
+    },
+    "tests": [
+      "folderThemePositionAndBookmarksSurvive"
+    ],
+    "case_results": {
+      "folderThemePositionAndBookmarksSurvive": "PASS"
+    }
+  },
+  {
+    "label": "about",
+    "run_id": "20261014-190710-emulator-5582-about-LIGHT",
+    "summary": {
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 1,
+      "passed_tests": 1
+    },
+    "tests": [
+      "aboutAndUpdatesRespectThemeLargeTextAndBackNavigation"
+    ],
+    "case_results": {
+      "aboutAndUpdatesRespectThemeLargeTextAndBackNavigation": "PASS"
+    }
+  }
+]

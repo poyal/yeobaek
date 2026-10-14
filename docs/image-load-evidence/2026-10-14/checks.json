@@ -1,0 +1,21 @@
+{
+  "release_apk_sha256": "94adcb652393a9fa5f548e9fccc34fa2359357eb5fcfef3b99537616f8439130",
+  "release_apk_bytes": 50538027,
+  "native_64bit_libraries": 10,
+  "native_minimum_load_alignment": 16384,
+  "lint_errors": 0,
+  "lint_warnings": 46,
+  "txt_core": {
+    "tests": 9,
+    "failures": 0,
+    "errors": 0
+  },
+  "app_unit": {
+    "tests": 23,
+    "failures": 0,
+    "errors": 0
+  },
+  "zip_alignment_16k": true,
+  "post_load_ui_change": "ImageReaderScreen AndroidView clipped to its layout bounds; image source, decoding, cache and stress-test code unchanged.",
+  "final_build_success": true
+}

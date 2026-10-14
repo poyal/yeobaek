@@ -1,0 +1,232 @@
+[
+  {
+    "elapsed_s": 0.002,
+    "app_pss_kib": 0,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 2.042,
+    "app_pss_kib": 118538,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 4.388,
+    "app_pss_kib": 98157,
+    "worker_pss_kib": 50945
+  },
+  {
+    "elapsed_s": 6.521,
+    "app_pss_kib": 108761,
+    "worker_pss_kib": 64339
+  },
+  {
+    "elapsed_s": 8.661,
+    "app_pss_kib": 108382,
+    "worker_pss_kib": 53595
+  },
+  {
+    "elapsed_s": 10.792,
+    "app_pss_kib": 108072,
+    "worker_pss_kib": 53499
+  },
+  {
+    "elapsed_s": 12.941,
+    "app_pss_kib": 108058,
+    "worker_pss_kib": 53515
+  },
+  {
+    "elapsed_s": 15.227,
+    "app_pss_kib": 108567,
+    "worker_pss_kib": 53519
+  },
+  {
+    "elapsed_s": 17.428,
+    "app_pss_kib": 108556,
+    "worker_pss_kib": 53518
+  },
+  {
+    "elapsed_s": 19.688,
+    "app_pss_kib": 108428,
+    "worker_pss_kib": 53530
+  },
+  {
+    "elapsed_s": 21.821,
+    "app_pss_kib": 116343,
+    "worker_pss_kib": 73351
+  },
+  {
+    "elapsed_s": 24.132,
+    "app_pss_kib": 112990,
+    "worker_pss_kib": 45342
+  },
+  {
+    "elapsed_s": 26.263,
+    "app_pss_kib": 128035,
+    "worker_pss_kib": 69953
+  },
+  {
+    "elapsed_s": 28.481,
+    "app_pss_kib": 123193,
+    "worker_pss_kib": 58677
+  },
+  {
+    "elapsed_s": 30.671,
+    "app_pss_kib": 121880,
+    "worker_pss_kib": 59736
+  },
+  {
+    "elapsed_s": 32.869,
+    "app_pss_kib": 118509,
+    "worker_pss_kib": 56928
+  },
+  {
+    "elapsed_s": 35.007,
+    "app_pss_kib": 105689,
+    "worker_pss_kib": 43883
+  },
+  {
+    "elapsed_s": 37.191,
+    "app_pss_kib": 105709,
+    "worker_pss_kib": 43859
+  },
+  {
+    "elapsed_s": 39.371,
+    "app_pss_kib": 105941,
+    "worker_pss_kib": 38599
+  },
+  {
+    "elapsed_s": 41.535,
+    "app_pss_kib": 123878,
+    "worker_pss_kib": 61168
+  },
+  {
+    "elapsed_s": 43.752,
+    "app_pss_kib": 125377,
+    "worker_pss_kib": 66216
+  },
+  {
+    "elapsed_s": 46.159,
+    "app_pss_kib": 126764,
+    "worker_pss_kib": 70912
+  },
+  {
+    "elapsed_s": 48.497,
+    "app_pss_kib": 116678,
+    "worker_pss_kib": 61507
+  },
+  {
+    "elapsed_s": 51.352,
+    "app_pss_kib": 111382,
+    "worker_pss_kib": 54627
+  },
+  {
+    "elapsed_s": 53.554,
+    "app_pss_kib": 106974,
+    "worker_pss_kib": 53455
+  },
+  {
+    "elapsed_s": 55.822,
+    "app_pss_kib": 107010,
+    "worker_pss_kib": 53451
+  },
+  {
+    "elapsed_s": 58.124,
+    "app_pss_kib": 106961,
+    "worker_pss_kib": 53436
+  },
+  {
+    "elapsed_s": 60.282,
+    "app_pss_kib": 106957,
+    "worker_pss_kib": 53444
+  },
+  {
+    "elapsed_s": 62.481,
+    "app_pss_kib": 106957,
+    "worker_pss_kib": 53452
+  },
+  {
+    "elapsed_s": 64.67,
+    "app_pss_kib": 106935,
+    "worker_pss_kib": 53598
+  },
+  {
+    "elapsed_s": 66.803,
+    "app_pss_kib": 119647,
+    "worker_pss_kib": 62252
+  },
+  {
+    "elapsed_s": 69.092,
+    "app_pss_kib": 133924,
+    "worker_pss_kib": 77776
+  },
+  {
+    "elapsed_s": 71.217,
+    "app_pss_kib": 129604,
+    "worker_pss_kib": 67096
+  },
+  {
+    "elapsed_s": 73.347,
+    "app_pss_kib": 127133,
+    "worker_pss_kib": 73708
+  },
+  {
+    "elapsed_s": 75.543,
+    "app_pss_kib": 125777,
+    "worker_pss_kib": 67312
+  },
+  {
+    "elapsed_s": 77.923,
+    "app_pss_kib": 111683,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 80.011,
+    "app_pss_kib": 81858,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 82.136,
+    "app_pss_kib": 99640,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 84.22,
+    "app_pss_kib": 81640,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 86.561,
+    "app_pss_kib": 99796,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 88.656,
+    "app_pss_kib": 87358,
+    "worker_pss_kib": 70965
+  },
+  {
+    "elapsed_s": 90.779,
+    "app_pss_kib": 99900,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 92.87,
+    "app_pss_kib": 100100,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 94.951,
+    "app_pss_kib": 87571,
+    "worker_pss_kib": 71033
+  },
+  {
+    "elapsed_s": 97.091,
+    "app_pss_kib": 100030,
+    "worker_pss_kib": 0
+  },
+  {
+    "elapsed_s": 99.227,
+    "app_pss_kib": 100608,
+    "worker_pss_kib": 0
+  }
+]

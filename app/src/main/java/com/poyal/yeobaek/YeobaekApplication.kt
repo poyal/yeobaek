@@ -12,7 +12,7 @@ class YeobaekApplication : Application() {
     private val updateScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     val updates by lazy { UpdateController(BuildConfig.VERSION_NAME, GitHubUpdates(),
         AndroidUpdatePersistence(this), AndroidUpdateDownloads(this), updateScope) }
-    val database by lazy { Room.databaseBuilder(this, LibraryDatabase::class.java, "library.db").build() }
+    val database by lazy { Room.databaseBuilder(this, LibraryDatabase::class.java, "library.db").addMigrations(LibraryDatabase.MIGRATION_1_2, LibraryDatabase.MIGRATION_2_3).build() }
     val preferences by lazy { Preferences(this) }
     val folders by lazy { FolderSource(contentResolver) }
     val texts by lazy { TextStore(File(cacheDir, "text")) }
