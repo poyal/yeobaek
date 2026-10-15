@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "installed_version": "0.3.0",
+  "latest_version": "0.3.0",
+  "checks": [
+    "actual release app manual update check",
+    "current and latest versions match"
+  ]
+}
