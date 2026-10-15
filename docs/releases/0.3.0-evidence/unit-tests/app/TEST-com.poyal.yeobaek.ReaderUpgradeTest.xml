@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.poyal.yeobaek.ReaderUpgradeTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-15T15:08:17.188Z" hostname="POYAL" time="0.051">
+  <properties/>
+  <testcase name="partialOverridesInheritCommonChangesAndOnlyExactParent" classname="com.poyal.yeobaek.ReaderUpgradeTest" time="0.018"/>
+  <testcase name="toolbarChangesTheEffectiveOverrideRatherThanAnInvisibleCommonValue" classname="com.poyal.yeobaek.ReaderUpgradeTest" time="0.001"/>
+  <testcase name="backupRejectsUnknownVersionAndOrphanRecords" classname="com.poyal.yeobaek.ReaderUpgradeTest" time="0.005"/>
+  <testcase name="naturalSortingAndUnknownMetadataHaveStableOrder" classname="com.poyal.yeobaek.ReaderUpgradeTest" time="0.022"/>
+  <testcase name="badNumericPreferencesCannotPoisonLayout" classname="com.poyal.yeobaek.ReaderUpgradeTest" time="0.0"/>
+  <testcase name="cropDetectorKeepsFullBleedAndBlankPagesAndFindsBlackWhiteBorders" classname="com.poyal.yeobaek.ReaderUpgradeTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

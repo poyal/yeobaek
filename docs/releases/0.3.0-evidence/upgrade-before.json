@@ -1,0 +1,148 @@
+{
+  "version": 3,
+  "tables": {
+    "books": [
+      {
+        "id": "b34ceb7c-e6a3-4fd6-a292-4ead28fd6d30",
+        "sourceKey": "com.android.externalstorage.documents:primary:Download/Yeobaek/ReaderReview/02 Guide.pdf",
+        "uri": "content://com.android.externalstorage.documents/tree/primary%3ADownload%2FYeobaek/document/primary%3ADownload%2FYeobaek%2FReaderReview%2F02%20Guide.pdf",
+        "name": "02 Guide.pdf",
+        "folder": "Yeobaek / ReaderReview",
+        "charset": "",
+        "charsetOverride": null,
+        "version": "673544a7400fe464a03764965a4980c766de7de4a74a54d5d640bfe3e0be2a36",
+        "sourceHash": "673544a7400fe464a03764965a4980c766de7de4a74a54d5d640bfe3e0be2a36",
+        "length": 1804,
+        "openedAt": 1792077042733,
+        "format": "PDF",
+        "pageCount": 3
+      },
+      {
+        "id": "f1d99128-7c7e-491f-8ad1-0c8cef5d264c",
+        "sourceKey": "com.android.externalstorage.documents:primary:Download/Yeobaek/ReaderReview/03 Comic.cbz",
+        "uri": "content://com.android.externalstorage.documents/tree/primary%3ADownload%2FYeobaek/document/primary%3ADownload%2FYeobaek%2FReaderReview%2F03%20Comic.cbz",
+        "name": "03 Comic.cbz",
+        "folder": "Yeobaek / ReaderReview",
+        "charset": "",
+        "charsetOverride": null,
+        "version": "132f37ecdb260fe32a9ea42948157bd5f34122845a62c954234636f94ccbf941",
+        "sourceHash": "132f37ecdb260fe32a9ea42948157bd5f34122845a62c954234636f94ccbf941",
+        "length": 2,
+        "openedAt": 1792077069553,
+        "format": "IMAGE_ARCHIVE",
+        "pageCount": 2
+      },
+      {
+        "id": "0ea2ad52-1d75-4e6d-8c32-f817307d5259",
+        "sourceKey": "com.android.externalstorage.documents:primary:Download/Yeobaek/비가 그친 오후.txt",
+        "uri": "content://com.android.externalstorage.documents/tree/primary%3ADownload%2FYeobaek/document/primary%3ADownload%2FYeobaek%2F%EB%B9%84%EA%B0%80%20%EA%B7%B8%EC%B9%9C%20%EC%98%A4%ED%9B%84.txt",
+        "name": "비가 그친 오후.txt",
+        "folder": "Yeobaek",
+        "charset": "UTF-8",
+        "charsetOverride": null,
+        "version": "efd14de733620ba7cceb930555e407c1b7af3f64bfa6205328bb9eb49773b89d",
+        "sourceHash": "1d005314017683a9785a7471790a12c227fc4e0ae2b1b5cfb387a118b571b361",
+        "length": 34000,
+        "openedAt": 1792077093212,
+        "format": "TXT",
+        "pageCount": null
+      }
+    ],
+    "positions": [
+      {
+        "bookId": "0ea2ad52-1d75-4e6d-8c32-f817307d5259",
+        "version": "efd14de733620ba7cceb930555e407c1b7af3f64bfa6205328bb9eb49773b89d",
+        "offset": 26145,
+        "before": "인지도 모른 채 작게 중얼거렸다. 주머니 속 휴대전화는 조",
+        "after": "용했고, 다음 모퉁이까지는 아직 걸어갈 시간이 남아 있었다",
+        "session": 5,
+        "sequence": 3,
+        "layoutKey": "e63df6c8737de3016b28",
+        "fraction": 0.0,
+        "completed": 0,
+        "locatorVersion": 1
+      }
+    ],
+    "bookmarks": [
+      {
+        "id": "32c84191-96f1-4f1b-8a25-0aeda95bb2eb",
+        "bookId": "0ea2ad52-1d75-4e6d-8c32-f817307d5259",
+        "version": "efd14de733620ba7cceb930555e407c1b7af3f64bfa6205328bb9eb49773b89d",
+        "offset": 26147,
+        "excerpt": "고, 다음 모퉁이까지는 아직 걸어갈 시간이 남아 있었다.  비가 그친 오후  창밖에서 다시 바람이 불었다. 젖은 잎이 서로 닿는 소리를 들으며,",
+        "before": "도 모른 채 작게 중얼거렸다. 주머니 속 휴대전화는 조용했",
+        "after": "고, 다음 모퉁이까지는 아직 걸어갈 시간이 남아 있었다.\n",
+        "createdAt": 1792077108274,
+        "locatorVersion": 1
+      }
+    ],
+    "session": [
+      {
+        "id": 1,
+        "bookId": "0ea2ad52-1d75-4e6d-8c32-f817307d5259",
+        "revision": 5
+      }
+    ],
+    "pdf_positions": [
+      {
+        "bookId": "b34ceb7c-e6a3-4fd6-a292-4ead28fd6d30",
+        "version": "673544a7400fe464a03764965a4980c766de7de4a74a54d5d640bfe3e0be2a36",
+        "page": 1,
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0,
+        "completed": 0,
+        "session": 1,
+        "sequence": 3
+      }
+    ],
+    "pdf_bookmarks": [
+      {
+        "id": "f4434d5a-b3ba-45fe-b1aa-0e44ff8a4c47",
+        "bookId": "b34ceb7c-e6a3-4fd6-a292-4ead28fd6d30",
+        "version": "673544a7400fe464a03764965a4980c766de7de4a74a54d5d640bfe3e0be2a36",
+        "page": 1,
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0,
+        "createdAt": 1792077054860
+      }
+    ],
+    "image_positions": [
+      {
+        "bookId": "f1d99128-7c7e-491f-8ad1-0c8cef5d264c",
+        "version": "132f37ecdb260fe32a9ea42948157bd5f34122845a62c954234636f94ccbf941",
+        "pageKey": "0:01.png",
+        "page": 0,
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0,
+        "completed": 0,
+        "session": 3,
+        "sequence": 3
+      }
+    ],
+    "image_bookmarks": [
+      {
+        "id": "2c6e7380-a9af-4ef3-9dde-016ed90cf97b",
+        "bookId": "f1d99128-7c7e-491f-8ad1-0c8cef5d264c",
+        "version": "132f37ecdb260fe32a9ea42948157bd5f34122845a62c954234636f94ccbf941",
+        "pageKey": "0:01.png",
+        "page": 0,
+        "name": "01.png",
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0,
+        "createdAt": 1792077073817
+      }
+    ]
+  },
+  "preferences": {
+    "app_preferences.preferences_pb": "a8124dc62ad2136305e175e1a317d26632f4d63e3ceb8cc1ab30c72f2d595def",
+    "image_preferences.preferences_pb": "cecddd49fc7508e748b9a529f99673e94f42f0fd99f3518222ae1bd476769079",
+    "pdf_preferences.preferences_pb": "6d15df32b080423042a8f6bf96fa091292fd61ec60fca4593b694694f3cdbd1b",
+    "txt_preferences.preferences_pb": "155a6a5e01a80773a580fc1fe98efa72b3e302dcc6e26d632ce4bb9be0d8a28a"
+  },
+  "grants_sha256": "2301e68f28983e83168543245e27b5ed8885c0adab1220d9ee587a2f2d7f809a",
+  "source": "1d005314017683a9785a7471790a12c227fc4e0ae2b1b5cfb387a118b571b361"
+}
