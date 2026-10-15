@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <queries><package android:name="com.poyal.yeobaek"/><package android:name="com.poyal.yeobaek.debug"/><package android:name="com.poyal.yeobaek.benchmark"/></queries>
-    <application android:label="여백 자동 검사" />
+    <application android:label="여백 자동 검사">
+        <provider android:name=".ExternalInputProvider" android:authorities="com.poyal.yeobaek.e2e.inputs" android:exported="false" android:grantUriPermissions="true" />
+    </application>
 </manifest>

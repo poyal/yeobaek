@@ -44,7 +44,7 @@ class ImageReaderController(private val scope: CoroutineScope, private val dao: 
         val doc = opened ?: return
         if (!dirty || revision == 0L) return
         val p = locator.value; val session = revision; dirty = false
-        try { dao.saveImage(ImagePosition(doc.book.id, doc.book.version, p.key, p.page, p.x, p.y, p.zoom, p.completed, session, ++sequence)) }
+        try { dao.saveImage(ImagePosition(doc.book.id, doc.book.version, p.key, p.page, p.x, p.y, p.zoom, p.completed, session, ++sequence, p.segment)) }
         catch (e: CancellationException) { dirty = true; throw e }
         catch (_: Exception) { if (opened?.token == doc.token) dirty = true; error("이미지 읽기 위치를 저장하지 못했습니다.") }
     }
@@ -60,7 +60,7 @@ class ImageReaderController(private val scope: CoroutineScope, private val dao: 
                 val existing = marks.value.firstOrNull { it.version == doc.book.version && it.pageKey == p.key }
                 if (existing != null) dao.deleteImageBookmark(existing.id)
                 else dao.addImageBookmark(ImageBookmark(UUID.randomUUID().toString(), doc.book.id, doc.book.version, p.key, p.page,
-                    doc.source.pages.value[p.page].name, p.x, p.y, p.zoom))
+                    doc.source.pages.value[p.page].name, p.x, p.y, p.zoom, segment = p.segment))
             } catch (_: Exception) { error("책갈피를 저장하지 못했습니다.") }
         }
     }
@@ -70,6 +70,6 @@ class ImageReaderController(private val scope: CoroutineScope, private val dao: 
         if (mark.version != doc.book.version && (doc.book.format == "IMAGE_ARCHIVE" || doc.source.pages.value.none { it.key == mark.pageKey })) {
             error("변경 전 이미지의 책갈피입니다. 현재 파일에서 위치를 확인할 수 없습니다."); return false
         }
-        move(ImageLocator(mark.page, mark.pageKey, mark.x, mark.y, mark.zoom)); return true
+        move(ImageLocator(mark.page, mark.pageKey, mark.x, mark.y, mark.zoom, segment = mark.segment)); return true
     }
 }

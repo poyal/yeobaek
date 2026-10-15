@@ -6,6 +6,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "books", indices = [Index(value = ["sourceKey"], unique = true)])
+@kotlinx.serialization.Serializable
 data class Book(
     @PrimaryKey val id: String,
     val sourceKey: String,
@@ -22,6 +23,7 @@ data class Book(
     val pageCount: Int? = null,
 )
 @Entity(tableName = "positions", primaryKeys = ["bookId", "version"])
+@kotlinx.serialization.Serializable
 data class ReadingPosition(
     val bookId: String, val version: String, val offset: Long,
     val before: String = "", val after: String = "",
@@ -30,6 +32,7 @@ data class ReadingPosition(
     val completed: Boolean = false, val locatorVersion: Int = 1,
 )
 @Entity(tableName = "bookmarks", indices = [Index(value = ["bookId", "version", "offset"], unique = true)])
+@kotlinx.serialization.Serializable
 data class Bookmark(
     @PrimaryKey val id: String,
     val bookId: String, val version: String, val offset: Long,
@@ -37,10 +40,40 @@ data class Bookmark(
     val createdAt: Long = System.currentTimeMillis(), val locatorVersion: Int = 1,
 )
 @Entity(tableName = "session")
+@kotlinx.serialization.Serializable
 data class ReaderSession(@PrimaryKey val id: Int = 1, val bookId: String? = null, val revision: Long = 0)
 
 @Dao
 abstract class LibraryDao {
+    @Query("SELECT * FROM books") abstract suspend fun exportBooks(): List<Book>
+    @Query("SELECT * FROM positions") abstract suspend fun exportPositions(): List<ReadingPosition>
+    @Query("SELECT * FROM bookmarks") abstract suspend fun exportBookmarks(): List<Bookmark>
+    @Query("SELECT * FROM pdf_positions") abstract suspend fun exportPdfPositions(): List<PdfPosition>
+    @Query("SELECT * FROM pdf_bookmarks") abstract suspend fun exportPdfBookmarks(): List<PdfBookmark>
+    @Query("SELECT * FROM image_positions") abstract suspend fun exportImagePositions(): List<ImagePosition>
+    @Query("SELECT * FROM image_bookmarks") abstract suspend fun exportImageBookmarks(): List<ImageBookmark>
+    @Insert(onConflict = OnConflictStrategy.IGNORE) abstract suspend fun importPosition(value: ReadingPosition)
+    @Insert(onConflict = OnConflictStrategy.IGNORE) abstract suspend fun importPdfPosition(value: PdfPosition)
+    @Insert(onConflict = OnConflictStrategy.IGNORE) abstract suspend fun importImagePosition(value: ImagePosition)
+    @Transaction open suspend fun snapshot() = LibrarySnapshot(exportBooks(), exportPositions(), exportBookmarks(), exportPdfPositions(), exportPdfBookmarks(), exportImagePositions(), exportImageBookmarks())
+    @Transaction open suspend fun importMissing(value: LibrarySnapshot): Map<String, String> {
+        val aliases = mutableMapOf<String, String>()
+        value.books.forEach { incoming ->
+            val sameId = book(incoming.id)
+            val existing = sameId ?: source(incoming.sourceKey)
+            if (existing == null) putBook(incoming)
+            else if (existing.openedAt == 0L && incoming.openedAt > 0L) putBook(existing.copy(openedAt = incoming.openedAt))
+            aliases[incoming.id] = existing?.id ?: incoming.id
+        }
+        value.positions.forEach { importPosition(it.copy(bookId = aliases.getValue(it.bookId), session = 0, sequence = 0)) }
+        value.pdfPositions.forEach { importPdfPosition(it.copy(bookId = aliases.getValue(it.bookId), session = 0, sequence = 0)) }
+        value.imagePositions.forEach { importImagePosition(it.copy(bookId = aliases.getValue(it.bookId), session = 0, sequence = 0)) }
+        value.bookmarks.forEach { addBookmark(it.copy(bookId = aliases.getValue(it.bookId))) }
+        value.pdfBookmarks.forEach { addPdfBookmark(it.copy(bookId = aliases.getValue(it.bookId))) }
+        value.imageBookmarks.forEach { addImageBookmark(it.copy(bookId = aliases.getValue(it.bookId))) }
+        return aliases
+    }
+
     @Query("SELECT * FROM image_positions") abstract fun observeImagePositions(): Flow<List<ImagePosition>>
     @Query("SELECT * FROM image_positions WHERE bookId=:id AND version=:version") abstract suspend fun imagePosition(id: String, version: String): ImagePosition?
     @Upsert protected abstract suspend fun putImagePosition(position: ImagePosition)
@@ -122,10 +155,17 @@ abstract class LibraryDao {
     }
 }
 
-@Database(entities = [Book::class, ReadingPosition::class, Bookmark::class, ReaderSession::class, PdfPosition::class, PdfBookmark::class, ImagePosition::class, ImageBookmark::class], version = 3, exportSchema = true)
+@Database(entities = [Book::class, ReadingPosition::class, Bookmark::class, ReaderSession::class, PdfPosition::class, PdfBookmark::class, ImagePosition::class, ImageBookmark::class], version = 4, exportSchema = true)
 abstract class LibraryDatabase : RoomDatabase() {
     abstract fun library(): LibraryDao
     companion object {
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE image_positions ADD COLUMN segment INTEGER NOT NULL DEFAULT -1")
+                db.execSQL("ALTER TABLE image_bookmarks ADD COLUMN segment INTEGER NOT NULL DEFAULT -1")
+            }
+        }
+
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS image_positions (bookId TEXT NOT NULL, version TEXT NOT NULL, pageKey TEXT NOT NULL, page INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, zoom REAL NOT NULL, completed INTEGER NOT NULL, session INTEGER NOT NULL, sequence INTEGER NOT NULL, PRIMARY KEY(bookId, version))")

@@ -19,7 +19,7 @@ class RecoveryJourneyTest {
         override fun failed(e: Throwable?, description: org.junit.runner.Description) { capture("FAIL-${description.methodName}") }
     }
     private fun node(tag: String, timeout: Long = 30000) = device.wait(Until.findObject(By.res(tag)), timeout) ?: throw AssertionError("요소 없음: $tag")
-    private fun click(tag: String) { node(tag).click(); device.waitForIdle() }
+    private fun click(tag: String) { node(tag).click(); device.waitForIdle(); if (tag in setOf("reader_txt", "pdf_settings", "image_settings")) { node("quick_details").click(); device.waitForIdle() } }
     private fun capture(id: String) { device.waitForIdle(); SystemClock.sleep(1200); check(device.takeScreenshot(File(out, "$id.png"))); device.dumpWindowHierarchy(File(out, "$id.xml")) }
     private fun find(tag: String, list: String = "library_list") { repeat(30) { if (device.hasObject(By.res(tag))) return; node(list).scroll(Direction.DOWN, .7f) }; throw AssertionError(tag) }
     private fun start() { device.executeShellCommand("am start -W -n $pkg/com.poyal.yeobaek.MainActivity"); device.waitForIdle() }

@@ -15,7 +15,8 @@ import java.util.LinkedHashMap
 data class TextBlock(val start: Long, val end: Long, val text: String, val layout: TextLayoutResult)
 
 /** All measurement is main-thread confined; file IO is dispatched. Only a small visible window is retained. */
-class TextLayoutEngine(val doc: TextDocument, val key: String, private val style: TextStyle, private val width: Int, private val measurer: TextMeasurer) {
+class TextLayoutEngine(val doc: TextDocument, val key: String, private val style: TextStyle, private val width: Int, private val measurer: TextMeasurer) : TextBlockSource {
+    override val length get() = doc.length
     private val checkpoints = File(doc.directory, "layout-$key.bin")
     private val cache = object : LinkedHashMap<Long, TextBlock>(32, .75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, TextBlock>?) = size > 32
@@ -26,7 +27,8 @@ class TextLayoutEngine(val doc: TextDocument, val key: String, private val style
         finally { android.os.Trace.endSection() }
     }
 
-    suspend fun block(start: Long, limit: Long = doc.length): TextBlock {
+    override suspend fun block(start: Long): TextBlock = block(start, doc.length)
+    suspend fun block(start: Long, limit: Long): TextBlock {
         cache[start]?.takeIf { it.end <= limit }?.let { return it }
         currentCoroutineContext().ensureActive()
         val raw = withContext(Dispatchers.IO) { doc.read(start, minOf(4096L, limit - start).toInt()) }
@@ -99,7 +101,7 @@ class TextLayoutEngine(val doc: TextDocument, val key: String, private val style
         repeat(5) { if (rows.last().end < doc.length) rows.add(block(rows.last().end)) }
         return rows
     }
-    suspend fun previous(end: Long): TextBlock {
+    override suspend fun previous(end: Long): TextBlock {
         checkpoint(end, true)?.let { return block(it, end) }
         var current = block(paragraphStart((end - 1).coerceAtLeast(0)), end)
         while (current.end < end) current = block(current.end, end)

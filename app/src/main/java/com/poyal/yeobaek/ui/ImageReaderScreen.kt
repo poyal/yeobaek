@@ -75,7 +75,7 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                         Tool(Icons.Outlined.ArrowBack, "닫기", "image_back", onClick = { vm.closeReader() })
                         Column(Modifier.weight(1f)) {
                             Text(opened.book.name, fontSize = 13.sp, lineHeight = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${locator.page + 1} / ${pages.size} 페이지", Modifier.testTag("image_page"), fontSize = 11.sp, color = p.muted)
+                            Text("${locator.page + 1} / ${pages.size} 페이지${if (prefs.splitWide && prefs.mode == ImageMode.PAGED && locator.segment >= 0) if (locator.segment == 0) " · 왼쪽" else " · 오른쪽" else ""}", Modifier.testTag("image_page"), fontSize = 11.sp, color = p.muted)
                         }
                         val marked = marks.any { it.version == opened.book.version && it.pageKey == locator.key }
                         Tool(if (marked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, if (marked) "책갈피 해제" else "책갈피 추가",
@@ -87,8 +87,8 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                 ReaderToolbar(listOf(
                     ReaderToolbarItem(ReaderAction.MOVE, "image_move", onClick = vm::openImagePages),
                     ReaderToolbarItem(ReaderAction.BOOKMARKS, "image_bookmarks") { vm.sheet("image_bookmarks") },
-                    ReaderToolbarItem(ReaderAction.INVERT, "image_invert", prefs.inverted) { vm.action { vm.prefs.setImageInverted(!prefs.inverted) } },
-                    ReaderToolbarItem(ReaderAction.SETTINGS, "image_settings", onClick = vm::openImageSettings),
+                    ReaderToolbarItem(ReaderAction.INVERT, "image_invert", prefs.inverted) { vm.toggleInversion("IMAGE") },
+                    ReaderToolbarItem(ReaderAction.SETTINGS, "image_settings", onClick = { vm.sheet("quick_settings") }),
                 ), Modifier.testTag("image_footer"))
             }
         }
@@ -117,10 +117,12 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
 }
 
 @Composable fun ImageSettingsScreen(vm: AppViewModel, prefs: ImagePreferences) {
-    fun set(value: ImagePreferences) { vm.action { vm.prefs.setImage(value) } }
+    fun set(value: ImagePreferences) { vm.setImage(value) }
     Column(Modifier.fillMaxSize().testTag("image_settings_screen")) {
         PageHeader("이미지 읽기 설정", vm::closeImageSettings)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            SettingsScopePicker(vm, "IMAGE")
+            ImageCropOptions(vm, prefs)
             Small("이미지 폴더 · ZIP · RAR · 7Z")
             Text("읽기 방식")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -155,7 +157,7 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
             Rule()
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) { Text("색상 반전"); Small("이미지와 미리보기의 색상을 반전합니다.") }
-                Switch(prefs.inverted, { vm.action { vm.prefs.setImageInverted(it) } }, Modifier.testTag("image_inversion_switch"))
+                Switch(prefs.inverted, { vm.changeSetting("IMAGE", "inverted", it) }, Modifier.testTag("image_inversion_switch"))
             }
             Text("이미지 바깥 배경")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -164,7 +166,7 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
             }
             Small("자동은 앱 테마를 따르며, 색상 반전 중에는 어두운 배경을 사용합니다.")
             Rule()
-            PaperButton("이미지 설정 기본값 복원", "image_reset", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { vm.action { vm.prefs.resetImage() } })
+            PaperButton("이미지 설정 기본값 복원", "image_reset", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { vm.resetSettings("IMAGE") })
         }
     }
 }

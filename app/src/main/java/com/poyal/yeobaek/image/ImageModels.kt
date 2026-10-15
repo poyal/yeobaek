@@ -15,6 +15,8 @@ data class ImagePreferences(
     val mode: ImageMode = ImageMode.VERTICAL, val direction: ImageDirection = ImageDirection.LTR,
     val spread: ImageSpread = ImageSpread.SINGLE, val coverAlone: Boolean = true,
     val verticalFit: ImageFit = ImageFit.WIDTH, val pagedFit: ImageFit = ImageFit.PAGE,
+    val splitWide: Boolean = false, val cropMode: CropMode = CropMode.OFF, val crop: CropRect = CropRect(),
+    val pageCrops: Map<String, CropRect> = emptyMap(),
     val spacing: Float = 0f, val inverted: Boolean = false, val canvas: ImageCanvas = ImageCanvas.AUTO,
 ) { val fit get() = if (mode == ImageMode.VERTICAL) verticalFit else pagedFit }
 data class ImagePage(val key: String, val name: String, val path: String, val size: Long = -1,
@@ -22,17 +24,17 @@ data class ImagePage(val key: String, val name: String, val path: String, val si
     val wide get() = measured && width > height
 }
 data class ImageLocator(val page: Int = 0, val key: String = "", val x: Float = 0f, val y: Float = 0f,
-    val zoom: Float = 1f, val completed: Boolean = false) {
+    val zoom: Float = 1f, val completed: Boolean = false, val segment: Int = -1) {
     fun constrained(pages: List<ImagePage>): ImageLocator {
         if (pages.isEmpty()) return copy(page = 0, key = "")
         val index = pages.indexOfFirst { it.key == key }.takeIf { it >= 0 } ?: page.coerceIn(pages.indices)
         return copy(page = index, key = pages[index].key, x = x.finite(0f).coerceIn(0f, 1f),
-            y = y.finite(0f).coerceIn(0f, 1f), zoom = zoom.finite(1f).coerceIn(1f, 5f))
+            y = y.finite(0f).coerceIn(0f, 1f), zoom = zoom.finite(1f).coerceIn(1f, 5f), segment = segment.coerceIn(-1, 1))
     }
     fun progress(count: Int): Float = if (completed) 1f else ((page + y) / count.coerceAtLeast(1)).coerceIn(0f, 1f)
 }
 private fun Float.finite(fallback: Float) = if (isFinite()) this else fallback
-fun ImagePosition.locator() = ImageLocator(page, pageKey, x, y, zoom, completed)
+fun ImagePosition.locator() = ImageLocator(page, pageKey, x, y, zoom, completed, segment)
 data class ImageSeek(val locator: ImageLocator, val serial: Long = System.nanoTime())
 data class OpenImages(val book: Book, val source: ImageSource, val initial: ImageLocator,
     val token: String = UUID.randomUUID().toString())

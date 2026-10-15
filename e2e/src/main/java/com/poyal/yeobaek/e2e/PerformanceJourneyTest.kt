@@ -63,6 +63,38 @@ class PerformanceJourneyTest {
         File(out, "$label-pid.txt").writeText(device.executeShellCommand("pidof $pkg"))
     }
     private fun screen(label: String) { device.takeScreenshot(File(out, "$label.png")); device.dumpWindowHierarchy(File(out, "$label.xml")) }
+    private fun waitForSettledText() {
+        val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+        val deadline = SystemClock.elapsedRealtime() + 15000
+        fun settled(): Boolean {
+            if (android.os.Build.VERSION.SDK_INT >= 33) automation.clearCache()
+            val queue = java.util.ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
+            automation.rootInActiveWindow?.let(queue::add)
+            while (queue.isNotEmpty()) {
+                val node = queue.removeFirst()
+                if (node.viewIdResourceName == "reader_body") return node.stateDescription?.toString() == "정지"
+                for (index in 0 until node.childCount) node.getChild(index)?.let(queue::add)
+            }
+            return false
+        }
+        SystemClock.sleep(100)
+        while (!settled() && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(50)
+        check(settled()) { "TXT 스크롤이 15초 안에 정지하지 않았습니다." }
+    }
+    private fun firstVisibleTextBlock(): Long {
+        val deadline = SystemClock.elapsedRealtime() + 5000
+        do {
+            try {
+                device.findObjects(By.res(java.util.regex.Pattern.compile("text_\\d+")))
+                    .filter { it.visibleBounds.height() > 0 }
+                    .map { it.resourceName.substringAfter("text_").toLong() }.minOrNull()?.let { return it }
+            } catch (_: StaleObjectException) {
+                // Prefetch can replace accessibility nodes between lookup and bounds access.
+            }
+            SystemClock.sleep(50)
+        } while (SystemClock.elapsedRealtime() < deadline)
+        throw AssertionError("보이는 TXT 본문 블록이 없습니다")
+    }
 
     @Test fun largeFilesAndLongParagraph() {
         memory("library-baseline")
@@ -99,10 +131,17 @@ class PerformanceJourneyTest {
         val start = SystemClock.elapsedRealtime()
         var iterations = 0; var nextSample = 5L * 60000
         val bounds = node("reader_body").visibleBounds
+        waitForSettledText()
+        var previousBlock = firstVisibleTextBlock()
         while (SystemClock.elapsedRealtime() - start < duration) {
             val reverse = iterations % 10 >= 8
             device.swipe(bounds.centerX(), if (reverse) bounds.top + bounds.height()/4 else bounds.bottom - bounds.height()/4,
                 bounds.centerX(), if (reverse) bounds.bottom - bounds.height()/4 else bounds.top + bounds.height()/4, 18)
+            waitForSettledText()
+            val currentBlock = firstVisibleTextBlock()
+            Assert.assertTrue("문장이 스크롤 반대 방향으로 이동: $previousBlock -> $currentBlock reverse=$reverse",
+                if (reverse) currentBlock <= previousBlock else currentBlock >= previousBlock)
+            previousBlock = currentBlock
             iterations++
             if (iterations % 20 == 0) {
                 Assert.assertTrue("독서 화면 이탈 또는 오류", device.hasObject(By.res("reader_body")) && !device.hasObject(By.res("error_close")) && !device.hasObject(By.res("layout_retry")))

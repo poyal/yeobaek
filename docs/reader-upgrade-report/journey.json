@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-15T23:28:42.765950+09:00",
+  "serial": "emulator-5588",
+  "api": "36",
+  "apk_sha256": "264fe754fa8c7e3a184b6fa4ad82048ecd233ef7f634c9e28b23d1ce613fd4a1",
+  "checks": [
+    "folder search and sort UI",
+    "book-specific size override",
+    "screen controls",
+    "PDF quick settings",
+    "comic split left/right",
+    "page crop",
+    "backup export and duplicate-safe restore"
+  ]
+}

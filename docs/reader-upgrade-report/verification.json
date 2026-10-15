@@ -1,0 +1,167 @@
+{
+  "date": "2026-10-15T23:52:16.646868+09:00",
+  "results": [
+    [
+      "빌드 · Lint",
+      "Debug 빌드 성공 · Lint 오류 0개, 경고 49개"
+    ],
+    [
+      "JVM 단위 검사",
+      "48개 통과 · 앱 39개 + TXT 코어 9개"
+    ],
+    [
+      "기기 내 통합 검사",
+      "16개 통과 · 분할/자동 자르기/이관/병합/위치 복원"
+    ],
+    [
+      "독서 E2E",
+      "4개 통과 · 독서/인코딩 경로 2개 + 외부 앱 열기 1개 + 장시간 스크롤 1개"
+    ],
+    [
+      "새 기능 UI",
+      "13개 실제 화면 · 백업 저장/중복 복원/빈 앱 복원/원본 재연결 통과"
+    ],
+    [
+      "50MiB TXT 연속 스크롤",
+      "30분 0.364초 · 1,980회 · 검사 기준상 비정상 역행 및 프로세스 재시작 없음"
+    ],
+    [
+      "스크롤 중 메모리",
+      "앱 PSS 147.4 → 148.1MiB · 수집 표본 최대 166.7MiB"
+    ],
+    [
+      "스크롤 진단 로그",
+      "검사 기기의 누적 점유 약 11.3MiB · 최대 128MiB 순환 보관"
+    ],
+    [
+      "HTML 보고서",
+      "PC·430px 화면 배치, 변경 표시 켜기/끄기, 화면 확대/닫기 통과"
+    ]
+  ],
+  "notes": [
+    "갤럭시 실기기는 연결되지 않아 기기 고유 터치 현상은 검증하지 않았습니다. 에뮬레이터 수치는 실기기의 프레임 성능을 뜻하지 않습니다.",
+    "기록 복원은 OS 파일 접근 권한을 복원하지 않습니다. 원본은 파일 다시 찾기로 재연결합니다.",
+    "30분 스크롤 검사는 마지막 백업·폴더·설정 보완 전 빌드에서 수행했습니다. 이후 TXT 스크롤 구현은 바뀌지 않았으며 최종 APK의 단위·기기 통합 검사를 다시 통과했습니다. 빌드별 해시는 메타데이터에 기록했습니다.",
+    "스크롤 검사와 기존 E2E의 초기 실패는 접근성 정보 갱신 및 화면 밖 버튼 탐색 문제였습니다. 진단 로그로 구분한 뒤 자동화를 보완하여 재검사했습니다.",
+    "진단 로그 점유량은 초기 검사까지 포함한 누적값입니다. 본문·파일명은 진단 로그에 기록하지 않습니다."
+  ],
+  "builds": {
+    "final_apk_sha256": "657343bc33eadb975145d9b13b3db8fa49d7d573acfe6dd0eca3fa003887a8dc",
+    "soak_apk_sha256": "264fe754fa8c7e3a184b6fa4ad82048ecd233ef7f634c9e28b23d1ce613fd4a1",
+    "main_capture_apk_sha256": "264fe754fa8c7e3a184b6fa4ad82048ecd233ef7f634c9e28b23d1ce613fd4a1"
+  },
+  "unit_suites": [
+    {
+      "name": "com.poyal.yeobaek.ImageModelsTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.poyal.yeobaek.PdfLocatorTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.poyal.yeobaek.ReaderUpgradeTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.poyal.yeobaek.ReadingEndTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.poyal.yeobaek.ScrollLogFilesTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.poyal.yeobaek.SearchNavigationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.poyal.yeobaek.TxtFontTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.poyal.yeobaek.UpdateTest",
+      "tests": "15",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "com.poyal.yeobaek.txt.TextStoreTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0"
+    }
+  ],
+  "lint": {
+    "Error": 0,
+    "Fatal": 0,
+    "Warning": 49
+  },
+  "soak": {
+    "durationMs": 1800364,
+    "swipes": 1980,
+    "pid": 2547,
+    "pss_kib": {
+      "start": 150936,
+      "5min": 164175,
+      "10min": 159673,
+      "15min": 163059,
+      "20min": 156887,
+      "25min": 170705,
+      "30min": 167509,
+      "end": 151609
+    },
+    "diagnostics_allocated_kib": 11564,
+    "serial": "emulator-5586",
+    "api": 36
+  },
+  "evidence": [
+    "evidence/TEST-com.poyal.yeobaek.ImageModelsTest.xml",
+    "evidence/TEST-com.poyal.yeobaek.PdfLocatorTest.xml",
+    "evidence/TEST-com.poyal.yeobaek.ReaderUpgradeTest.xml",
+    "evidence/TEST-com.poyal.yeobaek.ReadingEndTest.xml",
+    "evidence/TEST-com.poyal.yeobaek.ScrollLogFilesTest.xml",
+    "evidence/TEST-com.poyal.yeobaek.SearchNavigationTest.xml",
+    "evidence/TEST-com.poyal.yeobaek.TxtFontTest.xml",
+    "evidence/TEST-com.poyal.yeobaek.UpdateTest.xml",
+    "evidence/TEST-com.poyal.yeobaek.txt.TextStoreTest.xml",
+    "evidence/build.log",
+    "evidence/core-tests.log",
+    "evidence/external-open.txt",
+    "evidence/instrumentation.txt",
+    "evidence/reader-journey-retry.txt",
+    "evidence/reader-journeys-initial.txt",
+    "evidence/scroll-soak.txt",
+    "evidence/soak-10min-memory.txt",
+    "evidence/soak-10min-pid.txt",
+    "evidence/soak-15min-memory.txt",
+    "evidence/soak-15min-pid.txt",
+    "evidence/soak-20min-memory.txt",
+    "evidence/soak-20min-pid.txt",
+    "evidence/soak-25min-memory.txt",
+    "evidence/soak-25min-pid.txt",
+    "evidence/soak-30min-memory.txt",
+    "evidence/soak-30min-pid.txt",
+    "evidence/soak-5min-memory.txt",
+    "evidence/soak-5min-pid.txt",
+    "evidence/soak-end-memory.txt",
+    "evidence/soak-end-pid.txt",
+    "evidence/soak-start-memory.txt",
+    "evidence/soak-start-pid.txt",
+    "evidence/soak.tsv"
+  ]
+}

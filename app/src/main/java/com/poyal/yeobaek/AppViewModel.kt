@@ -42,14 +42,13 @@ data class UiState(
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val container = application as YeobaekApplication
     val prefs = container.preferences
+    val thumbnails = FolderThumbnails(application)
+    val scrollDiagnostics = container.scrollDiagnostics
     val updates = container.updates
     private val dao = container.database.library()
     private val folders = container.folders
     private val store = container.texts
     val app = prefs.app.stateIn(viewModelScope, SharingStarted.Eagerly, AppPreferences())
-    val txt = prefs.txt.stateIn(viewModelScope, SharingStarted.Eagerly, TxtPreferences())
-    val pdf = prefs.pdf.stateIn(viewModelScope, SharingStarted.Eagerly, PdfPreferences())
-    val image = prefs.image.stateIn(viewModelScope, SharingStarted.Eagerly, ImagePreferences())
     val imagePositions = dao.observeImagePositions().stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), emptyList())
     private val imageStore = ImageStore(File(application.noBackupFilesDir, "reader-cache"))
     val imageReader = ImageReaderController(viewModelScope, dao) { message -> _ui.update { it.copy(error = message) } }
@@ -61,6 +60,96 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val positions = dao.observePositions().stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), emptyList())
     private val _ui = MutableStateFlow(UiState())
     val ui = _ui.asStateFlow()
+    val settingsStore = container.readerSettings
+    val settings = settingsStore.data.stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
+    val settingsScope = MutableStateFlow(SettingsScope.COMMON)
+    private val backups = ReadingBackups(container, dao, prefs, settingsStore)
+    val backupPreview = MutableStateFlow<BackupPreview?>(null)
+    val backupStatus = MutableStateFlow("")
+    val backupBusy = MutableStateFlow(false)
+    private fun backupAction(block: suspend () -> Unit) {
+        if (backupBusy.value) return
+        backupBusy.value = true
+        action { try { block() } finally { backupBusy.value = false } }
+    }
+    fun exportBackup(uri: Uri) = backupAction { flushPosition(); backups.export(uri); backupStatus.value = "독서 기록과 설정을 저장했습니다." }
+    fun inspectBackup(uri: Uri) = backupAction {
+        backupPreview.value = null
+        try { backupPreview.value = backups.preview(uri) }
+        catch (e: CancellationException) { throw e }
+        catch (_: Exception) { backupStatus.value = "백업을 읽지 못했습니다. 손상되었거나 지원하지 않는 백업입니다." }
+    }
+    fun restoreBackup() {
+        val value = backupPreview.value?.backup ?: return
+        backupAction { flushPosition(); backups.restore(value); backupPreview.value = null; backupStatus.value = "복원했습니다. 접근할 수 없는 책은 최근 읽기에서 파일을 다시 연결해 주세요." }
+    }
+    fun setBookCrop(crop: CropRect) {
+        val id = currentBook?.id ?: return
+        action { settingsStore.fields("book:$id:IMAGE", mapOf("cropMode" to "MANUAL", "cropLeft" to "${crop.left}", "cropTop" to "${crop.top}", "cropRight" to "${crop.right}", "cropBottom" to "${crop.bottom}")) }
+    }
+    private fun UiState.book() = reader?.book ?: pdfReader?.book ?: imageReader?.book
+    val currentBook get() = ui.value.book()
+    val txt = combine(prefs.txt, settings, ui) { base, extra, state -> ReaderSettingValues.txt(base, extra.fields("TXT", state.book()?.id)) }
+        .distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, TxtPreferences())
+    val pdf = combine(prefs.pdf, settings, ui) { base, extra, state -> ReaderSettingValues.pdf(base, extra.fields("PDF", state.book()?.id)) }
+        .distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, PdfPreferences())
+    val image = combine(prefs.image, settings, ui) { base, extra, state ->
+        val id = state.book()?.id
+        ReaderSettingValues.image(base, extra.fields("IMAGE", id)).copy(pageCrops = extra.crops.filterKeys { it.startsWith("$id:") }.mapKeys { it.key.removePrefix("$id:") })
+    }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, ImagePreferences())
+    val editTxt = combine(prefs.txt, settings, ui, settingsScope) { base, extra, state, scope -> ReaderSettingValues.txt(base, extra.editingFields("TXT", state.book()?.id, scope)) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, TxtPreferences())
+    val editPdf = combine(prefs.pdf, settings, ui, settingsScope) { base, extra, state, scope -> ReaderSettingValues.pdf(base, extra.editingFields("PDF", state.book()?.id, scope)) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, PdfPreferences())
+    val editImage = combine(prefs.image, settings, ui, settingsScope) { base, extra, state, scope -> ReaderSettingValues.image(base, extra.editingFields("IMAGE", state.book()?.id, scope)) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ImagePreferences())
+    fun changeSetting(format: String, field: String, value: Any) {
+        val key = settings.value.scopeKey(settingsScope.value, format, currentBook?.id)
+        action { settingsStore.fields(key, mapOf(field to value.toString())) }
+    }
+    fun setImage(value: ImagePreferences) {
+        val old = ReaderSettingValues.image(editImage.value)
+        val changes = ReaderSettingValues.image(value).filter { old[it.key] != it.value }
+        val key = settings.value.scopeKey(settingsScope.value, "IMAGE", currentBook?.id)
+        action { settingsStore.fields(key, changes) }
+    }
+    fun toggleInversion(format: String) {
+        val inverted = if (format == "PDF") pdf.value.inverted else image.value.inverted
+        val key = settings.value.effectiveFieldScope(format, currentBook?.id, "inverted", settingsScope.value)
+        action { settingsStore.fields(key, mapOf("inverted" to (!inverted).toString())) }
+    }
+    fun resetSettings(format: String) {
+        val scope = settingsScope.value
+        val key = settings.value.scopeKey(scope, format, currentBook?.id)
+        action {
+            settingsStore.reset(key)
+            if (scope == SettingsScope.COMMON) when (format) { "TXT" -> prefs.resetTxt(); "PDF" -> prefs.resetPdf(); "IMAGE" -> prefs.resetImage() }
+        }
+    }
+    fun inheritSetting(format: String, field: String) {
+        val key = settings.value.scopeKey(settingsScope.value, format, currentBook?.id)
+        action { settingsStore.update { it.copy(overrides = it.overrides + (key to (it.overrides[key].orEmpty() - field))) } }
+    }
+    fun setScreen(value: ScreenSettings) = action { settingsStore.update { it.copy(screen = value) } }
+    private suspend fun associateFolder(book: Book) {
+        settingsScope.value = SettingsScope.COMMON
+        val parent = withContext(Dispatchers.IO) { runCatching { folders.parentPath(book.uri, ui.value.path).lastOrNull()?.let { folders.key(it.uri) } }.getOrNull() }
+        settingsStore.update { it.copy(folders = if (parent == null) it.folders - book.id else it.folders + (book.id to parent)) }
+    }
+    fun setPageCrop(crop: CropRect?) {
+        val doc = ui.value.imageReader ?: return
+        val key = "${doc.book.id}:${imageReader.locator.value.key}"
+        action { settingsStore.update { it.copy(crops = if (crop == null) it.crops - key else it.crops + (key to crop)) } }
+    }
+    fun setFolderSort(value: FolderSort) = action { settingsStore.update { it.copy(sort = value) } }
+    fun favorite() {
+        val folder = ui.value.path.lastOrNull() ?: return
+        action { settingsStore.update { old -> old.copy(favorites = if (old.favorites.any { it.uri == folder.uri }) old.favorites.filterNot { it.uri == folder.uri } else old.favorites + folder) } }
+    }
+    fun removeFavorite(uri: String) = action { settingsStore.update { it.copy(favorites = it.favorites.filterNot { entry -> entry.uri == uri }) } }
+    fun entryKey(uri: String) = folders.key(uri)
+    fun openFavorite(entry: DocumentEntry) = navigate(listOf(entry), entry)
+
     private val _bookmarks = MutableStateFlow<List<Bookmark>>(emptyList())
     val bookmarks = _bookmarks.asStateFlow()
     private val _seek = MutableStateFlow<SeekRequest?>(null)
@@ -92,10 +181,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     init {
         viewModelScope.launch {
             withContext(Dispatchers.IO) { store.cleanAbandoned(); pdfStore.clean(); imageStore.clean(); container.cacheDir.listFiles()?.filter { it.name.startsWith("pdf-search-") }?.forEach { it.delete() }; File(container.cacheDir, "search").deleteRecursively() }
+            try { backups.recover() } catch (_: Exception) { _ui.update { it.copy(error = "중단된 백업 복원을 완료하지 못했습니다. 저장 공간을 확인해 주세요.") } }
             val preferences = prefs.app.first()
             if (preferences.tree.isNotEmpty()) loadRoot(preferences.tree)
             val candidate = dao.session()?.bookId?.let { dao.book(it) }
-            if (candidate != null) {
+            if (candidate != null && !externalLaunch) {
                 try {
                     withContext(Dispatchers.IO) { folders.info(candidate.uri) }
                     _ui.update { it.copy(resume = candidate) }
@@ -154,7 +244,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 val previous = app.value.tree
                 val entry = withContext(Dispatchers.IO) { folders.connect(uri) }
                 prefs.setFolder(uri.toString(), entry.name)
-                if (previous.isNotEmpty() && previous != uri.toString()) withContext(Dispatchers.IO) { folders.release(previous) }
+                // Keep grants used by reading history and favorite folders.
                 _ui.update { it.copy(path = listOf(entry), folderError = null, screen = "folder") }
                 queryFolder(uri.toString(), entry)
             } catch (e: CancellationException) { throw e }
@@ -181,8 +271,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _ui.update { it.copy(entries = entries, folderError = null) }
     }
     fun refresh() {
-        if (app.value.tree.isEmpty()) return
-        val entry = ui.value.path.lastOrNull() ?: return loadRoot(app.value.tree)
+        val entry = ui.value.path.lastOrNull() ?: return if (app.value.tree.isNotEmpty()) loadRoot(app.value.tree) else Unit
         navigate(ui.value.path, entry)
     }
     fun foreground() {
@@ -200,7 +289,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         folderJob?.cancel()
         folderJob = viewModelScope.launch {
             _ui.update { it.copy(folderBusy = true) }
-            try { queryFolder(app.value.tree, entry); _ui.update { it.copy(path = path) } }
+            try { queryFolder(entry.uri, entry); _ui.update { it.copy(path = path) } }
             catch (e: CancellationException) { throw e }
             catch (e: Exception) { _ui.update { it.copy(folderError = message(e)) } }
             finally { _ui.update { it.copy(folderBusy = false) } }
@@ -211,7 +300,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         folderJob?.cancelAndJoin()
         val old = app.value.tree
         prefs.setFolder("", "")
-        withContext(Dispatchers.IO) { if (old.isNotEmpty()) folders.release(old) }
+        // Disconnecting the home folder does not invalidate books or favorites.
         _ui.update { it.copy(path = emptyList(), entries = emptyList(), folderError = null, sheet = null) }
     }
     fun clearCache() = action {
@@ -224,6 +313,24 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _ui.update { it.copy(resume = null) }
         dao.consumeCandidate()
         if (resume) openBook(book)
+    }
+    private val externalUris = mutableSetOf<String>()
+    private var externalLaunch = false
+    fun openExternal(intent: android.content.Intent) {
+        if (intent.action != android.content.Intent.ACTION_VIEW) return
+        val uri = intent.data ?: return
+        externalLaunch = true
+        action {
+            require(uri.scheme == "content")
+            if (intent.flags and android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION != 0) {
+                runCatching { container.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            }
+            val entry = withContext(Dispatchers.IO) { folders.info(uri.toString()) }
+            if (!entry.supported) { _ui.update { it.copy(error = "TXT·PDF·이미지·압축파일을 선택해 주세요.") }; return@action }
+            externalUris += entry.uri
+            _ui.update { it.copy(resume = null) }
+            open(entry)
+        }
     }
     fun openBook(book: Book) {
         val request = ++entryRequest
@@ -335,21 +442,21 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             var source: ImageSource? = null
             var retained = false
             try {
-                val folder = if (entry.directory || existing?.format == "IMAGE_FOLDER") entry else if (entry.image) ui.value.path.lastOrNull() else null
-                if (entry.image && folder == null) throw ImageFailure("이미지가 있는 폴더에서 파일을 열어 주세요.")
+                val folder = if (entry.directory || existing?.format == "IMAGE_FOLDER") entry else if (entry.image && !externalUris.contains(entry.uri) && existing?.format != "IMAGE_SINGLE") withContext(Dispatchers.IO) { runCatching { folders.parentPath(entry.uri, ui.value.path).lastOrNull() }.getOrNull() } else null
                 val origin = folder ?: entry
                 val key = folders.key(origin.uri)
                 val original = existing ?: dao.source(key)
                 source = if (folder != null) {
                     val children = withContext(Dispatchers.IO) { folders.list(folder.uri, folder.id) }
                     ImageSource.folder(container, imageStore, children, folders)
-                } else ImageSource.archive(container, imageStore, { folders.open(entry.uri) }, original?.sourceHash) { phase ->
+                } else if (entry.image) ImageSource.folder(container, imageStore, listOf(entry), folders)
+                else ImageSource.archive(container, imageStore, { folders.open(entry.uri) }, original?.sourceHash) { phase ->
                     if (generation == openGeneration) _ui.update { it.copy(preparing = phase) }
                 }
                 ensureActive()
                 val pages = source.pages.value
                 val book = (original ?: Book(UUID.randomUUID().toString(), key, origin.uri, origin.name, ui.value.path.joinToString(" / ") { it.name }))
-                    .copy(sourceKey = key, uri = origin.uri, name = origin.name, format = if (folder != null) "IMAGE_FOLDER" else "IMAGE_ARCHIVE",
+                    .copy(sourceKey = key, uri = origin.uri, name = origin.name, format = if (folder != null) "IMAGE_FOLDER" else if (entry.image) "IMAGE_SINGLE" else "IMAGE_ARCHIVE",
                         pageCount = pages.size, version = source.version, sourceHash = source.version, length = pages.size.toLong(), charset = "", charsetOverride = null)
                 val saved = dao.imagePosition(book.id, book.version) ?: original?.let { dao.imagePosition(it.id, it.version) }
                 val explicit = if (entry.image) pages.indexOfFirst { it.key == entry.uri }.takeIf { it >= 0 } else null
@@ -369,9 +476,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     private suspend fun showImages(opened: OpenImages) {
+        associateFolder(opened.book)
         flushPosition(); pdfReader.close(); imageReader.close(); cancelSearch(); marksJob?.cancel()
         activeSession = 0; latest = null; dirty = false
         imageReader.show(opened)
+        viewModelScope.launch {
+            try {
+                val entry = withContext(Dispatchers.IO) { folders.info(opened.book.uri) }
+                val cover = opened.source.thumbnail(0)
+                try { thumbnails.save(entry, cover) } finally { cover.recycle() }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { /* Preview is optional. */ }
+        }
         _ui.update { it.copy(reader = null, pdfReader = null, imageReader = opened, changedImages = null,
             preparing = null, sheet = null, missingBook = null, error = null) }
     }
@@ -400,6 +515,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         if (accept) showReader(change.opened)
     }
     private suspend fun showPdf(opened: OpenPdf) {
+        associateFolder(opened.book)
         flushPosition(); pdfReader.close(); imageReader.close(); cancelSearch(); marksJob?.cancel(); activeSession = 0; latest = null; dirty = false
         pdfReader.show(opened)
         _ui.update { it.copy(reader = null, imageReader = null, pdfReader = opened, changedPdf = null, preparing = null, sheet = null, missingBook = null, error = null) }
@@ -411,6 +527,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         else showPdf(if (mode == "first") value.copy(initial = PdfLocator()) else value)
     }
     private suspend fun showReader(opened: OpenBook) {
+        associateFolder(opened.book)
         pdfReader.close(); imageReader.close()
         activeSession = 0; sequence = 0; latest = opened.initial; dirty = false; searchOrigin = null
         _locator.value = opened.initial?.offset ?: 0
@@ -470,6 +587,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun background() = action { flushPosition() }
     fun closeReader() = action {
+        settingsScope.value = SettingsScope.COMMON
         dismissReadingEnd(); announcedEnd = null
         cancelOpen(); cancelSearch(); idleSave?.cancel()
         flushPosition(); pdfReader.close(); imageReader.close(); dao.consumeCandidate(); activeSession = 0; marksJob?.cancel()
@@ -494,7 +612,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 withContext(Dispatchers.IO) {
                     val path = folders.parentPath(book.uri, knownPath)
                     val parent = path.lastOrNull()
-                    val entries = if (parent == null) emptyList() else folders.list(parent.uri, parent.id)
+                    val entries = if (parent == null) emptyList() else sortEntries(folders.list(parent.uri, parent.id), settings.value.sort)
                     val current = folders.info(book.uri)
                     val next = nextReadingEntry(entries, current.id) { folder ->
                         ensureActive()

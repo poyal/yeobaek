@@ -23,6 +23,25 @@ class ImageDocumentView(context: Context) : View(context) {
     private var heights = FloatArray(0)
     private var spreads = emptyList<List<Int>>()
     private var focus = 0
+    private var segment = -1
+    private val autoCrops = mutableMapOf<Int, CropRect>()
+    private val cropping = mutableMapOf<Int, Job>()
+    private var deferredPages: List<ImagePage>? = null
+    private fun split(index: Int) = preferences.splitWide && preferences.mode == ImageMode.PAGED && height > width && pages.getOrNull(index)?.wide == true
+    private fun firstHalf() = if (preferences.direction == ImageDirection.LTR) 0 else 1
+    private fun crop(index: Int): CropRect {
+        val base = preferences.pageCrops[pages[index].key] ?: when (preferences.cropMode) {
+            CropMode.OFF -> CropRect()
+            CropMode.MANUAL -> preferences.crop
+            CropMode.AUTO -> autoCrops[index] ?: CropRect()
+        }
+        return if (index == focus && split(index)) base.half(segment == 1) else base
+    }
+    private fun applyPages(updated: List<ImagePage>) {
+        val position = locator(); pages = updated; pending = position
+        layoutPages(); restore(); changed()
+    }
+
     private var scroll = 0f
     private var pan = 0f
     private var zoom = 1f
@@ -100,8 +119,8 @@ class ImageDocumentView(context: Context) : View(context) {
         scope.launch {
             value.pages.collect { updated ->
                 if (updated != pages) {
-                    val position = locator(); pages = updated; pending = position
-                    layoutPages(); restore(); changed()
+                    if (touching || !scroller.isFinished || scales.isInProgress) deferredPages = updated
+                    else applyPages(updated)
                 }
             }
         }
@@ -124,18 +143,21 @@ class ImageDocumentView(context: Context) : View(context) {
     }
     private fun double() = preferences.mode == ImageMode.PAGED && (preferences.spread == ImageSpread.DOUBLE ||
         preferences.spread == ImageSpread.LANDSCAPE && width > height)
-    private fun group() = spreads.firstOrNull { focus in it } ?: listOf(focus)
+    private fun group() = if (split(focus)) listOf(focus) else spreads.firstOrNull { focus in it } ?: listOf(focus)
     private fun layoutPages() {
         visible = emptySet()
         if (width <= 0 || height <= 0 || pages.isEmpty()) return
         focus = (pending?.constrained(pages)?.page ?: focus).coerceIn(pages.indices)
+        segment = if (split(focus)) pending?.let { if (it.segment >= 0) it.segment else if (it.x > 0f) (if (it.x >= .5f) 1 else 0) else firstHalf() } ?: segment.takeIf { it >= 0 } ?: firstHalf()
+            else pending?.segment ?: segment
         starts = FloatArray(pages.size); widths = FloatArray(pages.size); heights = FloatArray(pages.size)
         spreads = imageSpreads(pages, double(), preferences.coverAlone)
         val gap = preferences.spacing * density
         if (preferences.mode == ImageMode.VERTICAL) {
             var y = 0f
             pages.forEachIndexed { i, size ->
-                val ratio = size.height.toFloat() / size.width
+                val c = crop(i)
+                val ratio = size.height * c.height / (size.width * c.width)
                 val available = width.toFloat()
                 val base = if (preferences.fit == ImageFit.PAGE) min(available, contentHeight / ratio) else available
                 starts[i] = y; widths[i] = base * zoom; heights[i] = widths[i] * ratio
@@ -146,7 +168,8 @@ class ImageDocumentView(context: Context) : View(context) {
             val group = group()
             val available = (width - gap * (group.size - 1)) / group.size
             group.forEach { i ->
-                val ratio = pages[i].height.toFloat() / pages[i].width
+                val c = crop(i)
+                val ratio = pages[i].height * c.height / (pages[i].width * c.width)
                 val base = if (preferences.fit == ImageFit.PAGE) min(available, contentHeight / ratio) else available
                 widths[i] = base * zoom; heights[i] = widths[i] * ratio
             }
@@ -178,13 +201,16 @@ class ImageDocumentView(context: Context) : View(context) {
         val p = pending?.constrained(pages) ?: return
         if (widths.isEmpty() || widths[p.page] <= 0) return
         focus = p.page
+        val c = crop(p.page)
+        val localX = ((p.x - c.left) / c.width).coerceIn(0f, 1f)
+        val localY = ((p.y - c.top) / c.height).coerceIn(0f, 1f)
         if (preferences.mode == ImageMode.VERTICAL) {
-            scroll = if (p.completed) maxScroll() else (starts[p.page] + heights[p.page] * p.y).coerceIn(0f, maxScroll())
-            pan = if (widths[p.page] > width) (p.x * widths[p.page] / (widths[p.page] - width)).coerceIn(0f, 1f) else 0f
+            scroll = if (p.completed) maxScroll() else (starts[p.page] + heights[p.page] * localY).coerceIn(0f, maxScroll())
+            pan = if (widths[p.page] > width) (localX * widths[p.page] / (widths[p.page] - width)).coerceIn(0f, 1f) else 0f
         } else {
-            scroll = ((total - heights[focus]) / 2 + heights[focus] * p.y).coerceIn(0f, maxScroll())
+            scroll = ((total - heights[focus]) / 2 + heights[focus] * localY).coerceIn(0f, maxScroll())
             pan = 0f
-            if (groupWidth > width) pan = ((rect(focus).left + widths[focus] * p.x) / (groupWidth - width)).coerceIn(0f, 1f)
+            if (groupWidth > width) pan = ((rect(focus).left + widths[focus] * localX) / (groupWidth - width)).coerceIn(0f, 1f)
         }
         pending = null
     }
@@ -193,8 +219,11 @@ class ImageDocumentView(context: Context) : View(context) {
         if (widths.isEmpty() || pages.isEmpty()) return ImageLocator()
         val page = if (preferences.mode == ImageMode.VERTICAL) pageAt(scroll) else focus
         val r = rect(page)
-        return ImageLocator(page, pages[page].key, (-r.left / r.width()).coerceIn(0f, 1f), ((topPad - r.top) / r.height()).coerceIn(0f, 1f), zoom,
-            if (preferences.mode == ImageMode.VERTICAL) scroll >= maxScroll() - 1 else group().last() == pages.lastIndex && scroll >= maxScroll() - 1)
+        val c = crop(page)
+        return ImageLocator(page, pages[page].key, c.left + (-r.left / r.width()).coerceIn(0f, 1f) * c.width,
+            c.top + ((topPad - r.top) / r.height()).coerceIn(0f, 1f) * c.height, zoom,
+            if (preferences.mode == ImageMode.VERTICAL) scroll >= maxScroll() - 1
+            else group().last() == pages.lastIndex && scroll >= maxScroll() - 1 && (!split(page) || segment != firstHalf()), segment)
     }
     fun move(value: ImageLocator, announceEnd: Boolean = true) {
         if (pages.isEmpty()) return
@@ -208,9 +237,13 @@ class ImageDocumentView(context: Context) : View(context) {
             endSignal.advance(delta > 0)
             scroll = (scroll + contentHeight * delta).coerceIn(0f, maxScroll()); changed()
         } else {
+            if (split(focus) && ((delta > 0 && segment == firstHalf()) || (delta < 0 && segment != firstHalf()))) {
+                move(ImageLocator(page = focus, segment = 1 - segment), announceEnd = false)
+                return
+            }
             val current = spreads.indexOfFirst { focus in it }
             val target = (current + delta).coerceIn(spreads.indices)
-            if (target != current) move(ImageLocator(page = spreads[target].first()), announceEnd = false)
+            if (target != current) move(ImageLocator(page = spreads[target].first(), segment = if (delta < 0 && split(spreads[target].first())) 1 - firstHalf() else -1), announceEnd = false)
             else { endSignal.advance(delta > 0); changed() }
         }
     }
@@ -218,7 +251,7 @@ class ImageDocumentView(context: Context) : View(context) {
     private fun changed() {
         visible = emptySet()
         if (ready && pending == null) onPosition(locator())
-        contentDescription = "이미지 ${locator().page + 1} / ${pages.size} 페이지 · ${(zoom * 100).toInt()}%"
+        contentDescription = "이미지 ${locator().page + 1} / ${pages.size} 페이지${if (split(focus)) if (segment == 0) " · 왼쪽" else " · 오른쪽" else ""} · ${(zoom * 100).toInt()}%"
         invalidate()
     }
     private fun hit(x: Float, y: Float): Triple<Int, Float, Float>? {
@@ -252,9 +285,21 @@ class ImageDocumentView(context: Context) : View(context) {
         }
         paint.colorFilter = if (preferences.inverted) ColorMatrixColorFilter(PDF_INVERSION) else null
         indices.forEach { page ->
-            val r = rect(page)
-            if (!r.intersects(0f, 0f, width.toFloat(), height.toFloat())) return@forEach
+            val area = rect(page)
+            if (preferences.cropMode == CropMode.AUTO && page !in autoCrops && page !in failures && preferences.pageCrops[pages[page].key] == null) {
+                visibleMeasured = false
+                prepareCrop(page)
+                label.color = Color.GRAY
+                canvas.drawText("여백 확인 중", width / 2f, topPad + 48 * density, label)
+                return@forEach
+            }
+            val c = crop(page)
+            val rw = area.width() / c.width; val rh = area.height() / c.height
+            val r = RectF(area.left - c.left * rw, area.top - c.top * rh, area.left + (1 - c.left) * rw, area.top + (1 - c.top) * rh)
+            if (!area.intersects(0f, 0f, width.toFloat(), height.toFloat())) return@forEach
             if (!pages[page].measured) visibleMeasured = false
+            val save = canvas.save()
+            canvas.clipRect(area)
             paint.color = Color.WHITE; canvas.drawRect(r, paint)
             if (!pages[page].measured && page !in failures) measure(page)
             cache.snapshot().filterKeys { it.page == page }.forEach { (tile, bitmap) -> drawTile(canvas, tile, bitmap, r) }
@@ -263,10 +308,10 @@ class ImageDocumentView(context: Context) : View(context) {
                 val pw = (r.width() / zoom * rasterZoom).roundToInt().coerceIn(1, 200_000)
                 val ph = (r.height() / zoom * rasterZoom).roundToInt().coerceIn(1, 200_000)
                 val sx = r.width() / pw; val sy = r.height() / ph
-                val fromX = (max(0f, -r.left) / sx / 512).toInt() * 512
-                val fromY = (max(0f, -r.top) / sy / 512).toInt() * 512
-                val untilX = min(pw, ceil((width - r.left) / sx).toInt())
-                val untilY = min(ph, ceil((height - r.top) / sy).toInt())
+                val fromX = (max(0f, max(0f, area.left) - r.left) / sx / 512).toInt() * 512
+                val fromY = (max(0f, max(0f, area.top) - r.top) / sy / 512).toInt() * 512
+                val untilX = min(pw, ceil((min(width.toFloat(), area.right) - r.left) / sx).toInt())
+                val untilY = min(ph, ceil((min(height.toFloat(), area.bottom) - r.top) / sy).toInt())
                 for (y in fromY until untilY step 512) for (x in fromX until untilX step 512) {
                     val tile = Tile(page, pw, ph, x, y, min(512, pw - x), min(512, ph - y)); needed += tile
                     cache.get(tile)?.let { drawTile(canvas, tile, it, r) }
@@ -277,6 +322,7 @@ class ImageDocumentView(context: Context) : View(context) {
                 canvas.drawText(if (page in failures) "이미지를 읽지 못했습니다" else "${page + 1} 페이지 준비 중", r.centerX().coerceIn(0f, width.toFloat()),
                     (r.top + 48 * density).coerceIn(topPad + 24 * density, height - bottomPad), label)
             }
+            canvas.restoreToCount(save)
         }
         visible = needed.toSet()
         jobs.keys.filter { it !in needed }.forEach { jobs.remove(it)?.cancel() }
@@ -300,6 +346,29 @@ class ImageDocumentView(context: Context) : View(context) {
             if (!disposed) onEndReached()
         }
     }
+    private fun prepareCrop(page: Int) {
+        if (page in cropping) return
+        cropping[page] = scope.launch {
+            try {
+                val bitmap = source?.thumbnail(page) ?: return@launch
+                val result = withContext(Dispatchers.Default) {
+                    val pixels = IntArray(bitmap.width * bitmap.height)
+                    bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+                    detectImageCrop(pixels, bitmap.width, bitmap.height)
+                }
+                bitmap.recycle()
+                // Apply only at rest; an asynchronous crop must not move the current gesture.
+                while (touching || !scroller.isFinished || scales.isInProgress) delay(32)
+                val position = locator(); autoCrops[page] = result; pending = position
+                layoutPages(); restore(); changed()
+            } catch (e: CancellationException) { throw e }
+            catch (_: Exception) { autoCrops[page] = CropRect() }
+            finally { cropping.remove(page); invalidate() }
+        }
+    }
+    private fun applyDeferred() {
+        if (!touching && scroller.isFinished && !scales.isInProgress) deferredPages?.let { deferredPages = null; applyPages(it) }
+    }
     private fun measure(page: Int) {
         if (page in measuring) return
         measuring[page] = scope.launch {
@@ -314,7 +383,7 @@ class ImageDocumentView(context: Context) : View(context) {
         canvas.drawBitmap(bitmap, null, RectF(r.left + tile.x * sx, r.top + tile.y * sy,
             r.left + (tile.x + tile.w) * sx, r.top + (tile.y + tile.h) * sy), paint)
     }
-    override fun computeScroll() { if (scroller.computeScrollOffset()) { scroll = scroller.currY.toFloat(); changed(); postInvalidateOnAnimation() } }
+    override fun computeScroll() { if (scroller.computeScrollOffset()) { scroll = scroller.currY.toFloat(); changed(); postInvalidateOnAnimation() }; applyDeferred() }
     override fun onTouchEvent(event: MotionEvent): Boolean {
         parent?.requestDisallowInterceptTouchEvent(true)
         if (event.actionMasked == MotionEvent.ACTION_DOWN) touching = true
@@ -330,6 +399,7 @@ class ImageDocumentView(context: Context) : View(context) {
             }
             changed()
         }
+        applyDeferred()
         return true
     }
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {

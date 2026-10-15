@@ -32,7 +32,7 @@ class ImagePersistenceTest {
             old.execSQL("INSERT INTO pdf_bookmarks VALUES ('mark','pdf','old',123,0.0,0.0,1.0,12)")
             old.version = 2
         }
-        val db = Room.databaseBuilder(context, LibraryDatabase::class.java, name).addMigrations(LibraryDatabase.MIGRATION_2_3).build()
+        val db = Room.databaseBuilder(context, LibraryDatabase::class.java, name).addMigrations(LibraryDatabase.MIGRATION_2_3, LibraryDatabase.MIGRATION_3_4).build()
         try {
             val dao = db.library()
             assertEquals(321, dao.pdfPosition("pdf", "old")!!.page)

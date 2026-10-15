@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.poyal.yeobaek.UpdateTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-10-15T14:40:29.849Z" hostname="POYAL" time="0.149">
+  <properties/>
+  <testcase name="releaseIdentityIncludesUrlHashSizeAndInstalledReleaseHidesAllTransfers" classname="com.poyal.yeobaek.UpdateTest" time="0.091"/>
+  <testcase name="checkingANewerReleaseClearsOldProgressFailureFilenameAndInstallCallbacks" classname="com.poyal.yeobaek.UpdateTest" time="0.007"/>
+  <testcase name="verifyExactBytesAndCopyRejectsTamperingTruncationAndOversize" classname="com.poyal.yeobaek.UpdateTest" time="0.001"/>
+  <testcase name="cancellationNeverDeletesCompletedDownload" classname="com.poyal.yeobaek.UpdateTest" time="0.003"/>
+  <testcase name="downloadsResumeReuseVerifiedBytesAndRecheckBeforeEveryInstall" classname="com.poyal.yeobaek.UpdateTest" time="0.004"/>
+  <testcase name="noReleaseResultSurvivesRestartAndManualCheckFindsNewRelease" classname="com.poyal.yeobaek.UpdateTest" time="0.001"/>
+  <testcase name="retryAndCancelAreOnlyForTheCurrentAttemptAndOldCallbacksAreIgnored" classname="com.poyal.yeobaek.UpdateTest" time="0.002"/>
+  <testcase name="lateProgressVerificationEnqueueAndInstallationResultsCannotOverwriteNewTarget" classname="com.poyal.yeobaek.UpdateTest" time="0.007"/>
+  <testcase name="checksumsMustMatchBothExactFilenamesAndGitHubDigest" classname="com.poyal.yeobaek.UpdateTest" time="0.003"/>
+  <testcase name="startupPromptOncePerProcessButReturnsOnNextProcessFromCache" classname="com.poyal.yeobaek.UpdateTest" time="0.001"/>
+  <testcase name="numericVersionComparisonAndInvalidVersions" classname="com.poyal.yeobaek.UpdateTest" time="0.001"/>
+  <testcase name="installedOldDownloadNeverBecomesTheNewReleaseTransferEvenOfflineOrAfterRestart" classname="com.poyal.yeobaek.UpdateTest" time="0.003"/>
+  <testcase name="onlyStableCompleteOfficialAssetsAreAccepted" classname="com.poyal.yeobaek.UpdateTest" time="0.021"/>
+  <testcase name="automaticCheckIsDailyManualBypassesAndClockRollbackRecovers" classname="com.poyal.yeobaek.UpdateTest" time="0.0"/>
+  <testcase name="failureKeepsLastSuccessWithoutClaimingCurrentAndManualRetryWorks" classname="com.poyal.yeobaek.UpdateTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

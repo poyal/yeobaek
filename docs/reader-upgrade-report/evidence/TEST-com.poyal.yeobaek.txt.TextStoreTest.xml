@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.poyal.yeobaek.txt.TextStoreTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-15T14:51:41.575Z" hostname="POYAL" time="0.599">
+  <properties/>
+  <testcase name="sameMetadataDifferentContentDifferentVersion" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.072"/>
+  <testcase name="matchesAcrossEveryBlockAndOverlaps" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.044"/>
+  <testcase name="corruptedNumericMetadataIsRebuiltBeforeLayout" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.11"/>
+  <testcase name="encodingsNormalizationAndBoundaryReads" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.114"/>
+  <testcase name="koreanLegacyEncoding" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.025"/>
+  <testcase name="missingMetadataIsRebuiltFromTheOriginal" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.152"/>
+  <testcase name="cancellationAndCorruptedCacheRecoverWithoutSourceChanges" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.048"/>
+  <testcase name="rejectsLateTruncationAndUtf32" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.01"/>
+  <testcase name="emptyAndWhitespaceRemainDistinct" classname="com.poyal.yeobaek.txt.TextStoreTest" time="0.023"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

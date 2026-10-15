@@ -44,7 +44,7 @@ class PdfPersistenceTest {
             old.execSQL("INSERT INTO session VALUES (1,'txt',1)")
             old.version = 1
         }
-        val db = Room.databaseBuilder(context, LibraryDatabase::class.java, name).addMigrations(LibraryDatabase.MIGRATION_1_2, LibraryDatabase.MIGRATION_2_3).build()
+        val db = Room.databaseBuilder(context, LibraryDatabase::class.java, name).addMigrations(LibraryDatabase.MIGRATION_1_2, LibraryDatabase.MIGRATION_2_3, LibraryDatabase.MIGRATION_3_4).build()
         try {
             val dao = db.library()
             assertEquals("TXT", dao.book("txt")!!.format)

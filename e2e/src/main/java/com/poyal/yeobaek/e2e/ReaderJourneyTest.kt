@@ -33,7 +33,14 @@ class ReaderJourneyTest {
     private fun launch() { device.executeShellCommand("am start -W -n $pkg/com.poyal.yeobaek.MainActivity"); device.waitForIdle() }
     private fun node(tag: String, timeout: Long = 15000) = device.wait(Until.findObject(By.res(tag)), timeout)
         ?: throw AssertionError("요소가 없습니다: $tag")
-    private fun click(tag: String) { node(tag).click(); device.waitForIdle() }
+    private fun click(tag: String) {
+        if (tag.startsWith("folder_") && !device.hasObject(By.res(tag))) {
+            repeat(10) { if (!device.hasObject(By.res(tag))) { device.findObject(By.res("library_list"))?.scroll(Direction.UP, .7f); device.waitForIdle() } }
+            repeat(15) { if (!device.hasObject(By.res(tag))) { device.findObject(By.res("library_list"))?.scroll(Direction.DOWN, .7f); device.waitForIdle() } }
+        }
+        node(tag).click(); device.waitForIdle()
+        if (tag in setOf("reader_txt", "pdf_settings", "image_settings")) { node("quick_details").click(); device.waitForIdle() }
+    }
     private fun text(text: String, timeout: Long = 15000) = device.wait(Until.findObject(By.text(text)), timeout)
         ?: throw AssertionError("문구가 없습니다: $text")
     private fun capture(id: String) {
@@ -103,10 +110,11 @@ class ReaderJourneyTest {
         click("reader_bookmarks"); capture("11-bookmarks-empty"); click("sheet_close")
         click("reader_bookmark"); SystemClock.sleep(500); click("reader_bookmarks"); node("bookmark_delete"); capture("12-bookmarks-added"); click("sheet_close")
         click("reader_txt"); capture("13-txt-settings")
-        click("font_larger"); Assert.assertEquals("19", node("font_size").text)
-        val options = node("txt_options"); options.scroll(Direction.DOWN, .5f)
+        scrollTo("font_larger", "txt_options"); click("font_larger")
+        check(device.wait(Until.hasObject(By.res("font_size").text("19")), 5000))
+        scrollTo("paper_SEPIA", "txt_options")
         click("paper_SEPIA"); capture("14-txt-paper"); click("page_back"); capture("15-sepia-reader")
-        click("reader_txt"); node("txt_options").scroll(Direction.DOWN, .7f); click("txt_reset"); click("page_back")
+        click("reader_txt"); scrollTo("txt_reset", "txt_options"); click("txt_reset"); click("page_back")
         click("reader_search"); capture("16-search-empty")
         node("search_input").text = "골목"
         click("search_submit")

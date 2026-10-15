@@ -25,8 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.poyal.yeobaek.BuildConfig
+import com.poyal.yeobaek.YeobaekApplication
 import com.poyal.yeobaek.update.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -51,6 +55,23 @@ import java.time.format.DateTimeFormatter
     val state by updates.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var message by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    var exporting by remember { mutableStateOf(false) }
+    val exportLogs = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        if (uri != null) scope.launch {
+            exporting = true
+            try {
+                withContext(Dispatchers.IO) {
+                    val diagnostics = (context.applicationContext as YeobaekApplication).scrollDiagnostics
+                    val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("로그 파일을 열지 못했어요.")
+                    output.use { diagnostics.export(it) }
+                }
+                message = "스크롤 진단 로그를 저장했어요. 재현한 날짜·시간과 함께 전달해 주세요."
+            } catch (e: CancellationException) { throw e }
+            catch (_: Exception) { message = "로그를 저장하지 못했어요. 저장 위치를 확인하고 다시 시도해 주세요." }
+            finally { exporting = false }
+        }
+    }
     fun link(url: String) { if (!openExternal(context, url)) message = "연결할 앱을 찾지 못했어요." }
     InformationPage("앱 정보·문의", "about_screen", back, modifier) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -66,7 +87,16 @@ import java.time.format.DateTimeFormatter
             SettingsRow(Icons.Outlined.BugReport, "버그 신고 · 기능 제안", "GitHub Issues", "about_issues") { link("https://github.com/poyal/yeobaek/issues") }
             SettingsRow(Icons.Outlined.NewReleases, "릴리즈 · 변경 내역", "공개 버전과 변경 사항", "about_releases") { link(state.release?.pageUrl ?: "$RELEASES_URL/latest") }
         }
-        if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.error)
+        InformationCard {
+            Text("TXT 스크롤 진단")
+            Small("터치·스크롤·화면 변화의 최근 기록을 기기 시간과 함께 보관해요. 최대 128MiB(약 134MB)이며 오래된 기록부터 지워져요. 책 이름과 본문은 기록하지 않아요.")
+            PaperButton(if (exporting) "로그 저장 중…" else "스크롤 진단 로그 저장", "export_scroll_logs",
+                Modifier.fillMaxWidth(), outlined = true, enabled = !exporting) {
+                val date = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+                exportLogs.launch("yeobaek-scroll-$date.txt")
+            }
+        }
+        if (message.isNotBlank()) Text(message)
         InformationCard {
             Small("책과 독서 기록은 기기에 보관해요. 업데이트 확인·다운로드에만 GitHub를 사용하며, 본문·책갈피·읽기 기록은 전송하지 않아요.")
             Rule()

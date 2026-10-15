@@ -93,8 +93,8 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
                         ReaderToolbarItem(ReaderAction.MOVE, "pdf_move") { vm.sheet("pdf_move") },
                         ReaderToolbarItem(ReaderAction.BOOKMARKS, "pdf_bookmarks") { vm.sheet("pdf_bookmarks") },
                         ReaderToolbarItem(ReaderAction.SEARCH, "pdf_search") { vm.sheet("pdf_search") },
-                        ReaderToolbarItem(ReaderAction.INVERT, "pdf_invert", prefs.inverted) { vm.action { vm.prefs.setPdfInverted(!prefs.inverted) } },
-                        ReaderToolbarItem(ReaderAction.SETTINGS, "pdf_settings", onClick = vm::openPdfSettings),
+                        ReaderToolbarItem(ReaderAction.INVERT, "pdf_invert", prefs.inverted) { vm.toggleInversion("PDF") },
+                        ReaderToolbarItem(ReaderAction.SETTINGS, "pdf_settings", onClick = { vm.sheet("quick_settings") }),
                     ), Modifier.testTag("pdf_footer"))
                 }
             }
@@ -137,28 +137,29 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
         PageHeader("PDF 읽기 설정", vm::closePdfSettings)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             Small("PDF 전용")
+            SettingsScopePicker(vm, "PDF")
             Text("화면 맞춤", fontSize = 15.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PdfFit.entries.forEach { fit -> Choice(if (fit == PdfFit.WIDTH) "너비에 맞춤" else "페이지에 맞춤", prefs.fit == fit, "pdf_fit_${fit.name}", Modifier.weight(1f)) { vm.action { vm.prefs.setPdfFit(fit) } } }
+                PdfFit.entries.forEach { fit -> Choice(if (fit == PdfFit.WIDTH) "너비에 맞춤" else "페이지에 맞춤", prefs.fit == fit, "pdf_fit_${fit.name}", Modifier.weight(1f)) { vm.changeSetting("PDF", "fit", fit) } }
             }
             Rule()
             var spacing by remember(prefs.spacing) { mutableFloatStateOf(prefs.spacing) }
             Text("페이지 간격 · ${spacing.roundToInt()} dp", fontSize = 15.sp)
-            Slider(spacing, { spacing = it }, Modifier.testTag("pdf_spacing"), valueRange = 0f..24f, steps = 23, onValueChangeFinished = { vm.action { vm.prefs.setPdfSpacing(spacing) } })
+            Slider(spacing, { spacing = it }, Modifier.testTag("pdf_spacing"), valueRange = 0f..24f, steps = 23, onValueChangeFinished = { vm.changeSetting("PDF", "spacing", spacing) })
             Rule()
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) { Text("색상 반전", fontSize = 15.sp); Small("글자·이미지·도표의 색상을 함께 반전합니다.") }
-                Switch(prefs.inverted, { vm.action { vm.prefs.setPdfInverted(it) } }, Modifier.testTag("pdf_inversion_switch").semantics { contentDescription = "PDF 색상 반전" })
+                Switch(prefs.inverted, { vm.changeSetting("PDF", "inverted", it) }, Modifier.testTag("pdf_inversion_switch").semantics { contentDescription = "PDF 색상 반전" })
             }
             Small("원본 파일과 메뉴 색상에는 영향을 주지 않습니다.")
             Rule()
             Text("페이지 바깥 배경", fontSize = 15.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PdfCanvas.entries.forEach { canvas -> Choice(when (canvas) { PdfCanvas.AUTO -> "자동"; PdfCanvas.LIGHT -> "라이트"; PdfCanvas.DARK -> "다크" }, prefs.canvas == canvas, "pdf_canvas_${canvas.name}", Modifier.weight(1f)) { vm.action { vm.prefs.setPdfCanvas(canvas) } } }
+                PdfCanvas.entries.forEach { canvas -> Choice(when (canvas) { PdfCanvas.AUTO -> "자동"; PdfCanvas.LIGHT -> "라이트"; PdfCanvas.DARK -> "다크" }, prefs.canvas == canvas, "pdf_canvas_${canvas.name}", Modifier.weight(1f)) { vm.changeSetting("PDF", "canvas", canvas) } }
             }
             Small("자동은 앱 테마를 따르며, 색상 반전 중에는 어두운 배경을 사용합니다.")
             Rule()
-            PaperButton("PDF 설정 기본값 복원", "pdf_reset", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { vm.action { vm.prefs.resetPdf() } })
+            PaperButton("PDF 설정 기본값 복원", "pdf_reset", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { vm.resetSettings("PDF") })
             Small("TXT 설정과 독서 기록은 유지됩니다.")
         }
     }

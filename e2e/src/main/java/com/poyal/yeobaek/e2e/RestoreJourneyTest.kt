@@ -24,7 +24,12 @@ class RestoreJourneyTest {
         check(device.wait(Until.gone(By.res("layout_loading")), 60000))
         assertTrue(node("reader_percent").text.removeSuffix("%").toFloat() > 50f)
         click("reader_bookmarks"); node("bookmark_delete"); click("sheet_close")
-        click("reader_txt"); assertEquals("18", node("font_size").text); click("page_back"); click("reader_back")
+        click("reader_txt"); click("quick_details")
+        for (attempt in 0 until 12) {
+            if (device.hasObject(By.res("font_size"))) break
+            node("txt_options").scroll(Direction.DOWN, .5f)
+        }
+        assertEquals("18", node("font_size").text); click("page_back"); click("reader_back")
         click("nav_settings"); click("settings_general"); assertTrue(device.hasObject(By.text("다크 ✓")))
         val out = File(InstrumentationRegistry.getInstrumentation().context.getExternalFilesDir(null), "restore").apply { mkdirs() }
         device.takeScreenshot(File(out, "preserved.png")); device.dumpWindowHierarchy(File(out, "preserved.xml"))
