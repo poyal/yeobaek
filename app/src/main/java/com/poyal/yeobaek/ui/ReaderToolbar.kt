@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 enum class ReaderAction(val label: String, val icon: ImageVector) {
+    CONTENTS("목차", Icons.Outlined.List),
     MOVE("이동", Icons.Outlined.SwapVert),
     BOOKMARKS("책갈피", Icons.Outlined.Bookmarks),
     SEARCH("검색", Icons.Outlined.Search),

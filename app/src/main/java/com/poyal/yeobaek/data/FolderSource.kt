@@ -10,12 +10,13 @@ import java.util.Locale
 
 @kotlinx.serialization.Serializable
 data class DocumentEntry(val id: String, val uri: String, val name: String, val directory: Boolean, val size: Long?, val modified: Long?, val mime: String) {
+    val epub get() = name.endsWith(".epub", true) || mime == "application/epub+zip"
     val txt get() = name.endsWith(".txt", true) || mime == "text/plain"
     val pdf get() = name.endsWith(".pdf", true) || mime == "application/pdf"
     val image get() = com.poyal.yeobaek.image.ImageFormats.image(name) || mime in setOf("image/jpeg", "image/png", "image/webp", "image/bmp", "image/gif")
     val archive get() = com.poyal.yeobaek.image.ImageFormats.archive(name) || mime in setOf("application/zip", "application/x-rar-compressed", "application/vnd.rar", "application/x-7z-compressed")
-    val supported get() = txt || pdf || image || archive
-    val formatLabel get() = when { pdf -> "PDF"; image -> "이미지"; archive -> "압축 이미지"; else -> "TXT" }
+    val supported get() = epub || txt || pdf || image || archive
+    val formatLabel get() = when { epub -> "EPUB"; pdf -> "PDF"; image -> "이미지"; archive -> "압축 이미지"; else -> "TXT" }
 }
 class FolderSource(private val resolver: ContentResolver) {
     private val projection = arrayOf(

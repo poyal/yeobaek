@@ -5,11 +5,8 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -35,22 +32,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-@Composable private fun InformationPage(title: String, tag: String, back: () -> Unit,
-    modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier.fillMaxSize()) {
-        PageHeader(title, back)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).testTag(tag).padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp), content = content)
-    }
-}
-
-@Composable private fun InformationCard(content: @Composable ColumnScope.() -> Unit) {
-    val paper = LocalPaper.current
-    Surface(color = paper.alt, shape = RoundedCornerShape(4.dp), border = BorderStroke(1.dp, paper.line)) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
-    }
-}
-
 @Composable fun AboutScreen(updates: UpdateController, back: () -> Unit, modifier: Modifier = Modifier) {
     val state by updates.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -73,22 +54,23 @@ import java.time.format.DateTimeFormatter
         }
     }
     fun link(url: String) { if (!openExternal(context, url)) message = "연결할 앱을 찾지 못했어요." }
-    InformationPage("앱 정보·문의", "about_screen", back, modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Symbol(48.dp)
-            Column { Heading("여백"); Small("버전 ${BuildConfig.VERSION_NAME}") }
+    SettingsPage("앱 정보·문의", "about_page", back, modifier, "about_screen") {
+        SettingsCard {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Symbol(48.dp)
+                Column { Heading("여백"); Small("버전 ${BuildConfig.VERSION_NAME}") }
+            }
+            Text("문장과 문장 사이,\n나만의 읽는 자리.", fontFamily = Serif)
         }
-        Text("문장과 문장 사이,\n나만의 읽는 자리.", fontFamily = Serif)
-        InformationCard {
-            Text("제작자  Poyal")
+        SettingsSection("제작자 · 문의", Icons.Outlined.PersonOutline) {
+            Small("제작자 Poyal")
             SettingsRow(Icons.Outlined.Email, "이메일 문의", "poyal.work@gmail.com", "about_email") { link("mailto:poyal.work@gmail.com") }
             Rule()
             SettingsRow(Icons.Outlined.Code, "GitHub", "소스와 프로젝트 안내", "about_github") { link("https://github.com/poyal/yeobaek") }
             SettingsRow(Icons.Outlined.BugReport, "버그 신고 · 기능 제안", "GitHub Issues", "about_issues") { link("https://github.com/poyal/yeobaek/issues") }
             SettingsRow(Icons.Outlined.NewReleases, "릴리즈 · 변경 내역", "공개 버전과 변경 사항", "about_releases") { link(state.release?.pageUrl ?: "$RELEASES_URL/latest") }
         }
-        InformationCard {
-            Text("TXT 스크롤 진단")
+        SettingsSection("TXT 스크롤 진단", Icons.Outlined.BugReport) {
             Small("터치·스크롤·화면 변화의 최근 기록을 기기 시간과 함께 보관해요. 최대 128MiB(약 134MB)이며 오래된 기록부터 지워져요. 책 이름과 본문은 기록하지 않아요.")
             PaperButton(if (exporting) "로그 저장 중…" else "스크롤 진단 로그 저장", "export_scroll_logs",
                 Modifier.fillMaxWidth(), outlined = true, enabled = !exporting) {
@@ -96,13 +78,15 @@ import java.time.format.DateTimeFormatter
                 exportLogs.launch("yeobaek-scroll-$date.txt")
             }
         }
-        if (message.isNotBlank()) Text(message)
-        InformationCard {
+        if (message.isNotBlank()) SettingsCard { Text(message) }
+        SettingsSection("개인정보와 라이선스", Icons.Outlined.Info) {
             Small("책과 독서 기록은 기기에 보관해요. 업데이트 확인·다운로드에만 GitHub를 사용하며, 본문·책갈피·읽기 기록은 전송하지 않아요.")
             Rule()
             Small("본문 글꼴 · Noto Serif KR\nSIL Open Font License 1.1\n폰트 라이선스 원문은 앱에 함께 포함되어 있어요.")
             Rule()
             Small("PDF 엔진 · PdfiumAndroidKt 2.0.0 · PDFium\nApache License 2.0 · BSD 및 구성요소별 라이선스\n라이선스 원문은 앱에 함께 포함되어 있어요.")
+            Rule()
+            Small("EPUB 엔진 · Readium Kotlin 3.1.2\nBSD 3-Clause · jsoup MIT 및 구성요소별 라이선스\n라이선스 원문은 앱에 함께 포함되어 있어요.")
             Rule()
             Small("이미지 압축 엔진 · libarchive-android 1.1.6\n이미지 회전 정보 · AndroidX ExifInterface 1.4.1\nApache License 2.0 · BSD 및 구성요소별 라이선스\n라이선스 원문은 앱에 함께 포함되어 있어요.")
         }
@@ -136,9 +120,8 @@ import java.time.format.DateTimeFormatter
             }
         } catch (_: Exception) { updates.installationMessage(installationId, "설치 화면을 열지 못했어요. 다운로드 폴더에서 APK를 직접 열어 주세요.") }
     } }
-    InformationPage("업데이트", "updates_screen", back, modifier) {
-        Small("읽는 자리를 이어가도록"); Heading("새로운 여백")
-        InformationCard {
+    SettingsPage("업데이트", "updates_page", back, modifier, "updates_screen") {
+        SettingsSection("버전 확인", Icons.Outlined.SystemUpdate) {
             Text(state.message, Modifier.testTag("update_status"), color = if (state.check == CheckStatus.ERROR) MaterialTheme.colorScheme.error else LocalPaper.current.ink)
             Small("현재 버전 ${updates.installedVersion}")
             state.release?.let { Small("최신 확인 버전 ${it.version}") }
@@ -173,8 +156,7 @@ import java.time.format.DateTimeFormatter
             if (folderMessage.isNotBlank()) Small(folderMessage)
             Small("앱을 새로 실행하면 새 버전을 알려드려요. 자동 조회는 하루 한 번, 직접 확인은 언제든 가능해요.")
         }
-        InformationCard {
-            Text("업데이트와 독서 기록")
+        SettingsSection("업데이트와 독서 기록", Icons.Outlined.BookmarkBorder) {
             Small("기존 앱을 삭제하지 않고 같은 서명의 APK로 업데이트하면 시작 폴더·읽기 위치·책갈피·설정이 유지돼요. 앱을 삭제하거나 데이터를 초기화하면 독서 기록이 지워져요.")
             Small("설치가 취소되거나 끝나도 Download 폴더의 APK는 보관돼요. 필요 없어진 파일은 직접 정리해 주세요.")
             Rule()

@@ -120,25 +120,10 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
         }
     }
 }
-@Composable fun ViewerSettingsScreen(vm: AppViewModel) {
-    Column(Modifier.fillMaxSize().testTag("viewer_settings_screen")) {
-        PageHeader("뷰어 설정") { vm.screen("settings") }
-        Column(Modifier.padding(24.dp)) {
-            SettingsRow(Icons.Outlined.TextFields, "TXT 뷰어", "글꼴 · 크기 · 간격 · 본문 색상", "settings_txt", vm::openTxtSettings)
-            Rule()
-            SettingsRow(Icons.Outlined.PictureAsPdf, "PDF 뷰어", "화면 맞춤 · 페이지 간격 · 색상 반전", "settings_pdf", vm::openPdfSettings)
-            Rule()
-            SettingsRow(Icons.Outlined.Collections, "이미지 뷰어", "폴더·압축 · 넘김 방식 · 색상 반전", "settings_image", vm::openImageSettings)
-        }
-    }
-}
 @Composable fun PdfSettingsScreen(vm: AppViewModel, prefs: PdfPreferences) {
-    Column(Modifier.fillMaxSize().testTag("pdf_settings_screen")) {
-        PageHeader("PDF 읽기 설정", vm::closePdfSettings)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Small("PDF 전용")
-            SettingsScopePicker(vm, "PDF")
-            Text("화면 맞춤", fontSize = 15.sp)
+    SettingsPage("PDF 읽기 설정", "pdf_settings_screen", vm::closePdfSettings, contentTag = "pdf_options") {
+        SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "PDF", showTitle = false) }
+        SettingsSection("화면 맞춤과 간격", Icons.Outlined.FitScreen) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PdfFit.entries.forEach { fit -> Choice(if (fit == PdfFit.WIDTH) "너비에 맞춤" else "페이지에 맞춤", prefs.fit == fit, "pdf_fit_${fit.name}", Modifier.weight(1f)) { vm.changeSetting("PDF", "fit", fit) } }
             }
@@ -146,19 +131,21 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
             var spacing by remember(prefs.spacing) { mutableFloatStateOf(prefs.spacing) }
             Text("페이지 간격 · ${spacing.roundToInt()} dp", fontSize = 15.sp)
             Slider(spacing, { spacing = it }, Modifier.testTag("pdf_spacing"), valueRange = 0f..24f, steps = 23, onValueChangeFinished = { vm.changeSetting("PDF", "spacing", spacing) })
-            Rule()
+        }
+        SettingsSection("페이지 색상", Icons.Outlined.Palette) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) { Text("색상 반전", fontSize = 15.sp); Small("글자·이미지·도표의 색상을 함께 반전합니다.") }
                 Switch(prefs.inverted, { vm.changeSetting("PDF", "inverted", it) }, Modifier.testTag("pdf_inversion_switch").semantics { contentDescription = "PDF 색상 반전" })
             }
             Small("원본 파일과 메뉴 색상에는 영향을 주지 않습니다.")
-            Rule()
-            Text("페이지 바깥 배경", fontSize = 15.sp)
+        }
+        SettingsSection("페이지 바깥 배경", Icons.Outlined.Wallpaper) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PdfCanvas.entries.forEach { canvas -> Choice(when (canvas) { PdfCanvas.AUTO -> "자동"; PdfCanvas.LIGHT -> "라이트"; PdfCanvas.DARK -> "다크" }, prefs.canvas == canvas, "pdf_canvas_${canvas.name}", Modifier.weight(1f)) { vm.changeSetting("PDF", "canvas", canvas) } }
             }
             Small("자동은 앱 테마를 따르며, 색상 반전 중에는 어두운 배경을 사용합니다.")
-            Rule()
+        }
+        SettingsSection("설정 초기화", Icons.Outlined.RestartAlt) {
             PaperButton("PDF 설정 기본값 복원", "pdf_reset", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { vm.resetSettings("PDF") })
             Small("TXT 설정과 독서 기록은 유지됩니다.")
         }

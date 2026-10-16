@@ -55,6 +55,7 @@ import java.util.Locale
     var loading by remember(opened.token) { mutableStateOf(true) }
     var failure by remember(opened.token) { mutableStateOf<String?>(null) }
     var forwardIntent by remember(opened.token) { mutableStateOf(false) }
+    val flingGuard = remember(opened.token) { ReaderFlingGuard() }
     val diagnostics = vm.scrollDiagnostics
     DisposableEffect(opened.token) {
         diagnostics.record("reader_open", "session=${opened.token} length=${opened.document.length} anchor=$anchor")
@@ -72,8 +73,10 @@ import java.util.Locale
             return Offset.Zero
         }
         override suspend fun onPreFling(available: Velocity): Velocity {
-            diagnostics.record("fling_start", "session=${opened.token} vx=${available.x} vy=${available.y} forward=$forwardIntent")
-            return Velocity.Zero
+            val suppressed = flingGuard.suppressFling(android.os.SystemClock.uptimeMillis())
+            diagnostics.record("fling_start", "session=${opened.token} vx=${available.x} vy=${available.y} forward=$forwardIntent " +
+                "suppressed=$suppressed touchTravelPx=${flingGuard.maxTravel}")
+            return if (suppressed) Velocity(0f, available.y) else Velocity.Zero
         }
         override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
             diagnostics.record("fling_end", "session=${opened.token} consumedY=${consumed.y} remainingY=${available.y}")
@@ -220,6 +223,7 @@ import java.util.Locale
             } else LazyColumn(
                 state = list,
                 modifier = Modifier.fillMaxSize().testTag("reader_body").nestedScroll(endScroll)
+                    .observeReaderFlingGesture(flingGuard)
                     .semantics { stateDescription = if (list.isScrollInProgress) "스크롤 중" else "정지"; customActions = listOf(CustomAccessibilityAction(if (chrome) "독서 메뉴 숨기기" else "독서 메뉴 표시") { chrome = !chrome; true }) }
                     .onKeyEvent { if (it.type == KeyEventType.KeyUp && it.key == Key.Enter) { chrome = !chrome; true } else false }
                     .pointerInput(opened.token) { detectTapGestures(onTap = { chrome = !chrome }, onLongPress = {}) },

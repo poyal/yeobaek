@@ -1,0 +1,33 @@
+EPUB components
+
+Readium Kotlin Toolkit 3.1.2 (shared, streamer, navigator)
+https://github.com/readium/kotlin-toolkit/tree/3.1.2
+BSD-3-Clause; see Readium-BSD-3-Clause.txt.
+Bundled Readium CSS font licenses are also packaged under
+assets/readium/readium-css/fonts/LICENSE-AccessibleDfa and LICENSE-IaWriterDuospace.md.
+
+jsoup 1.18.1
+https://github.com/jhy/jsoup/tree/jsoup-1.18.1
+MIT; see jsoup-MIT.txt.
+
+PhotoView 2.3.0 (bundled by Readium navigator)
+https://github.com/Baseflow/PhotoView/tree/2.3.0
+Apache-2.0; see PhotoView-APACHE-2.0.txt.
+
+Kotlin Koi core 0.5.5 (Readium streamer dependency)
+https://github.com/mcxiaoke/kotlin-koi
+Apache-2.0; see koi-APACHE-2.0.txt.
+
+AndroidX (including Fragment, WebKit and Media3), Kotlin, kotlinx.coroutines,
+kotlinx.serialization, kotlinx.datetime, Timber and desugar_jdk_libs are
+distributed under Apache-2.0. License text: PhotoView-APACHE-2.0.txt.
+https://android.googlesource.com/platform/frameworks/support/
+https://github.com/JetBrains/kotlin
+https://github.com/Kotlin/kotlinx.coroutines
+https://github.com/Kotlin/kotlinx.serialization
+https://github.com/Kotlin/kotlinx-datetime
+https://github.com/JakeWharton/timber
+https://github.com/google/desugar_jdk_libs
+
+The existing Noto Serif CJK KR font is exposed to the EPUB navigator as well.
+Its license is in ../NotoSerifCJK-OFL.txt.

@@ -118,13 +118,9 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
 
 @Composable fun ImageSettingsScreen(vm: AppViewModel, prefs: ImagePreferences) {
     fun set(value: ImagePreferences) { vm.setImage(value) }
-    Column(Modifier.fillMaxSize().testTag("image_settings_screen")) {
-        PageHeader("이미지 읽기 설정", vm::closeImageSettings)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            SettingsScopePicker(vm, "IMAGE")
-            ImageCropOptions(vm, prefs)
-            Small("이미지 폴더 · ZIP · RAR · 7Z")
-            Text("읽기 방식")
+    SettingsPage("이미지 읽기 설정", "image_settings_screen", vm::closeImageSettings, contentTag = "image_options") {
+        SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "IMAGE", showTitle = false) }
+        SettingsSection("읽기 방식", Icons.Outlined.AutoStories) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ImageMode.entries.forEach { mode -> Choice(if (mode == ImageMode.VERTICAL) "세로 연속" else "좌우 넘김", prefs.mode == mode, "image_mode_$mode", Modifier.weight(1f)) { set(prefs.copy(mode = mode)) } }
             }
@@ -144,7 +140,8 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                 }
                 Small("가로로 긴 이미지는 한 쪽으로 표시합니다.")
             }
-            Rule(); Text("화면 맞춤")
+        }
+        SettingsSection("화면 맞춤과 간격", Icons.Outlined.FitScreen) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ImageFit.entries.forEach { fit -> Choice(if (fit == ImageFit.WIDTH) "너비에 맞춤" else "전체 이미지", prefs.fit == fit, "image_fit_$fit", Modifier.weight(1f)) {
                     set(if (prefs.mode == ImageMode.VERTICAL) prefs.copy(verticalFit = fit) else prefs.copy(pagedFit = fit))
@@ -154,7 +151,11 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
             var spacing by remember(prefs.spacing) { mutableFloatStateOf(prefs.spacing) }
             Text("이미지 간격 · ${spacing.roundToInt()} dp")
             Slider(spacing, { spacing = it }, Modifier.testTag("image_spacing"), valueRange = 0f..24f, steps = 23, onValueChangeFinished = { set(prefs.copy(spacing = spacing)) })
-            Rule()
+        }
+        SettingsSection("페이지 여백", Icons.Outlined.Crop) {
+            ImageCropOptions(vm, prefs)
+        }
+        SettingsSection("페이지 색상과 배경", Icons.Outlined.Palette) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) { Text("색상 반전"); Small("이미지와 미리보기의 색상을 반전합니다.") }
                 Switch(prefs.inverted, { vm.changeSetting("IMAGE", "inverted", it) }, Modifier.testTag("image_inversion_switch"))
@@ -165,7 +166,8 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                     "image_canvas_$canvas", Modifier.weight(1f)) { set(prefs.copy(canvas = canvas)) } }
             }
             Small("자동은 앱 테마를 따르며, 색상 반전 중에는 어두운 배경을 사용합니다.")
-            Rule()
+        }
+        SettingsSection("설정 초기화", Icons.Outlined.RestartAlt) {
             PaperButton("이미지 설정 기본값 복원", "image_reset", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { vm.resetSettings("IMAGE") })
         }
     }

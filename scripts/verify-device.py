@@ -6,7 +6,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
 p = argparse.ArgumentParser()
 p.add_argument('--serial', required=True)
-p.add_argument('--suite', choices=['engine', 'e2e', 'recovery', 'restore', 'about', 'load', 'soak', 'repeat', 'macro', 'profile'], required=True)
+p.add_argument('--suite', choices=['engine', 'e2e', 'epub', 'recovery', 'restore', 'about', 'load', 'soak', 'repeat', 'macro', 'profile'], required=True)
 p.add_argument('--theme', choices=['LIGHT', 'DARK'], default='LIGHT')
 p.add_argument('--variant', choices=['debug', 'benchmark', 'release', 'profile'], default='debug')
 p.add_argument('--method')
@@ -61,7 +61,7 @@ elif args.suite in ('macro', 'profile'):
 else:
     command('install', '-r', 'e2e/build/outputs/apk/debug/e2e-debug.apk')
     runner = 'com.poyal.yeobaek.e2e/androidx.test.runner.AndroidJUnitRunner'
-    klass = {'e2e':'ReaderJourneyTest', 'recovery':'RecoveryJourneyTest', 'restore':'RestoreJourneyTest', 'about':'AboutJourneyTest'}.get(args.suite, 'PerformanceJourneyTest')
+    klass = {'e2e':'ReaderJourneyTest', 'epub':'EpubJourneyTest', 'recovery':'RecoveryJourneyTest', 'restore':'RestoreJourneyTest', 'about':'AboutJourneyTest'}.get(args.suite, 'PerformanceJourneyTest')
     method = args.method or dict(load='largeFilesAndLongParagraph', soak='continuousReading30Minutes', repeat='repeatedOpen100Times').get(args.suite)
     options = ['-e', 'targetPackage', pkg, '-e', 'theme', args.theme, '-e', 'class',
         f'com.poyal.yeobaek.e2e.{klass}' + (f'#{method}' if method else '')]
@@ -71,10 +71,23 @@ with (out/'instrumentation.txt').open('w', encoding='utf-8') as log:
     result = subprocess.run([adb, '-s', args.serial, 'shell', 'am', 'instrument', '-w', '-r', *options, runner], stdout=log, stderr=subprocess.STDOUT)
 raw = (out/'instrumentation.txt').read_text(encoding='utf-8')
 match = re.search(r'OK \((\d+) tests?\)', raw)
-expected = 1 if args.method else dict(engine=3, e2e=2, recovery=4, macro=6).get(args.suite, 1)
+expected = 1 if args.method else dict(engine=3, e2e=2, epub=3, recovery=4, macro=6).get(args.suite, 1)
 actual = int(match.group(1)) if match else 0
-success = result.returncode == 0 and actual == expected and 'FAILURES!!!' not in raw and 'Process crashed' not in raw
-summary = {'status': 'PASS' if success else 'FAIL', 'exit_code': result.returncode, 'expected_tests': expected, 'passed_tests': actual}
+requested_classes = options[options.index('class') + 1].split(',')
+expected_names = set()
+for requested in requested_classes:
+    class_name, _, selected_method = requested.partition('#')
+    if selected_method:
+        expected_names.add(class_name + '#' + selected_method)
+    else:
+        module = 'app/src/androidTest' if args.suite == 'engine' else 'benchmark/src/main' if args.suite in ('macro', 'profile') else 'e2e/src/main'
+        source = ROOT / module / 'java' / (class_name.replace('.', '/') + '.kt')
+        expected_names.update(class_name + '#' + name for name in re.findall(r'@Test\s+fun\s+(\w+)', source.read_text(encoding='utf-8')))
+actual_names = {cls + '#' + name for cls, name in re.findall(r'INSTRUMENTATION_STATUS: class=(\S+).*?INSTRUMENTATION_STATUS: test=(\S+)', raw, re.S)}
+success = (result.returncode == 0 and actual == expected == len(expected_names) and actual_names == expected_names
+    and 'FAILURES!!!' not in raw and 'Process crashed' not in raw and 'INSTRUMENTATION_STATUS_CODE: -3' not in raw)
+summary = {'status': 'PASS' if success else 'FAIL', 'exit_code': result.returncode, 'expected_tests': expected, 'passed_tests': actual,
+    'tests': sorted(actual_names), 'missing': sorted(expected_names - actual_names), 'unexpected': sorted(actual_names - expected_names)}
 (out/'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
 if args.suite not in ('engine', 'macro', 'profile'):
     if int(manifest['api']) <= 30:

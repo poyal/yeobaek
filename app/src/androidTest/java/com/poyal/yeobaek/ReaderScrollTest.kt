@@ -1,5 +1,9 @@
 package com.poyal.yeobaek
 
+import android.os.SystemClock
+import android.view.InputDevice
+import android.view.MotionEvent
+import android.view.View
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.*
 import androidx.compose.runtime.*
@@ -7,6 +11,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.ViewModelStore
 import androidx.test.platform.app.InstrumentationRegistry
 import com.poyal.yeobaek.data.*
@@ -18,6 +23,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.io.ByteArrayOutputStream
 import java.util.UUID
 
 class ReaderScrollTest {
@@ -25,6 +31,8 @@ class ReaderScrollTest {
     private lateinit var list: LazyListState
     private lateinit var scope: CoroutineScope
     private lateinit var vm: AppViewModel
+    private lateinit var readerView: View
+    private lateinit var session: String
     private var prefs by mutableStateOf(TxtPreferences(size = 14f, line = 1.3f))
     private val frames = mutableListOf<Pair<Long, Int>>()
 
@@ -36,7 +44,9 @@ class ReaderScrollTest {
             val doc = withContext(Dispatchers.IO) { TextStore(root).prepare({ text.byteInputStream() }) }
             ui.runOnUiThread { vm = AppViewModel(app); store.put("test", vm) }
             val book = OpenBook(Book("test", "test", "content://test/book", "테스트.txt", "", version = doc.version, length = doc.length), doc, null)
+            session = book.token
             ui.setContent {
+                readerView = LocalView.current
                 list = rememberLazyListState()
                 scope = rememberCoroutineScope()
                 LaunchedEffect(list) {
@@ -86,6 +96,48 @@ class ReaderScrollTest {
         assertTrue("Must cross the 24-block retention limit", offset() > 50000)
         scroll(-1400f, 120)
         ui.onNodeWithTag("layout_retry").assertDoesNotExist()
+    }
+
+    @Test fun stoppingAFlingWithTheReportedNearStationaryTouchDoesNotRestartIt() = withReader(
+        (0 until 3000).joinToString("\n") { "문장 $it · 터치로 관성 스크롤을 멈춥니다. 다음 문장을 읽습니다." }
+    ) {
+        val body = ui.onNodeWithTag("reader_body").fetchSemanticsNode().boundsInRoot
+        val x = body.center.x
+        val y = body.center.y
+        fun event(action: Int, down: Long, time: Long, atX: Float, atY: Float) {
+            SystemClock.sleep((time - SystemClock.uptimeMillis()).coerceAtLeast(0))
+            ui.runOnUiThread {
+                val pointer = MotionEvent.PointerProperties().apply { id = 0; toolType = MotionEvent.TOOL_TYPE_FINGER }
+                val coords = MotionEvent.PointerCoords().apply { this.x = atX; this.y = atY; pressure = 1f; size = 1f }
+                val touch = MotionEvent.obtain(down, time, action, 1, arrayOf(pointer), arrayOf(coords),
+                    0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0)
+                try { readerView.dispatchTouchEvent(touch) } finally { touch.recycle() }
+            }
+        }
+        val swipe = SystemClock.uptimeMillis()
+        event(MotionEvent.ACTION_DOWN, swipe, swipe, x, y + 200f)
+        for (i in 1..8) event(MotionEvent.ACTION_MOVE, swipe, swipe + i * 12, x, y + 200f - i * 40f)
+        event(MotionEvent.ACTION_UP, swipe, swipe + 104, x, y - 120f)
+        val stop = maxOf(swipe + 160, SystemClock.uptimeMillis())
+        event(MotionEvent.ACTION_DOWN, stop, stop, x, y)
+        // Replay gesture 4342: stationary for 100 ms, then only 1 px vertically at lift-off.
+        for (i in 1..13) event(MotionEvent.ACTION_MOVE, stop, stop + i * 8, x, y)
+        event(MotionEvent.ACTION_MOVE, stop, stop + 108, x - 7f, y + 1f)
+        event(MotionEvent.ACTION_MOVE, stop, stop + 117, x - 12f, y + 1f)
+        lateinit var stopped: Pair<Int, Int>
+        ui.runOnUiThread { stopped = list.firstVisibleItemIndex to list.firstVisibleItemScrollOffset }
+        event(MotionEvent.ACTION_UP, stop, stop + 125, x - 12f, y + 1f)
+        ui.waitForIdle()
+        ui.runOnIdle {
+            assertEquals("Lifting a stopping touch must not restart scrolling", stopped,
+                list.firstVisibleItemIndex to list.firstVisibleItemScrollOffset)
+        }
+        val out = ByteArrayOutputStream()
+        runBlocking { vm.scrollDiagnostics.export(out) }
+        val flings = out.toString("UTF-8").lineSequence()
+            .filter { it.contains("fling_start session=$session") }.toList()
+        assertTrue("The real swipe must keep its fling: $flings", flings.any { it.contains("suppressed=false") })
+        assertTrue("The stopping touch must suppress the fling: $flings", flings.last().contains("suppressed=true"))
     }
 
     @Test fun fontChangesAndRapidSeeksKeepTheRequestedSentenceInALongParagraph() = withReader(

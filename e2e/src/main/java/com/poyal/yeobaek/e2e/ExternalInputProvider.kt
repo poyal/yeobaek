@@ -11,7 +11,9 @@ import java.io.File
 /** Test-only non-DocumentsProvider: exercises a grant from another app. */
 class ExternalInputProvider : ContentProvider() {
     override fun onCreate() = true
-    override fun getType(uri: Uri) = if (uri.lastPathSegment?.endsWith("png") == true) "image/png" else "text/plain"
+    override fun getType(uri: Uri) = when (uri.lastPathSegment?.substringAfterLast('.')) {
+        "png" -> "image/png"; "epub" -> "application/epub+zip"; else -> "text/plain"
+    }
     override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): MatrixCursor {
         val file = file(uri)
         val columns = projection ?: arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
@@ -19,7 +21,7 @@ class ExternalInputProvider : ContentProvider() {
     }
     private fun file(uri: Uri): File {
         val name = requireNotNull(uri.lastPathSegment)
-        require(name in setOf("external-reader.txt", "external-page.png"))
+        require(name in setOf("external-reader.txt", "external-page.png", "external-reflow.epub", "external-fixed.epub", "external-drm.epub"))
         return File(requireNotNull(context).cacheDir, name)
     }
     override fun openFile(uri: Uri, mode: String) = ParcelFileDescriptor.open(file(uri), ParcelFileDescriptor.MODE_READ_ONLY)

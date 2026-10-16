@@ -18,7 +18,7 @@ internal fun nextReadingEntry(
     val current = entries.indexOfFirst { it.id == currentId }
     if (current < 0) return null
     return entries.asSequence().drop(current + 1).firstOrNull {
-        if (it.directory) containsImages(it) else it.txt || it.pdf || it.archive
+        if (it.directory) containsImages(it) else it.epub || it.txt || it.pdf || it.archive
     }
 }
 

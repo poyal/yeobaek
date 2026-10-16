@@ -5,7 +5,8 @@ import android.content.Intent
 import androidx.compose.runtime.LaunchedEffect
 import android.view.MotionEvent
 import com.poyal.yeobaek.diagnostics.ScrollTouchTrace
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
+import com.poyal.yeobaek.epub.EpubHostFragment
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -13,7 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import com.poyal.yeobaek.ui.*
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private var model: AppViewModel? = null
     private val scrollTouchTrace by lazy { ScrollTouchTrace((application as YeobaekApplication).scrollDiagnostics) }
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
@@ -24,6 +25,9 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        supportFragmentManager.fragments.filterIsInstance<EpubHostFragment>().forEach {
+            supportFragmentManager.beginTransaction().remove(it).commitNow()
+        }
         enableEdgeToEdge()
         window.isNavigationBarContrastEnforced = false
         setContent {

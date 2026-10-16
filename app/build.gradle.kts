@@ -16,8 +16,8 @@ android {
         applicationId = "com.poyal.yeobaek"
         minSdk = 30
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {
@@ -51,7 +51,7 @@ android {
             matchingFallbacks += "release"
         }
     }
-    compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
+    compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17; isCoreLibraryDesugaringEnabled = true }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true; buildConfig = true }
     if (providers.gradleProperty("updateFixture").isPresent) {
@@ -65,11 +65,18 @@ android {
         sourceSets.getByName("androidTest").java.srcDir("src/imageLoadTest/java")
     }
     sourceSets.getByName("androidTest").assets.srcDir("schemas")
+    sourceSets.getByName("main").assets.srcDir("src/main/res/font")
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     implementation(project(":core:txt"))
+    implementation("org.readium.kotlin-toolkit:readium-shared:3.1.2")
+    implementation("org.readium.kotlin-toolkit:readium-streamer:3.1.2")
+    implementation("org.readium.kotlin-toolkit:readium-navigator:3.1.2")
+    implementation("androidx.fragment:fragment-ktx:1.8.7")
+    implementation("org.jsoup:jsoup:1.18.1")
     implementation("io.legere:pdfiumandroid:2.0.0")
     implementation("me.zhanghai.android.libarchive:library:1.1.6")
     implementation("androidx.exifinterface:exifinterface:1.4.1")

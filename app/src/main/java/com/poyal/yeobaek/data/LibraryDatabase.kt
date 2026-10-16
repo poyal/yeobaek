@@ -52,10 +52,13 @@ abstract class LibraryDao {
     @Query("SELECT * FROM pdf_bookmarks") abstract suspend fun exportPdfBookmarks(): List<PdfBookmark>
     @Query("SELECT * FROM image_positions") abstract suspend fun exportImagePositions(): List<ImagePosition>
     @Query("SELECT * FROM image_bookmarks") abstract suspend fun exportImageBookmarks(): List<ImageBookmark>
+    @Query("SELECT * FROM epub_positions") abstract suspend fun exportEpubPositions(): List<EpubPosition>
+    @Query("SELECT * FROM epub_bookmarks") abstract suspend fun exportEpubBookmarks(): List<EpubBookmark>
+    @Insert(onConflict = OnConflictStrategy.IGNORE) abstract suspend fun importEpubPosition(value: EpubPosition)
     @Insert(onConflict = OnConflictStrategy.IGNORE) abstract suspend fun importPosition(value: ReadingPosition)
     @Insert(onConflict = OnConflictStrategy.IGNORE) abstract suspend fun importPdfPosition(value: PdfPosition)
     @Insert(onConflict = OnConflictStrategy.IGNORE) abstract suspend fun importImagePosition(value: ImagePosition)
-    @Transaction open suspend fun snapshot() = LibrarySnapshot(exportBooks(), exportPositions(), exportBookmarks(), exportPdfPositions(), exportPdfBookmarks(), exportImagePositions(), exportImageBookmarks())
+    @Transaction open suspend fun snapshot() = LibrarySnapshot(exportBooks(), exportPositions(), exportBookmarks(), exportPdfPositions(), exportPdfBookmarks(), exportImagePositions(), exportImageBookmarks(), exportEpubPositions(), exportEpubBookmarks())
     @Transaction open suspend fun importMissing(value: LibrarySnapshot): Map<String, String> {
         val aliases = mutableMapOf<String, String>()
         value.books.forEach { incoming ->
@@ -68,10 +71,28 @@ abstract class LibraryDao {
         value.positions.forEach { importPosition(it.copy(bookId = aliases.getValue(it.bookId), session = 0, sequence = 0)) }
         value.pdfPositions.forEach { importPdfPosition(it.copy(bookId = aliases.getValue(it.bookId), session = 0, sequence = 0)) }
         value.imagePositions.forEach { importImagePosition(it.copy(bookId = aliases.getValue(it.bookId), session = 0, sequence = 0)) }
+        value.epubPositions.forEach { importEpubPosition(it.copy(bookId = aliases.getValue(it.bookId), session = 0, sequence = 0)) }
         value.bookmarks.forEach { addBookmark(it.copy(bookId = aliases.getValue(it.bookId))) }
         value.pdfBookmarks.forEach { addPdfBookmark(it.copy(bookId = aliases.getValue(it.bookId))) }
         value.imageBookmarks.forEach { addImageBookmark(it.copy(bookId = aliases.getValue(it.bookId))) }
+        value.epubBookmarks.forEach { addEpubBookmark(it.copy(bookId = aliases.getValue(it.bookId))) }
         return aliases
+    }
+
+    @Query("SELECT * FROM epub_positions") abstract fun observeEpubPositions(): Flow<List<EpubPosition>>
+    @Query("SELECT * FROM epub_positions WHERE bookId=:id AND version=:version") abstract suspend fun epubPosition(id: String, version: String): EpubPosition?
+    @Upsert protected abstract suspend fun putEpubPosition(position: EpubPosition)
+    @Query("SELECT * FROM epub_bookmarks WHERE bookId=:id ORDER BY createdAt DESC") abstract fun epubBookmarks(id: String): Flow<List<EpubBookmark>>
+    @Insert(onConflict = OnConflictStrategy.IGNORE) abstract suspend fun addEpubBookmark(mark: EpubBookmark)
+    @Query("DELETE FROM epub_bookmarks WHERE id=:id") abstract suspend fun deleteEpubBookmark(id: String)
+    @Query("DELETE FROM epub_bookmarks WHERE bookId=:id") protected abstract suspend fun deleteEpubBookmarks(id: String)
+    @Query("DELETE FROM epub_positions WHERE bookId=:id") protected abstract suspend fun deleteEpubPositions(id: String)
+    @Transaction open suspend fun saveEpub(position: EpubPosition) {
+        val active = session() ?: return
+        if (active.revision != position.session || active.bookId != position.bookId) return
+        val old = epubPosition(position.bookId, position.version)
+        if (old != null && old.session == position.session && old.sequence >= position.sequence) return
+        putEpubPosition(position)
     }
 
     @Query("SELECT * FROM image_positions") abstract fun observeImagePositions(): Flow<List<ImagePosition>>
@@ -151,14 +172,21 @@ abstract class LibraryDao {
     open suspend fun forget(id: String) {
         if (session()?.bookId == id) consumeCandidate()
         deleteBookmarks(id); deletePositions(id); deletePdfBookmarks(id); deletePdfPositions(id)
-        deleteImageBookmarks(id); deleteImagePositions(id); forgetOpened(id)
+        deleteImageBookmarks(id); deleteImagePositions(id); deleteEpubBookmarks(id); deleteEpubPositions(id); forgetOpened(id)
     }
 }
 
-@Database(entities = [Book::class, ReadingPosition::class, Bookmark::class, ReaderSession::class, PdfPosition::class, PdfBookmark::class, ImagePosition::class, ImageBookmark::class], version = 4, exportSchema = true)
+@Database(entities = [Book::class, ReadingPosition::class, Bookmark::class, ReaderSession::class, PdfPosition::class, PdfBookmark::class, ImagePosition::class, ImageBookmark::class, EpubPosition::class, EpubBookmark::class], version = 5, exportSchema = true)
 abstract class LibraryDatabase : RoomDatabase() {
     abstract fun library(): LibraryDao
     companion object {
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS epub_positions (bookId TEXT NOT NULL, version TEXT NOT NULL, locator TEXT NOT NULL, progress REAL NOT NULL, completed INTEGER NOT NULL, session INTEGER NOT NULL, sequence INTEGER NOT NULL, locatorVersion INTEGER NOT NULL, PRIMARY KEY(bookId, version))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS epub_bookmarks (id TEXT NOT NULL PRIMARY KEY, bookId TEXT NOT NULL, version TEXT NOT NULL, locationKey TEXT NOT NULL, locator TEXT NOT NULL, title TEXT NOT NULL, createdAt INTEGER NOT NULL, locatorVersion INTEGER NOT NULL)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_epub_bookmarks_bookId_version_locationKey ON epub_bookmarks(bookId, version, locationKey)")
+            }
+        }
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE image_positions ADD COLUMN segment INTEGER NOT NULL DEFAULT -1")

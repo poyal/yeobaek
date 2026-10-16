@@ -17,11 +17,12 @@ import java.io.File
     val bookmarks: List<Bookmark> = emptyList(), val pdfPositions: List<PdfPosition> = emptyList(),
     val pdfBookmarks: List<PdfBookmark> = emptyList(), val imagePositions: List<ImagePosition> = emptyList(),
     val imageBookmarks: List<ImageBookmark> = emptyList(),
+    val epubPositions: List<EpubPosition> = emptyList(), val epubBookmarks: List<EpubBookmark> = emptyList(),
 ) {
-    val positionCount get() = positions.size + pdfPositions.size + imagePositions.size
-    val bookmarkCount get() = bookmarks.size + pdfBookmarks.size + imageBookmarks.size
+    val positionCount get() = positions.size + pdfPositions.size + imagePositions.size + epubPositions.size
+    val bookmarkCount get() = bookmarks.size + pdfBookmarks.size + imageBookmarks.size + epubBookmarks.size
 }
-@Serializable data class ReadingBackup(val version: Int = 1, val createdAt: Long = System.currentTimeMillis(),
+@Serializable data class ReadingBackup(val version: Int = 2, val createdAt: Long = System.currentTimeMillis(),
     val library: LibrarySnapshot, val settings: ReaderSettings, val theme: AppTheme)
 data class BackupPreview(val backup: ReadingBackup, val conflicts: Int)
 
@@ -98,13 +99,17 @@ class ReadingBackups(private val context: Context, private val dao: LibraryDao,
 }
 
 fun validateBackup(value: ReadingBackup) {
-    require(value.version == 1) { "지원하지 않는 백업 버전입니다." }
+    require(value.version in 1..2) { "지원하지 않는 백업 버전입니다." }
     val data = value.library
     require(data.books.size <= 100_000 && data.positionCount + data.bookmarkCount <= 300_000)
     val ids = data.books.map { it.id }.toSet()
     require(ids.size == data.books.size && data.books.map { it.sourceKey }.distinct().size == data.books.size)
     require(data.books.all { it.id.isNotBlank() && !it.id.contains(':') && it.uri.startsWith("content://") && it.length >= 0 &&
-        it.format in setOf("TXT", "PDF", "IMAGE_FOLDER", "IMAGE_ARCHIVE", "IMAGE_SINGLE") })
+        it.format in setOf("TXT", "PDF", "IMAGE_FOLDER", "IMAGE_ARCHIVE", "IMAGE_SINGLE", "EPUB") })
+    if (value.version == 1) require(data.epubPositions.isEmpty() && data.epubBookmarks.isEmpty() && data.books.none { it.format == "EPUB" })
+    val epubIds = data.books.filter { it.format == "EPUB" }.map { it.id }.toSet()
+    require(data.epubPositions.all { it.bookId in epubIds && it.locatorVersion == 1 && it.progress.isFinite() && it.progress in 0.0..1.0 && validEpubLocator(it.locator) })
+    require(data.epubBookmarks.all { it.bookId in epubIds && it.locatorVersion == 1 && it.locationKey.isNotBlank() && validEpubLocator(it.locator) })
     require(data.positions.all { it.bookId in ids && it.offset >= 0 && it.fraction.isFinite() })
     require(data.bookmarks.all { it.bookId in ids && it.offset >= 0 })
     fun valid(id: String, page: Int, x: Float, y: Float, zoom: Float) = id in ids && page >= 0 &&
@@ -117,3 +122,11 @@ fun validateBackup(value: ReadingBackup) {
         value.settings.screen.rotation in setOf("SYSTEM", "PORTRAIT", "LANDSCAPE"))
     require(value.settings.favorites.all { it.directory && it.uri.startsWith("content://") })
 }
+
+internal fun validEpubLocator(value: String): Boolean = runCatching {
+    require(value.length <= 256 * 1024)
+    val obj = kotlinx.serialization.json.Json.parseToJsonElement(value) as kotlinx.serialization.json.JsonObject
+    val href = (obj["href"] as? kotlinx.serialization.json.JsonPrimitive)?.content.orEmpty()
+    val type = (obj["type"] as? kotlinx.serialization.json.JsonPrimitive)?.content.orEmpty()
+    href.isNotBlank() && !href.startsWith("/") && !href.contains(":") && !href.split('/').contains("..") && type.isNotBlank()
+}.getOrDefault(false)

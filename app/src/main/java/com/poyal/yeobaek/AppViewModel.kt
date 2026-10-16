@@ -8,6 +8,8 @@ import com.poyal.yeobaek.data.*
 import com.poyal.yeobaek.txt.*
 import com.poyal.yeobaek.pdf.*
 import com.poyal.yeobaek.image.*
+import com.poyal.yeobaek.epub.*
+import org.readium.r2.shared.publication.services.coverFitting
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.File
@@ -22,6 +24,7 @@ data class UiState(
     val folderBusy: Boolean = false, val folderError: String? = null, val showAll: Boolean = false,
     val imageReader: OpenImages? = null, val changedImages: OpenImages? = null, val imageSettingsOrigin: String? = null, val imagePagesOrigin: String? = null,
     val pdfReader: OpenPdf? = null, val changedPdf: OpenPdf? = null, val pdfSettingsOrigin: String? = null,
+    val epubReader: OpenEpub? = null, val changedEpub: OpenEpub? = null, val epubSettingsOrigin: String? = null,
     val reader: OpenBook? = null, val preparing: String? = null, val error: String? = null,
     val failedEntry: DocumentEntry? = null, val resume: Book? = null, val sheet: String? = null,
     val info: DocumentEntry? = null, val changed: ChangedBook? = null,
@@ -32,7 +35,7 @@ data class UiState(
     val searchError: String? = null, val searchScanned: Float = 0f,
     val searchPageStart: Long = 0,
 ) {
-    val hasReader get() = reader != null || pdfReader != null || imageReader != null
+    val hasReader get() = reader != null || pdfReader != null || imageReader != null || epubReader != null
     fun searchHitIndex(row: Int): Long {
         require(row in searchHits.indices)
         return searchPageStart + row
@@ -55,6 +58,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val pdfPositions = dao.observePdfPositions().stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), emptyList())
     private val pdfEngine = PdfEngine(application)
     private val pdfStore = PdfStore(application.cacheDir)
+    private val epubStore = EpubStore(application.cacheDir)
+    private val epubEngine = EpubEngine(application)
+    val epubReader = EpubReaderController(viewModelScope, dao, application.cacheDir) { message -> _ui.update { it.copy(error = message) } }
+    val epubPositions = dao.observeEpubPositions().stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), emptyList())
     val pdfReader = PdfReaderController(viewModelScope, dao, application.cacheDir) { message -> _ui.update { it.copy(error = message) } }
     val books = dao.observeBooks().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val positions = dao.observePositions().stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), emptyList())
@@ -87,8 +94,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val id = currentBook?.id ?: return
         action { settingsStore.fields("book:$id:IMAGE", mapOf("cropMode" to "MANUAL", "cropLeft" to "${crop.left}", "cropTop" to "${crop.top}", "cropRight" to "${crop.right}", "cropBottom" to "${crop.bottom}")) }
     }
-    private fun UiState.book() = reader?.book ?: pdfReader?.book ?: imageReader?.book
+    private fun UiState.book() = reader?.book ?: pdfReader?.book ?: imageReader?.book ?: epubReader?.book
     val currentBook get() = ui.value.book()
+    val epub = combine(settings, ui) { extra, state -> ReaderSettingValues.epub(EpubReaderPreferences(), extra.fields("EPUB", state.book()?.id)) }
+        .distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, EpubReaderPreferences())
+    val editEpub = combine(settings, ui, settingsScope) { extra, state, scope -> ReaderSettingValues.epub(EpubReaderPreferences(), extra.editingFields("EPUB", state.book()?.id, scope)) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, EpubReaderPreferences())
     val txt = combine(prefs.txt, settings, ui) { base, extra, state -> ReaderSettingValues.txt(base, extra.fields("TXT", state.book()?.id)) }
         .distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, TxtPreferences())
     val pdf = combine(prefs.pdf, settings, ui) { base, extra, state -> ReaderSettingValues.pdf(base, extra.fields("PDF", state.book()?.id)) }
@@ -179,6 +190,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private fun endOpenTrace() { openTrace?.let { android.os.Trace.endAsyncSection("OpenText", it) }; openTrace = null }
 
     init {
+        viewModelScope.launch(Dispatchers.IO) { epubStore.clean(); container.cacheDir.listFiles()?.filter { it.name.startsWith("epub-search-") }?.forEach { it.delete() } }
         viewModelScope.launch {
             withContext(Dispatchers.IO) { store.cleanAbandoned(); pdfStore.clean(); imageStore.clean(); container.cacheDir.listFiles()?.filter { it.name.startsWith("pdf-search-") }?.forEach { it.delete() }; File(container.cacheDir, "search").deleteRecursively() }
             try { backups.recover() } catch (_: Exception) { _ui.update { it.copy(error = "중단된 백업 복원을 완료하지 못했습니다. 저장 공간을 확인해 주세요.") } }
@@ -213,11 +225,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _ui.update { if (it.screen == "txt_settings") it else it.copy(screen = "txt_settings", txtSettingsOrigin = it.screen, sheet = null) }
     }
     fun openPdfSettings() { _ui.update { it.copy(screen = "pdf_settings", pdfSettingsOrigin = it.screen, sheet = null) } }
+    fun openEpubSettings() = action {
+        epubReader.capture(); epubReader.flush()
+        epubReader.ready.value = false
+        _ui.update { it.copy(screen = "epub_settings", epubSettingsOrigin = it.screen, sheet = null) }
+    }
+    fun closeEpubSettings() {
+        epubReader.ready.value = false
+        _ui.update { it.copy(screen = it.epubSettingsOrigin ?: "settings", epubSettingsOrigin = null) }
+    }
     fun openImagePages() { _ui.update { it.copy(screen = "image_pages", imagePagesOrigin = it.screen, sheet = null) } }
     fun closeImagePages() { _ui.update { it.copy(screen = it.imagePagesOrigin ?: "folder", imagePagesOrigin = null) } }
     fun openImageSettings() { _ui.update { it.copy(screen = "image_settings", imageSettingsOrigin = it.screen, sheet = null) } }
-    fun closeImageSettings() { _ui.update { it.copy(screen = it.imageSettingsOrigin ?: "viewer_settings", imageSettingsOrigin = null) } }
-    fun closePdfSettings() { _ui.update { it.copy(screen = it.pdfSettingsOrigin ?: "viewer_settings", pdfSettingsOrigin = null) } }
+    fun closeImageSettings() { _ui.update { it.copy(screen = it.imageSettingsOrigin ?: "settings", imageSettingsOrigin = null) } }
+    fun closePdfSettings() { _ui.update { it.copy(screen = it.pdfSettingsOrigin ?: "settings", pdfSettingsOrigin = null) } }
     fun closeTxtSettings() {
         _ui.update { it.copy(screen = it.txtSettingsOrigin ?: "settings", txtSettingsOrigin = null) }
     }
@@ -233,6 +254,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         is java.io.FileNotFoundException -> "파일이나 폴더를 찾을 수 없습니다. 위치를 확인하고 다시 연결해 주세요."
         is ImageFailure -> e.message ?: "이미지를 열지 못했습니다."
         is PdfFailure -> e.message ?: "PDF를 열지 못했습니다."
+        is EpubFailure -> e.message ?: "EPUB을 열지 못했습니다."
         is TextFailure -> e.message ?: "본문을 준비하지 못했습니다."
         else -> "작업을 완료하지 못했습니다. 저장 공간과 파일 상태를 확인한 뒤 다시 시도해 주세요."
     }
@@ -280,7 +302,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun enter(entry: DocumentEntry) {
         if (entry.directory) navigate(ui.value.path + entry, entry)
         else if (entry.supported || ui.value.showAll) open(entry)
-        else _ui.update { it.copy(error = "TXT·PDF·이미지·압축파일을 읽을 수 있습니다.") }
+        else _ui.update { it.copy(error = "TXT·PDF·EPUB·이미지·압축파일을 읽을 수 있습니다.") }
     }
     fun up() {
         if (ui.value.path.size > 1) { val path = ui.value.path.dropLast(1); navigate(path, path.last()) }
@@ -305,6 +327,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun clearCache() = action {
         if (ui.value.preparing != null) return@action
+        withContext(Dispatchers.IO) { epubStore.clear(setOfNotNull(ui.value.epubReader?.document?.file, ui.value.changedEpub?.document?.file)) }
         withContext(Dispatchers.IO) { store.clear(setOfNotNull(ui.value.reader?.document?.version)); pdfStore.clear(setOfNotNull(ui.value.pdfReader?.document?.file, ui.value.changedPdf?.document?.file)); imageStore.clear() }
         _ui.update { it.copy(sheet = null) }
     }
@@ -326,7 +349,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 runCatching { container.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
             }
             val entry = withContext(Dispatchers.IO) { folders.info(uri.toString()) }
-            if (!entry.supported) { _ui.update { it.copy(error = "TXT·PDF·이미지·압축파일을 선택해 주세요.") }; return@action }
+            if (!entry.supported) { _ui.update { it.copy(error = "TXT·EPUB·PDF·이미지·압축파일을 선택해 주세요.") }; return@action }
             externalUris += entry.uri
             _ui.update { it.copy(resume = null) }
             open(entry)
@@ -341,6 +364,61 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) { if (request == entryRequest) _ui.update { it.copy(error = message(e), missingBook = book) } }
         }
+    }
+    private fun openEpub(entry: DocumentEntry, existing: Book?) {
+        ++entryRequest
+        openJob?.cancel()
+        val generation = ++openGeneration
+        ui.value.changedEpub?.document?.close()
+        _ui.update { it.copy(changedEpub = null, preparing = "EPUB 확인 중", error = null, failedEntry = entry, sheet = null) }
+        openJob = viewModelScope.launch {
+            var document: EpubDocument? = null
+            var retained = false
+            try {
+                flushPosition()
+                val original = existing ?: dao.source(folders.key(entry.uri))
+                val file = epubStore.prepare { folders.open(entry.uri) }
+                document = epubEngine.open(file)
+                ensureActive()
+                if (generation != openGeneration) return@launch
+                val book = (original ?: Book(UUID.randomUUID().toString(), folders.key(entry.uri), entry.uri, entry.name, ui.value.path.joinToString(" / ") { it.name }))
+                    .copy(uri = entry.uri, name = entry.name, sourceKey = folders.key(entry.uri), format = "EPUB", version = file.nameWithoutExtension,
+                        sourceHash = file.nameWithoutExtension, length = file.length(), pageCount = if (document.fixed) document.publication.readingOrder.size else null,
+                        charset = "", charsetOverride = null)
+                val saved = dao.epubPosition(book.id, book.version)
+                val opened = OpenEpub(book, document, decodeEpubLocator(saved?.locator))
+                if (original != null && original.sourceHash.isNotBlank() && original.sourceHash != book.sourceHash) {
+                    _ui.update { it.copy(changedEpub = opened, preparing = null) }
+                } else showEpub(opened)
+                retained = true
+                withContext(Dispatchers.IO) { epubStore.trim(setOfNotNull(file, ui.value.epubReader?.document?.file)) }
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) { if (generation == openGeneration) _ui.update { it.copy(preparing = null, error = message(e)) } }
+            finally { if (!retained) document?.close() }
+        }
+    }
+    private suspend fun showEpub(opened: OpenEpub) {
+        flushPosition(); epubReader.close(); pdfReader.close(); imageReader.close(); cancelSearch(); marksJob?.cancel()
+        activeSession = 0; latest = null; dirty = false
+        associateFolder(opened.book)
+        epubReader.show(opened)
+        _ui.update { it.copy(reader = null, pdfReader = null, imageReader = null, epubReader = opened, changedEpub = null,
+            preparing = null, sheet = null, missingBook = null, error = null) }
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    if (!opened.document.closed.get()) {
+                        val cover = opened.document.publication.coverFitting(android.util.Size(128, 160))
+                        if (cover != null) try { thumbnails.save(folders.info(opened.book.uri), cover) } finally { cover.recycle() }
+                    }
+                }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { /* Cover is optional. */ }
+        }
+    }
+    fun acceptEpubChange(accept: Boolean) = action {
+        val opened = ui.value.changedEpub ?: return@action
+        _ui.update { it.copy(changedEpub = null) }
+        if (accept) showEpub(opened.copy(initial = null)) else opened.document.close()
     }
     fun reconnectBook(uri: Uri) = action {
         val book = ui.value.missingBook ?: return@action
@@ -366,6 +444,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun open(entry: DocumentEntry, override: String? = null, existing: Book? = null) {
         dismissReadingEnd()
+        if (entry.epub && !entry.directory) { openEpub(entry, existing); return }
         if (entry.directory || entry.image || entry.archive || existing?.format == "IMAGE_FOLDER") { openImages(entry, existing); return }
         ++entryRequest
         openJob?.cancel()
@@ -477,7 +556,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     private suspend fun showImages(opened: OpenImages) {
         associateFolder(opened.book)
-        flushPosition(); pdfReader.close(); imageReader.close(); cancelSearch(); marksJob?.cancel()
+        flushPosition(); epubReader.close(); pdfReader.close(); imageReader.close(); cancelSearch(); marksJob?.cancel()
         activeSession = 0; latest = null; dirty = false
         imageReader.show(opened)
         viewModelScope.launch {
@@ -487,7 +566,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 try { thumbnails.save(entry, cover) } finally { cover.recycle() }
             } catch (e: CancellationException) { throw e } catch (_: Exception) { /* Preview is optional. */ }
         }
-        _ui.update { it.copy(reader = null, pdfReader = null, imageReader = opened, changedImages = null,
+        _ui.update { it.copy(reader = null, pdfReader = null, epubReader = null, imageReader = opened, changedImages = null,
             preparing = null, sheet = null, missingBook = null, error = null) }
     }
     fun acceptImageChange(mode: String) = action {
@@ -516,9 +595,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     private suspend fun showPdf(opened: OpenPdf) {
         associateFolder(opened.book)
-        flushPosition(); pdfReader.close(); imageReader.close(); cancelSearch(); marksJob?.cancel(); activeSession = 0; latest = null; dirty = false
+        flushPosition(); epubReader.close(); pdfReader.close(); imageReader.close(); cancelSearch(); marksJob?.cancel(); activeSession = 0; latest = null; dirty = false
         pdfReader.show(opened)
-        _ui.update { it.copy(reader = null, imageReader = null, pdfReader = opened, changedPdf = null, preparing = null, sheet = null, missingBook = null, error = null) }
+        _ui.update { it.copy(reader = null, imageReader = null, epubReader = null, pdfReader = opened, changedPdf = null, preparing = null, sheet = null, missingBook = null, error = null) }
     }
     fun acceptPdfChange(mode: String) = action {
         val value = ui.value.changedPdf ?: return@action
@@ -528,12 +607,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     private suspend fun showReader(opened: OpenBook) {
         associateFolder(opened.book)
-        pdfReader.close(); imageReader.close()
+        epubReader.close(); pdfReader.close(); imageReader.close()
         activeSession = 0; sequence = 0; latest = opened.initial; dirty = false; searchOrigin = null
         _locator.value = opened.initial?.offset ?: 0
         cancelSearch(); marksJob?.cancel(); _seek.value = null
         _progress.value = if (opened.document.length == 0L) 0f else ((opened.initial?.offset ?: 0).toFloat() / opened.document.length)
-        _ui.update { it.copy(reader = opened, imageReader = null, pdfReader = null, sheet = null, info = null, missingBook = null, preparing = null, error = null, changed = null, searchHits = emptyList(), searchResult = null, searchQuery = "", searchPageStart = 0) }
+        _ui.update { it.copy(reader = opened, imageReader = null, pdfReader = null, epubReader = null, sheet = null, info = null, missingBook = null, preparing = null, error = null, changed = null, searchHits = emptyList(), searchResult = null, searchQuery = "", searchPageStart = 0) }
         marksJob = viewModelScope.launch { dao.bookmarks(opened.book.id).collect { _bookmarks.value = it } }
     }
     fun cancelOpen() { ++entryRequest; ++openGeneration; openJob?.cancel(); endOpenTrace(); _ui.update { it.copy(preparing = null) } }
@@ -567,6 +646,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         idleSave = viewModelScope.launch { delay(300); flushPosition() }
     }
     suspend fun flushPosition() {
+        epubReader.capture(); epubReader.flush()
         pdfReader.flush(); imageReader.flush()
         if (!dirty || activeSession == 0L) return
         val p = latest ?: return
@@ -590,11 +670,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         settingsScope.value = SettingsScope.COMMON
         dismissReadingEnd(); announcedEnd = null
         cancelOpen(); cancelSearch(); idleSave?.cancel()
-        flushPosition(); pdfReader.close(); imageReader.close(); dao.consumeCandidate(); activeSession = 0; marksJob?.cancel()
-        _ui.update { it.copy(reader = null, imageReader = null, pdfReader = null, sheet = null, searchResult = null, searchHits = emptyList(), searchQuery = "") }
+        flushPosition(); epubReader.close(); pdfReader.close(); imageReader.close(); dao.consumeCandidate(); activeSession = 0; marksJob?.cancel()
+        _ui.update { it.copy(reader = null, imageReader = null, pdfReader = null, epubReader = null, sheet = null, searchResult = null, searchHits = emptyList(), searchQuery = "") }
         latest = null; searchOrigin = null; _seek.value = null
     }
-    private fun readerToken() = ui.value.reader?.token ?: ui.value.pdfReader?.token ?: ui.value.imageReader?.token
+    private fun readerToken() = ui.value.reader?.token ?: ui.value.pdfReader?.token ?: ui.value.imageReader?.token ?: ui.value.epubReader?.token
     fun readingProgress(token: String, completed: Boolean) {
         if (readerToken() != token || completed) return
         if (announcedEnd == token) announcedEnd = null
@@ -602,7 +682,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun readingFinished(token: String) {
         if (readerToken() != token || announcedEnd == token || ui.value.preparing != null) return
-        val book = ui.value.reader?.book ?: ui.value.pdfReader?.book ?: ui.value.imageReader?.book ?: return
+        val book = currentBook ?: return
         val knownPath = ui.value.path
         announcedEnd = token
         readingEndJob?.cancel()
@@ -728,7 +808,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val entry = if (reader != null) DocumentEntry("", reader.book.uri, reader.book.name, false, null, null, "text/plain") else ui.value.failedEntry
         if (entry != null) open(entry, encoding, reader?.book)
     }
-    override fun onCleared() { pdfEngine.dispose(); imageReader.opened?.source?.close(); ui.value.changedImages?.source?.close(); super.onCleared() }
+    override fun onCleared() { epubReader.dispose(); ui.value.changedEpub?.document?.close(); pdfEngine.dispose(); imageReader.opened?.source?.close(); ui.value.changedImages?.source?.close(); super.onCleared() }
     suspend fun encodingPreview(encoding: String): String = withContext(Dispatchers.IO) {
         val uri = ui.value.reader?.book?.uri ?: ui.value.failedEntry?.uri ?: return@withContext ""
         folders.open(uri).use { input ->

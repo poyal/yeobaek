@@ -56,6 +56,11 @@ class ReaderSettingsStore(private val context: Context) {
 
 /** Only changed fields are written. A size override never freezes the common font or paper. */
 object ReaderSettingValues {
+    fun epub(p: EpubReaderPreferences) = mapOf("mode" to p.mode.name, "publisherStyles" to "${p.publisherStyles}", "font" to p.font.name,
+        "size" to "${p.size}", "line" to "${p.line}", "margin" to "${p.margin}", "paper" to p.paper.name, "canvas" to p.canvas.name)
+    fun epub(p: EpubReaderPreferences, f: Map<String, String>) = p.copy(mode = f.enum("mode", p.mode), publisherStyles = f.bool("publisherStyles", p.publisherStyles),
+        font = f.enum("font", p.font), size = f.number("size", p.size, .75f, 2.5f), line = f.number("line", p.line, 1.2f, 2.2f),
+        margin = f.number("margin", p.margin, .5f, 2f), paper = f.enum("paper", p.paper), canvas = f.enum("canvas", p.canvas))
     fun txt(p: TxtPreferences) = mapOf("font" to p.font.name, "size" to "${p.size}", "line" to "${p.line}", "margin" to "${p.margin}", "paper" to p.paper.name)
     fun pdf(p: PdfPreferences) = mapOf("fit" to p.fit.name, "spacing" to "${p.spacing}", "inverted" to "${p.inverted}", "canvas" to p.canvas.name)
     fun image(p: ImagePreferences) = mapOf("mode" to p.mode.name, "direction" to p.direction.name, "spread" to p.spread.name,
