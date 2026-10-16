@@ -168,11 +168,13 @@ class EpubJourneyTest {
         if (device.hasObject(By.res(Pattern.compile(".*:id/breadcrumb_text")).text("YeobaekEPUB"))) return
         val download = By.res(Pattern.compile(".*:id/breadcrumb_text")).text(Pattern.compile("Downloads?"))
         if (device.hasObject(download)) check(clickOptional(download)) else {
-            check(clickOptional(By.desc("Show roots")))
-            check(clickOptional(By.text(Pattern.compile("Downloads?"))))
+            // Android 11's tree picker can start at storage root without a drawer button.
+            val downloads = By.text(Pattern.compile("Downloads?"))
+            if (!device.hasObject(downloads)) check(clickOptional(By.desc("Show roots")))
+            check(clickOptional(downloads))
         }
         if (device.hasObject(By.text("Files in YeobaekEPUB"))) return
-        check(clickOptional(By.text("YeobaekEPUB")))
+        selectDocument("YeobaekEPUB")
     }
     @Test fun backupFreshRestoreAndChangedOriginalKeepRecords() {
         connect(); openReflow(); click("epub_next"); SystemClock.sleep(700)
