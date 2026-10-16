@@ -1,0 +1,42 @@
+[
+  {
+    "path": "비가 그친 오후.txt",
+    "sha256": "fce292211c14b43014ea0a7e205c1f69b37c88b502cdf4e3777bf824d17ea338",
+    "bytes": 2027
+  },
+  {
+    "path": "산문/숲으로 가는 길.txt",
+    "sha256": "4aabd96a2b5a6b2464421b491d016d8a7417721a7f9b66f697ad94597b34e440",
+    "bytes": 1144
+  },
+  {
+    "path": "산책의 기록.pdf",
+    "sha256": "fc7be80150886772cea01966b02656ef02eacc57b0967b0f443ee5b01fb6603f",
+    "bytes": 56235
+  },
+  {
+    "path": "오래된 편지.txt",
+    "sha256": "49268ca0413d42b1861bdef2c651b64f065a445c1e21c7b10e2ce9b58984fb26",
+    "bytes": 760
+  },
+  {
+    "path": "작은 정원.cbz",
+    "sha256": "063a0921adcdd225aa23d4b0ec3aa3456336c5107b93ebfe2834de0f9c7c31db",
+    "bytes": 82701
+  },
+  {
+    "path": "창가의 장면/01.png",
+    "sha256": "d1c15598bde034ca9344de40f75778173d5bca1e81af623b8c4f2bd073bf918d",
+    "bytes": 33666
+  },
+  {
+    "path": "창가의 장면/02.png",
+    "sha256": "a162cf3b93af578926f3d901c81ea100bf71f5e35817814aff8bc583d9c4d9f4",
+    "bytes": 34655
+  },
+  {
+    "path": "창가의 장면/03.png",
+    "sha256": "2f5271df3505435e66744576613c9ddc7635078a238520ba6858dbe4ded56633",
+    "bytes": 40393
+  }
+]

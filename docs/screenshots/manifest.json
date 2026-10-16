@@ -1,0 +1,381 @@
+{
+  "version": "0.3.0",
+  "apk_sha256": "e8b51930dcac76138b765fb370b714cd469a361517cfa69509f4409a226a8c59",
+  "release": "https://github.com/poyal/yeobaek/releases/tag/v0.3.0",
+  "avd": "yeobaek-manual-030",
+  "api": 36,
+  "resolution": [
+    1080,
+    2400
+  ],
+  "density": 420,
+  "locale": "ko-KR",
+  "font_scale": 1.0,
+  "screens": [
+    {
+      "name": "01-first-open",
+      "title": "처음 실행과 시작 폴더 선택",
+      "sha256": "eeb845338f10e2a5cbed6746f6cc697e1159d8ee3df9e21749180ea89009092f",
+      "required": [
+        "connect_folder"
+      ],
+      "captured_at": "2026-10-16T16:36:51.359328+09:00"
+    },
+    {
+      "name": "02-folder-picker",
+      "title": "Android에서 시작 폴더 선택",
+      "sha256": "fcfc717be82f61ed813dce23c38d8f853a137b81d4f3f0dc74b56efcaaeac4bb",
+      "required": [],
+      "captured_at": "2026-10-16T16:36:54.352855+09:00"
+    },
+    {
+      "name": "03-library",
+      "title": "폴더와 파일이 있는 홈",
+      "sha256": "c0c579c3b1efb5b5b5af4d60b860cc2777bf1b72e007da4af3c629bc80243a02",
+      "required": [
+        "folder_refresh",
+        "nav_folder"
+      ],
+      "captured_at": "2026-10-16T16:36:56.550075+09:00"
+    },
+    {
+      "name": "04-txt-reader",
+      "title": "메뉴를 펼친 TXT 독서",
+      "sha256": "f74c96d1d2f55a8649b7528205c3fa524f87ef86e23b9122a5f1294f882c9313",
+      "required": [
+        "reader_header",
+        "reader_footer"
+      ],
+      "captured_at": "2026-10-16T16:36:59.976160+09:00"
+    },
+    {
+      "name": "05-txt-focus",
+      "title": "메뉴를 숨기고 본문 읽기",
+      "sha256": "7270217493f0f1700710d91cccf85d1971ca481d92114edd919e69a0d25fa8ee",
+      "required": [
+        "reader_body"
+      ],
+      "captured_at": "2026-10-16T16:37:01.715120+09:00"
+    },
+    {
+      "name": "06-move",
+      "title": "읽기 위치를 고른 뒤 이동",
+      "sha256": "8ead939a5d56eb414e4b1443c8294dbf09d2420c6754b851612cbcd0cd39c267",
+      "required": [
+        "move_slider",
+        "move_apply"
+      ],
+      "captured_at": "2026-10-16T16:37:04.205687+09:00"
+    },
+    {
+      "name": "07-bookmarks",
+      "title": "문장 위치를 보관하는 책갈피",
+      "sha256": "ea66497ee60dce6509066df003ccb27c5c23dc8535560d366ace08bd9a9f94c1",
+      "required": [
+        "bookmark_list"
+      ],
+      "captured_at": "2026-10-16T16:37:09.581259+09:00"
+    },
+    {
+      "name": "08-txt-search",
+      "title": "본문 검색과 결과 이동",
+      "sha256": "ecc6eab1a66020699dee1a70c77d2e9e0eac70a975f7f48b96e1f1840d86bc06",
+      "required": [
+        "search_input",
+        "search_results",
+        "search_return"
+      ],
+      "captured_at": "2026-10-16T16:37:14.153813+09:00"
+    },
+    {
+      "name": "09-quick-settings",
+      "title": "이 책에만 글자 크기 적용",
+      "sha256": "23bb12ef5d19fda7ee87e3d057ba6928e380c62e5c35e19f3531e18b0e05c0ec",
+      "required": [
+        "scope_BOOK",
+        "inherit_size",
+        "quick_font"
+      ],
+      "captured_at": "2026-10-16T16:37:17.388556+09:00"
+    },
+    {
+      "name": "10-txt-settings",
+      "title": "글꼴과 본문 미리보기",
+      "sha256": "bcb7f9b3c038f6df0211c0f981b9d1e926473c8d2f5d379b4bb63a24ca9d4877",
+      "required": [
+        "txt_settings_screen"
+      ],
+      "captured_at": "2026-10-16T16:37:18.979791+09:00"
+    },
+    {
+      "name": "11-sepia",
+      "title": "세피아 본문",
+      "sha256": "36c2e80600e6ea4da9d281857a5ad2c4e539922cf3b79b5ed92b01752569e1ef",
+      "required": [
+        "reader_body"
+      ],
+      "captured_at": "2026-10-16T16:37:23.442093+09:00"
+    },
+    {
+      "name": "12-dark-reader",
+      "title": "다크 본문",
+      "sha256": "e88c979408ebc8c23536fe92520a12b0a02569e13a4fcacc5398cff50d527508",
+      "required": [
+        "reader_body"
+      ],
+      "captured_at": "2026-10-16T16:37:26.714215+09:00"
+    },
+    {
+      "name": "13-screen-controls",
+      "title": "독서 중 밝기·회전·화면 유지",
+      "sha256": "71b108e344cc3728bd7d9debfdb41835704dfc53cc71966f5b612943cdf5a8c2",
+      "required": [
+        "reader_awake",
+        "rotation_PORTRAIT"
+      ],
+      "captured_at": "2026-10-16T16:37:31.933671+09:00"
+    },
+    {
+      "name": "14-encoding",
+      "title": "글자가 깨질 때 인코딩 미리보기",
+      "sha256": "e8cf08b96bed332172fcc6d1777d822040ecd163845705da9203412dfc7c5bf5",
+      "required": [
+        "encoding_apply"
+      ],
+      "captured_at": "2026-10-16T16:37:34.589810+09:00"
+    },
+    {
+      "name": "15-resume",
+      "title": "다음 실행에서 읽던 책 이어 읽기",
+      "sha256": "65021efaf13422fba786a8731f0bde38e5c5801907971176e41cfbeb8e6785a9",
+      "required": [
+        "resume_accept",
+        "resume_decline"
+      ],
+      "captured_at": "2026-10-16T16:37:38.473859+09:00"
+    },
+    {
+      "name": "16-recent",
+      "title": "최근 읽기에서 책 다시 열기",
+      "sha256": "6de8575aa998c1da76db70c16b0a31575e74d24dc6ff54c9c2b5e64fe0f0e3e0",
+      "required": [
+        "recent_list"
+      ],
+      "captured_at": "2026-10-16T16:37:41.198588+09:00"
+    },
+    {
+      "name": "17-folder-search",
+      "title": "현재 폴더 검색·정렬·읽기 상태",
+      "sha256": "921fbaeb6ab0590b56362f4393714c744bb6d77049bd89421058cf17cd5cf3d2",
+      "required": [
+        "folder_search",
+        "sort_NAME",
+        "status_비가 그친 오후.txt"
+      ],
+      "captured_at": "2026-10-16T16:37:46.229424+09:00"
+    },
+    {
+      "name": "18-pdf-reader",
+      "title": "한글 PDF를 원래 편집 그대로 읽기",
+      "sha256": "52622927283548517559950d78fcf5c24411ffed467ab1b6f82a4d0aae72178e",
+      "required": [
+        "pdf_footer",
+        "pdf_page"
+      ],
+      "captured_at": "2026-10-16T16:37:51.887720+09:00"
+    },
+    {
+      "name": "19-pdf-settings",
+      "title": "PDF 화면 맞춤과 색상 반전",
+      "sha256": "cd184065c1efb0d25e647e4fd13c9bd0f764fabd1583568ace38533ab67c27ac",
+      "required": [
+        "pdf_fit_WIDTH",
+        "pdf_inversion_switch"
+      ],
+      "captured_at": "2026-10-16T16:37:53.503992+09:00"
+    },
+    {
+      "name": "20-pdf-search",
+      "title": "PDF 텍스트 검색",
+      "sha256": "c9cdb8d6f9d66de642eae90eb26a96077a9ce9926dab4573455c080a0deb805a",
+      "required": [
+        "pdf_search_results",
+        "pdf_search_return"
+      ],
+      "captured_at": "2026-10-16T16:37:59.337658+09:00"
+    },
+    {
+      "name": "21-comic-spread",
+      "title": "가로로 긴 펼침면 전체",
+      "sha256": "98a2139496f10c203b41d6c7c883b69c53251e803680d35efcee045f195f6abe",
+      "required": [
+        "image_page",
+        "image_footer"
+      ],
+      "captured_at": "2026-10-16T16:38:12.954282+09:00"
+    },
+    {
+      "name": "22-comic-left",
+      "title": "펼침면 왼쪽부터 읽기",
+      "sha256": "0c783269b2d079f011ddbfc1358a73c0a3bea5ed1f4de5e6d027109ddc45b3a3",
+      "required": [
+        "image_page"
+      ],
+      "captured_at": "2026-10-16T16:38:20.591208+09:00"
+    },
+    {
+      "name": "23-comic-right",
+      "title": "같은 페이지의 오른쪽 이어 읽기",
+      "sha256": "a913c59f1af353f167384ac62f923a28f839dc8690e36e228ad34bb18e3cf7c5",
+      "required": [
+        "image_page"
+      ],
+      "captured_at": "2026-10-16T16:38:23.756824+09:00"
+    },
+    {
+      "name": "24-crop",
+      "title": "미리보며 여백 직접 조절",
+      "sha256": "21ecde0475955ede49a3174d68e35f375ba517a05b770bbadfbe9d6c24ff3b38",
+      "required": [
+        "crop_options",
+        "crop_left"
+      ],
+      "captured_at": "2026-10-16T16:38:30.076355+09:00"
+    },
+    {
+      "name": "25-thumbnails",
+      "title": "페이지 번호와 썸네일로 이동",
+      "sha256": "63d64122b5d0e7b26f765d18d0c30cd315fee53618fa9bdb82dd4f465ebe5249",
+      "required": [
+        "image_thumbnails",
+        "image_page_input"
+      ],
+      "captured_at": "2026-10-16T16:38:35.224253+09:00"
+    },
+    {
+      "name": "26-backup",
+      "title": "독서 기록 백업 저장과 가져오기",
+      "sha256": "0ac3084e1a4344c92fe2224593ecc726af64e1ab85c309799037b0afd95991c5",
+      "required": [
+        "backup_export",
+        "backup_import"
+      ],
+      "captured_at": "2026-10-16T16:38:43.234541+09:00"
+    },
+    {
+      "name": "27-restore-preview",
+      "title": "기존 기록을 유지하는 가져오기 미리보기",
+      "sha256": "90e22e8ca3cdbf142eb079d64ff084f5ad20200b6dab8810de05a8d48d404812",
+      "required": [
+        "backup_restore_confirm"
+      ],
+      "captured_at": "2026-10-16T16:38:48.143492+09:00"
+    },
+    {
+      "name": "28-fresh-restore",
+      "title": "빈 앱에 독서 기록 가져오기",
+      "sha256": "e0603c4c0ad640d5f1a0e12ea422b71de600c93e919821453e32353f67054f62",
+      "required": [
+        "backup_restore_confirm"
+      ],
+      "captured_at": "2026-10-16T16:39:09.955641+09:00"
+    },
+    {
+      "name": "29-reconnect",
+      "title": "기록은 남겨 두고 원본 파일 다시 찾기",
+      "sha256": "eb17912994f3a4836204a1fd6d81819131e158a42222f9a239b6215b87e2681e",
+      "required": [
+        "find_missing_book"
+      ],
+      "captured_at": "2026-10-16T16:39:14.678142+09:00"
+    },
+    {
+      "name": "30-settings",
+      "title": "설정 메뉴",
+      "sha256": "890ac83db4399e9c54aaa963cdb09b0b302c95f545576376b67029486d46447a",
+      "required": [
+        "settings_general",
+        "settings_updates"
+      ],
+      "captured_at": "2026-10-16T16:38:39.753012+09:00"
+    },
+    {
+      "name": "31-theme",
+      "title": "앱 테마와 시작 폴더",
+      "sha256": "0ac3084e1a4344c92fe2224593ecc726af64e1ab85c309799037b0afd95991c5",
+      "required": [
+        "theme_LIGHT",
+        "theme_DARK"
+      ],
+      "captured_at": "2026-10-16T16:38:41.362647+09:00"
+    },
+    {
+      "name": "32-storage",
+      "title": "원본과 독서 기록을 보존하는 캐시 정리",
+      "sha256": "86f298eb31a51f5c80e6c01cd8fe50abf14abc368f0d87fa1420172f4306b0a9",
+      "required": [
+        "clear_cache",
+        "disconnect"
+      ],
+      "captured_at": "2026-10-16T16:38:51.195038+09:00"
+    },
+    {
+      "name": "33-update",
+      "title": "현재 버전과 업데이트 확인",
+      "sha256": "077918ec4c4d21e3fb649e0826bd19a7836e7320553dbf890c5841e0b4416aa2",
+      "required": [
+        "update_check"
+      ],
+      "captured_at": "2026-10-16T16:39:04.038704+09:00"
+    },
+    {
+      "name": "34-image-folder",
+      "title": "폴더 속 이미지들을 한 권으로 읽기",
+      "sha256": "c6cefb86c76537f7839ee73c94f26dcd41d69122bc906f01e1e2e31122b7ba56",
+      "required": [
+        "image_page",
+        "image_footer"
+      ],
+      "captured_at": "2026-10-16T16:39:26.441633+09:00"
+    },
+    {
+      "name": "35-library-reading",
+      "title": "읽던 책과 내 폴더가 있는 홈",
+      "sha256": "2080ffad4a08d01bf70311a18d3406419ee28bed873be602aefbec715748b733",
+      "required": [
+        "continue_card",
+        "nav_folder"
+      ],
+      "captured_at": "2026-10-16T16:39:35.950307+09:00"
+    },
+    {
+      "name": "36-dark-library",
+      "title": "다크 테마의 홈",
+      "sha256": "648f103d037e22ae862a5fae2770898277ad8a5da10374c29660fc068c336098",
+      "required": [
+        "continue_card",
+        "nav_folder"
+      ],
+      "captured_at": "2026-10-16T16:39:40.673605+09:00"
+    },
+    {
+      "name": "37-reading-end",
+      "title": "마지막 항목까지 읽은 뒤 나가기",
+      "sha256": "cbb071568b6d9b7642342bcd8dd4304b41b85f7cddaf75a3977aff2a88606c37",
+      "required": [
+        "reading_end_dialog",
+        "reading_end_exit"
+      ],
+      "captured_at": "2026-10-16T16:38:37.609871+09:00"
+    }
+  ],
+  "checks": [
+    "처음 실행 → Android 폴더 권한 허용 → 실제 파일 목록",
+    "TXT 메뉴 숨김·위치 이동·책갈피·검색·개별 설정·인코딩 미리보기·프로세스 종료 후 이어 읽기",
+    "한글 PDF 렌더링·검색·페이지 이동·책갈피",
+    "CBZ 펼침면 전체·왼쪽/오른쪽 분할·책갈피·자르기 적용·썸네일 이동",
+    "Android 저장기로 JSON 백업 → 같은 앱에 가져오기 → 기존 기록 보존 안내 및 복원 성공",
+    "빈 앱 복원 → 겹치는 기록 0권 → 원본 다시 찾기 → TXT 위치와 책갈피 유지",
+    "이미지 폴더 열기·앱 라이트/다크 테마"
+  ]
+}

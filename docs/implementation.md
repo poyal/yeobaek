@@ -25,6 +25,20 @@ scripts/build.sh :app:assembleRelease
 
 Windows의 대응 명령은 `.\scripts\create-signing.ps1`과 `.\scripts\build.ps1 :app:assembleRelease`입니다. 기존 배포 키가 없는 PC에서 새 키를 생성하면 과거 서명 APK를 덮어 설치할 수 없습니다. 현재 설치의 데이터를 유지해야 한다면 과거 키를 복원하여 빌드합니다.
 
+Build Tools는 35.0.0을 사용합니다. 기본 개발 검사는 아래와 같이 실행합니다.
+
+```sh
+scripts/build.sh :core:txt:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+```
+
+```powershell
+.\scripts\build.ps1 :core:txt:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+```
+
+산출물은 `app/build/outputs/apk/debug/app-debug.apk`와 `app/build/outputs/apk/release/app-release.apk`입니다. 서명 설정 없이 release를 빌드하면 설치용 서명이 없는 `app-release-unsigned.apk`가 생성됩니다. 키와 비밀번호는 Git에 포함하지 않고 별도로 보관합니다.
+
+사용자 매뉴얼의 화면은 [별도 촬영 절차](screenshots/README.md#recapture)에 따라 공개 APK로 만듭니다. 문서용 촬영은 성능·TalkBack 인수나 새 릴리즈의 회귀 검사를 대체하지 않습니다.
+
 ## 모듈과 상태
 
 | 모듈/위치 | 책임 |

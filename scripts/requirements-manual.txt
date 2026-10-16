@@ -1,0 +1,4 @@
+# User-manual fixtures and Android UI capture only; not app/runtime dependencies.
+Pillow==12.2.0
+reportlab==5.0.0
+uiautomator2==3.5.0
