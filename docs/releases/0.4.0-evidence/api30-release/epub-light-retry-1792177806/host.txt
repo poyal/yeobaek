@@ -1,0 +1,88 @@
+restarting adbd as root
+Performing Streamed Install
+Success
+Performing Streamed Install
+Success
+Evidence: C:\Users\ttt45\Workspace\personal\yeobaek\.tools\verification\20261017-041007-emulator-5582-epub-LIGHT
+adbd is already running as root
+/sdcard/Android/data/com.poyal.yeobaek.e2e/files/: 14 files pulled, 0 skipped. 40.8 MB/s (816411 bytes in 0.019s)
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.EpubJourneyTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+com.poyal.yeobaek.e2e.EpubJourneyTest:
+INSTRUMENTATION_STATUS: test=externalFixedLayoutZoomDrmAndPermissionRecovery
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.EpubJourneyTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=externalFixedLayoutZoomDrmAndPermissionRecovery
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.EpubJourneyTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=backupFreshRestoreAndChangedOriginalKeepRecords
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.EpubJourneyTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stack=java.lang.IllegalStateException: No folder select button
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.connect(EpubJourneyTest.kt:59)
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.backupFreshRestoreAndChangedOriginalKeepRecords(EpubJourneyTest.kt:180)
+
+INSTRUMENTATION_STATUS: stream=
+Error in backupFreshRestoreAndChangedOriginalKeepRecords(com.poyal.yeobaek.e2e.EpubJourneyTest):
+java.lang.IllegalStateException: No folder select button
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.connect(EpubJourneyTest.kt:59)
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.backupFreshRestoreAndChangedOriginalKeepRecords(EpubJourneyTest.kt:180)
+
+INSTRUMENTATION_STATUS: test=backupFreshRestoreAndChangedOriginalKeepRecords
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.EpubJourneyTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=localReadingSearchBookmarksSettingsAndProcessDeath
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.EpubJourneyTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stack=java.lang.IllegalStateException: No folder select button
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.connect(EpubJourneyTest.kt:59)
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.localReadingSearchBookmarksSettingsAndProcessDeath(EpubJourneyTest.kt:69)
+
+INSTRUMENTATION_STATUS: stream=
+Error in localReadingSearchBookmarksSettingsAndProcessDeath(com.poyal.yeobaek.e2e.EpubJourneyTest):
+java.lang.IllegalStateException: No folder select button
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.connect(EpubJourneyTest.kt:59)
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.localReadingSearchBookmarksSettingsAndProcessDeath(EpubJourneyTest.kt:69)
+
+INSTRUMENTATION_STATUS: test=localReadingSearchBookmarksSettingsAndProcessDeath
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 53.128
+There were 2 failures:
+1) backupFreshRestoreAndChangedOriginalKeepRecords(com.poyal.yeobaek.e2e.EpubJourneyTest)
+java.lang.IllegalStateException: No folder select button
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.connect(EpubJourneyTest.kt:59)
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.backupFreshRestoreAndChangedOriginalKeepRecords(EpubJourneyTest.kt:180)
+2) localReadingSearchBookmarksSettingsAndProcessDeath(com.poyal.yeobaek.e2e.EpubJourneyTest)
+java.lang.IllegalStateException: No folder select button
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.connect(EpubJourneyTest.kt:59)
+	at com.poyal.yeobaek.e2e.EpubJourneyTest.localReadingSearchBookmarksSettingsAndProcessDeath(EpubJourneyTest.kt:69)
+
+FAILURES!!!
+Tests run: 3,  Failures: 2
+
+
+INSTRUMENTATION_CODE: -1
+

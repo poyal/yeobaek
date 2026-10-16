@@ -1,0 +1,30 @@
+Performing Streamed Install
+Success
+Performing Streamed Install
+Success
+Evidence: C:\Users\ttt45\Workspace\personal\yeobaek\.tools\verification\20261017-034317-emulator-5586-repeat-LIGHT
+/sdcard/Android/data/com.poyal.yeobaek.e2e/files/: 23 files pulled, 0 skipped. 6.2 MB/s (279994 bytes in 0.043s)
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.PerformanceJourneyTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.poyal.yeobaek.e2e.PerformanceJourneyTest:
+INSTRUMENTATION_STATUS: test=repeatedOpen100Times
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.PerformanceJourneyTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=repeatedOpen100Times
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 333.863
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1
+

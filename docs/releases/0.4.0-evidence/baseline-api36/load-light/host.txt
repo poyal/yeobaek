@@ -1,0 +1,30 @@
+Performing Streamed Install
+Success
+Performing Streamed Install
+Success
+Evidence: C:\Users\ttt45\Workspace\personal\yeobaek\.tools\verification\20261017-033624-emulator-5586-load-LIGHT
+/sdcard/Android/data/com.poyal.yeobaek.e2e/files/: 57 files pulled, 0 skipped. 23.3 MB/s (2964917 bytes in 0.121s)
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.PerformanceJourneyTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.poyal.yeobaek.e2e.PerformanceJourneyTest:
+INSTRUMENTATION_STATUS: test=largeFilesAndLongParagraph
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.e2e.PerformanceJourneyTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=largeFilesAndLongParagraph
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 410.083
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1
+

@@ -1,0 +1,177 @@
+{
+  "status": "PASS",
+  "checked_at": "2026-10-17T04:34:39.461205+09:00",
+  "source_commit": "6a2842a3b8f5ae66080656ea8076807c3cb51956",
+  "apk_sha256": "9a123fe485430618665c206a293efb6419a0a6e2e0cfafd778a66bd65e23ae0b",
+  "apk_bytes": 73917357,
+  "jvm_tests": 56,
+  "android_debug_tests": {
+    "API30": 48,
+    "API36": 48
+  },
+  "release_e2e_tests": 23,
+  "release_runs": [
+    {
+      "label": "baseline-api36/e2e-light",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 2,
+      "passed_tests": 2,
+      "tests": [
+        "com.poyal.yeobaek.e2e.ReaderJourneyTest#completeReadingJourneyAndScreens",
+        "com.poyal.yeobaek.e2e.ReaderJourneyTest#sourceFailureEmptyEncodingAndSettingIsolation"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "baseline-api36/e2e-dark",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 2,
+      "passed_tests": 2,
+      "tests": [
+        "com.poyal.yeobaek.e2e.ReaderJourneyTest#completeReadingJourneyAndScreens",
+        "com.poyal.yeobaek.e2e.ReaderJourneyTest#sourceFailureEmptyEncodingAndSettingIsolation"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "baseline-api36/restore-dark",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 1,
+      "passed_tests": 1,
+      "tests": [
+        "com.poyal.yeobaek.e2e.RestoreJourneyTest#folderThemePositionAndBookmarksSurvive"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "baseline-api36/restore-dark-folderThemePositionAndBookmarksSurvive",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 1,
+      "passed_tests": 1,
+      "tests": [
+        "com.poyal.yeobaek.e2e.RestoreJourneyTest#folderThemePositionAndBookmarksSurvive"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "baseline-api36/recovery-light",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 4,
+      "passed_tests": 4,
+      "tests": [
+        "com.poyal.yeobaek.e2e.RecoveryJourneyTest#cacheSourceChangesAndRecordDeletion",
+        "com.poyal.yeobaek.e2e.RecoveryJourneyTest#largeSystemFontKeyboardAndThousandFiles",
+        "com.poyal.yeobaek.e2e.RecoveryJourneyTest#movedFileReconnectsWithoutLosingPositionOrBookmark",
+        "com.poyal.yeobaek.e2e.RecoveryJourneyTest#returningToFolderRefreshesExternalChanges"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "baseline-api36/about-light",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 1,
+      "passed_tests": 1,
+      "tests": [
+        "com.poyal.yeobaek.e2e.AboutJourneyTest#aboutAndUpdatesRespectThemeLargeTextAndBackNavigation"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "baseline-api36/load-light",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 1,
+      "passed_tests": 1,
+      "tests": [
+        "com.poyal.yeobaek.e2e.PerformanceJourneyTest#largeFilesAndLongParagraph"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "baseline-api36/repeat-light",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 1,
+      "passed_tests": 1,
+      "tests": [
+        "com.poyal.yeobaek.e2e.PerformanceJourneyTest#repeatedOpen100Times"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "epub-light-retry-1792178974",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 3,
+      "passed_tests": 3,
+      "tests": [
+        "com.poyal.yeobaek.e2e.EpubJourneyTest#backupFreshRestoreAndChangedOriginalKeepRecords",
+        "com.poyal.yeobaek.e2e.EpubJourneyTest#externalFixedLayoutZoomDrmAndPermissionRecovery",
+        "com.poyal.yeobaek.e2e.EpubJourneyTest#localReadingSearchBookmarksSettingsAndProcessDeath"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "epub-dark",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 3,
+      "passed_tests": 3,
+      "tests": [
+        "com.poyal.yeobaek.e2e.EpubJourneyTest#backupFreshRestoreAndChangedOriginalKeepRecords",
+        "com.poyal.yeobaek.e2e.EpubJourneyTest#externalFixedLayoutZoomDrmAndPermissionRecovery",
+        "com.poyal.yeobaek.e2e.EpubJourneyTest#localReadingSearchBookmarksSettingsAndProcessDeath"
+      ],
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "label": "api30-release/epub-light-retry-1792178537",
+      "status": "PASS",
+      "exit_code": 0,
+      "expected_tests": 3,
+      "passed_tests": 3,
+      "tests": [
+        "com.poyal.yeobaek.e2e.EpubJourneyTest#backupFreshRestoreAndChangedOriginalKeepRecords",
+        "com.poyal.yeobaek.e2e.EpubJourneyTest#externalFixedLayoutZoomDrmAndPermissionRecovery",
+        "com.poyal.yeobaek.e2e.EpubJourneyTest#localReadingSearchBookmarksSettingsAndProcessDeath"
+      ],
+      "missing": [],
+      "unexpected": []
+    }
+  ],
+  "upgrade": "PASS",
+  "reader_ui_captures": 12,
+  "readme_screens": 16,
+  "fresh_backup_restore": "PASS",
+  "epub_debug_soak_seconds": 1801.113,
+  "epub_debug_soak_cycles": 1139,
+  "txt_release_soak": "PASS on pre-final EPUB-only-fix candidate; see txt-soak/result.json",
+  "not_run": [
+    "physical Galaxy touch reproduction and performance",
+    "actual purchased EPUB samples",
+    "TalkBack speech",
+    "16KiB page OS",
+    "manufacturer and cloud document providers",
+    "physical frame percentile measurement"
+  ],
+  "publication": "NOT_YET_PUBLISHED",
+  "known_limitations": [
+    "AOSP API30 DocumentsUI can omit its folder selection button when restoring the last tree; fresh-app release journeys reset picker history. See 0.4.0-verification.md."
+  ]
+}

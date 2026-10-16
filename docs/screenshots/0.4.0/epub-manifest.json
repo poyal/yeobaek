@@ -1,0 +1,68 @@
+{
+  "apk_sha256": "9a123fe485430618665c206a293efb6419a0a6e2e0cfafd778a66bd65e23ae0b",
+  "version": "0.4.0",
+  "avd": "yeobaek-release-040",
+  "api": 36,
+  "abi": "x86_64",
+  "display": "720x1600",
+  "density": 320,
+  "capture": "Unmodified UiDevice.takeScreenshot PNGs from passing release E2E runs on 2026-10-17 KST",
+  "images": [
+    {
+      "file": "epub-reader.png",
+      "sha256": "764f95eca1b58f0e7a0e1d3428a40bfa9a0c92f787ec8039aee4e7ecc29baefd",
+      "source": "docs/releases/0.4.0-evidence/epub-light-retry-1792176047/screens/captures/EPUB-LIGHT/01-reflow.png",
+      "theme": "LIGHT",
+      "font_scale": 1.0
+    },
+    {
+      "file": "epub-settings.png",
+      "sha256": "763c1e12711024fd13b19eda2c02ad1ca692c4169463dee795c956753c417454",
+      "source": "docs/releases/0.4.0-evidence/epub-light-retry-1792176047/screens/captures/EPUB-LIGHT/05-settings.png",
+      "theme": "LIGHT",
+      "font_scale": 1.0
+    },
+    {
+      "file": "epub-large-settings.png",
+      "sha256": "b0d769e1526484e1ed13517406cc3092bf90f17a4f4b75380d8126599b7fd255",
+      "source": "docs/releases/0.4.0-evidence/epub-light-retry-1792176047/screens/captures/EPUB-LIGHT/10-large-settings.png",
+      "theme": "LIGHT",
+      "font_scale": 2.0
+    },
+    {
+      "file": "epub-fixed-zoom.png",
+      "sha256": "8206bd3bf578ebd4a612870a2a7d81c79b1777de1767d69c43cddf4aa642569c",
+      "source": "docs/releases/0.4.0-evidence/epub-light-retry-1792176047/screens/captures/EPUB-LIGHT/12-fixed-zoom.png",
+      "theme": "LIGHT",
+      "font_scale": 1.0
+    },
+    {
+      "file": "epub-reader-dark.png",
+      "sha256": "9e4b4cb4a2d1e71299e585355dab2f3e53842e591dfb0f8599ed71918a1e0a89",
+      "source": "docs/releases/0.4.0-evidence/epub-dark/screens/captures/EPUB-DARK/01-reflow.png",
+      "theme": "DARK",
+      "font_scale": 1.0
+    },
+    {
+      "file": "epub-settings-dark.png",
+      "sha256": "7c1eae09ab0b42e4b3d7bff0c0a510bf313e9568bc959c55a24e95c480327e77",
+      "source": "docs/releases/0.4.0-evidence/epub-dark/screens/captures/EPUB-DARK/05-settings.png",
+      "theme": "DARK",
+      "font_scale": 1.0
+    },
+    {
+      "file": "epub-large-settings-dark.png",
+      "sha256": "76a8a4bcd2e6a6176d72b5c639bb1b7db7daba26687882a6368f9e1b41e7229b",
+      "source": "docs/releases/0.4.0-evidence/epub-dark/screens/captures/EPUB-DARK/10-large-settings.png",
+      "theme": "DARK",
+      "font_scale": 2.0
+    },
+    {
+      "file": "epub-fixed-zoom-dark.png",
+      "sha256": "19b477640b667e9b8091c46e1c35697ec3f8ad303e7b7f98e48b5e633cacf66d",
+      "source": "docs/releases/0.4.0-evidence/epub-dark/screens/captures/EPUB-DARK/12-fixed-zoom.png",
+      "theme": "DARK",
+      "font_scale": 1.0
+    }
+  ]
+}

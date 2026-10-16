@@ -2,7 +2,26 @@
 
 [사용자 매뉴얼로 돌아가기](../../README.md)
 
-공개 **v0.3.0**을 새 전용 에뮬레이터에서 실행해 촬영한 화면입니다. 산문·PDF·그림은 매뉴얼용 창작 예제입니다. 화면을 누르면 원본 크기로 열립니다.
+**v0.4.0 EPUB·설정 화면**과 **v0.3.0 기존 독서 흐름**을 각각 전용 에뮬레이터에서 실행해 촬영했습니다. 산문·PDF·그림은 매뉴얼용 창작 예제입니다. 화면을 누르면 원본 크기로 열립니다.
+
+## v0.4.0 EPUB과 설정
+
+2026-10-17 KST, 최종 release APK를 `yeobaek-release-040`에서 실행했습니다. Android 16(API 36), x86_64, 720×1600, density 320, 기본 fontScale 1.0이며 큰 글씨 화면만 2.0입니다. 앱은 한국어, 시스템 파일 선택기는 영문입니다. PNG 내용을 편집하지 않았습니다. [APK·시험 결과](../releases/0.4.0-verification.md), [EPUB 캡처 출처·해시](0.4.0/epub-manifest.json), [설정 캡처 출처·해시](0.4.0/settings-manifest.json).
+
+<table>
+<tr><th>형식별 설정 바로가기</th><th>일반 설정</th></tr>
+<tr><td><a href="0.4.0/settings-main.png"><img src="0.4.0/settings-main.png" alt="형식별 설정 바로가기" width="260"></a></td><td><a href="0.4.0/settings-general.png"><img src="0.4.0/settings-general.png" alt="앱 테마와 독서 기록 백업 카드" width="260"></a></td></tr>
+<tr><th>EPUB 읽기</th><th>EPUB 설정</th></tr>
+<tr><td><a href="0.4.0/epub-reader.png"><img src="0.4.0/epub-reader.png" alt="EPUB 장별 스크롤" width="260"></a></td><td><a href="0.4.0/epub-settings.png"><img src="0.4.0/epub-settings.png" alt="EPUB 책별 설정" width="260"></a></td></tr>
+<tr><th>다크 EPUB</th><th>큰 글씨 설정</th></tr>
+<tr><td><a href="0.4.0/epub-reader-dark.png"><img src="0.4.0/epub-reader-dark.png" alt="다크 EPUB 본문" width="260"></a></td><td><a href="0.4.0/epub-large-settings.png"><img src="0.4.0/epub-large-settings.png" alt="시스템 글자 배율 2.0 설정" width="260"></a></td></tr>
+</table>
+
+같은 카드 배경을 적용한 [TXT 설정](0.4.0/settings-txt.png) · [PDF 설정](0.4.0/settings-pdf.png) · [이미지 설정](0.4.0/settings-image.png) · [앱 정보](0.4.0/settings-about.png) · [업데이트](0.4.0/settings-updates.png)도 확인할 수 있습니다. [고정 지면 확대](0.4.0/epub-fixed-zoom.png) · [다크 설정](0.4.0/epub-settings-dark.png).
+
+## v0.3.0 기존 독서 흐름
+
+아래 37장은 공개 v0.3.0에서 촬영한 기록입니다. v0.4.0에서 다시 촬영한 결과로 간주하지 않습니다.
 
 ## 촬영 조건
 

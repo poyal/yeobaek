@@ -1,0 +1,79 @@
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.EpubReaderTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=
+com.poyal.yeobaek.EpubReaderTest:
+INSTRUMENTATION_STATUS: test=fixedLayoutPagesAndSettingsRemainIndependentFromReflow
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.EpubReaderTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=fixedLayoutPagesAndSettingsRemainIndependentFromReflow
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.EpubReaderTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=reflowChapterSearchBookmarkSettingsAndRecreationKeepLocation
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.poyal.yeobaek.EpubReaderTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stack=org.junit.ComparisonFailure: recreation: anchor {"href":"EPUB\/chapter2.xhtml","type":"application\/xhtml+xml","title":"2장 · 여백","locations":{"cssSelector":"#p57","yeobaekLayout":"720:1092:2.0:1.0:SCROLL:true:ORIGINAL:1.0:1.5:1.0","progression":0.9311779164303271,"position":2,"totalProgression":0.3333333333333333},"text":{"highlight":"2장 57번째 문단. 검색구절 여백의 독서는 문장을 천천히 따라갑니다. 한글과 English text, 숫자 123을 함께 읽습니다. 다음 문장도 같은 위치에서 이어집니다."}} current {"href":"EPUB\/chapter2.xhtml","type":"application\/xhtml+xml","title":"2장 · 여백","locations":{"progression":0.8125,"position":2,"totalProgression":0.3333333333333333}} bounds "{\"rects\":[{\"x\":380,\"y\":73,\"w\":320,\"h\":114}],\"w\":360,\"h\":546,\"x\":4680,\"y\":0}" expected:<[tru]e> but was:<[fals]e>
+	at org.junit.Assert.assertEquals(Assert.java:117)
+	at com.poyal.yeobaek.EpubReaderTest$assertVisible$2.invokeSuspend(EpubReaderTest.kt:53)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at android.os.Handler.handleCallback(Handler.java:938)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loop(Looper.java:223)
+	at android.app.ActivityThread.main(ActivityThread.java:7656)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:592)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:947)
+
+INSTRUMENTATION_STATUS: stream=
+Error in reflowChapterSearchBookmarkSettingsAndRecreationKeepLocation(com.poyal.yeobaek.EpubReaderTest):
+org.junit.ComparisonFailure: recreation: anchor {"href":"EPUB\/chapter2.xhtml","type":"application\/xhtml+xml","title":"2장 · 여백","locations":{"cssSelector":"#p57","yeobaekLayout":"720:1092:2.0:1.0:SCROLL:true:ORIGINAL:1.0:1.5:1.0","progression":0.9311779164303271,"position":2,"totalProgression":0.3333333333333333},"text":{"highlight":"2장 57번째 문단. 검색구절 여백의 독서는 문장을 천천히 따라갑니다. 한글과 English text, 숫자 123을 함께 읽습니다. 다음 문장도 같은 위치에서 이어집니다."}} current {"href":"EPUB\/chapter2.xhtml","type":"application\/xhtml+xml","title":"2장 · 여백","locations":{"progression":0.8125,"position":2,"totalProgression":0.3333333333333333}} bounds "{\"rects\":[{\"x\":380,\"y\":73,\"w\":320,\"h\":114}],\"w\":360,\"h\":546,\"x\":4680,\"y\":0}" expected:<[tru]e> but was:<[fals]e>
+	at org.junit.Assert.assertEquals(Assert.java:117)
+	at com.poyal.yeobaek.EpubReaderTest$assertVisible$2.invokeSuspend(EpubReaderTest.kt:53)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at android.os.Handler.handleCallback(Handler.java:938)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loop(Looper.java:223)
+	at android.app.ActivityThread.main(ActivityThread.java:7656)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:592)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:947)
+
+INSTRUMENTATION_STATUS: test=reflowChapterSearchBookmarkSettingsAndRecreationKeepLocation
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 12.567
+There was 1 failure:
+1) reflowChapterSearchBookmarkSettingsAndRecreationKeepLocation(com.poyal.yeobaek.EpubReaderTest)
+org.junit.ComparisonFailure: recreation: anchor {"href":"EPUB\/chapter2.xhtml","type":"application\/xhtml+xml","title":"2장 · 여백","locations":{"cssSelector":"#p57","yeobaekLayout":"720:1092:2.0:1.0:SCROLL:true:ORIGINAL:1.0:1.5:1.0","progression":0.9311779164303271,"position":2,"totalProgression":0.3333333333333333},"text":{"highlight":"2장 57번째 문단. 검색구절 여백의 독서는 문장을 천천히 따라갑니다. 한글과 English text, 숫자 123을 함께 읽습니다. 다음 문장도 같은 위치에서 이어집니다."}} current {"href":"EPUB\/chapter2.xhtml","type":"application\/xhtml+xml","title":"2장 · 여백","locations":{"progression":0.8125,"position":2,"totalProgression":0.3333333333333333}} bounds "{\"rects\":[{\"x\":380,\"y\":73,\"w\":320,\"h\":114}],\"w\":360,\"h\":546,\"x\":4680,\"y\":0}" expected:<[tru]e> but was:<[fals]e>
+	at org.junit.Assert.assertEquals(Assert.java:117)
+	at com.poyal.yeobaek.EpubReaderTest$assertVisible$2.invokeSuspend(EpubReaderTest.kt:53)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at android.os.Handler.handleCallback(Handler.java:938)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loop(Looper.java:223)
+	at android.app.ActivityThread.main(ActivityThread.java:7656)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:592)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:947)
+
+FAILURES!!!
+Tests run: 2,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,9 @@
+--------- beginning of main
+--------- beginning of system
+--------- beginning of kernel
+10-16 18:11:33.078  9759  9759 D EpubLayout: restore saved=720:1092:2.0:1.0:SCROLL:true:ORIGINAL:1.0:1.5:1.0 current=720:1092:2.0:1.0:SCROLL:true:ORIGINAL:1.0:1.5:1.0 progression=0.0
+10-16 18:11:38.504  9759  9759 D EpubLayout: restore saved=720:1092:2.0:1.0:SCROLL:true:ORIGINAL:1.0:1.5:1.0 current=720:1092:2.0:1.0:PAGED:true:ORIGINAL:1.0:1.5:1.0 progression=0.9311779164303271
+10-16 18:11:39.727  9759  9759 D EpubLayout: restore saved=720:1092:2.0:1.0:SCROLL:true:ORIGINAL:1.0:1.5:1.0 current=720:1092:2.0:1.0:PAGED:true:ORIGINAL:1.0:1.5:1.0 progression=0.9311779164303271
+10-16 18:11:40.437  9759  9781 I System.out: EPUB before recreation: Locations(fragments=[], progression=0.875, position=2, totalProgression=0.3333333333333333, otherLocations={cssSelector=#p56, yeobaekLayout=720:1092:2.0:1.0:PAGED:true:ORIGINAL:1.0:1.5:1.0})
+10-16 18:11:40.741  9759  9759 D EpubLayout: restore saved=720:1092:2.0:1.0:PAGED:true:ORIGINAL:1.0:1.5:1.0 current=720:1072:2.0:1.0:PAGED:true:ORIGINAL:1.0:1.5:1.0 progression=0.875
+--------- beginning of crash

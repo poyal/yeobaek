@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "exit_code": 0,
+  "expected_tests": 1,
+  "passed_tests": 1,
+  "tests": [
+    "com.poyal.yeobaek.e2e.AboutJourneyTest#aboutAndUpdatesRespectThemeLargeTextAndBackNavigation"
+  ],
+  "missing": [],
+  "unexpected": []
+}

@@ -1,0 +1,17 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=Yeobaek Local APK
+Signer #1 certificate SHA-256 digest: 5ad108f18a7477f91a281b4feb26301a14247e59440607c5f7710582ac92fd48
+Signer #1 certificate SHA-1 digest: 76451996266625d19d21a7c5361d73d58c3e8b1b
+Signer #1 certificate MD5 digest: f1c6cd664d698e00b4970ad0a114ee31
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 3072
+Signer #1 public key SHA-256 digest: 7f9ab83de200babbe736e9a0764a542838197b4a96568f1fffaa71d59142b635
+Signer #1 public key SHA-1 digest: e6166f15280701fb7e38c86478b0e7432bfde53c
+Signer #1 public key MD5 digest: c30d1fac8c0b0ac05bb6599292e6e01c

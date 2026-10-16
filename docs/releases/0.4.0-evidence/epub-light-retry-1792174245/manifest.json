@@ -1,0 +1,16 @@
+{
+  "serial": "emulator-5584",
+  "suite": "epub",
+  "theme": "LIGHT",
+  "variant": "release",
+  "method": null,
+  "avd": "yeobaek-release-040",
+  "package": "com.poyal.yeobaek",
+  "apk_sha256": "171345f752fc8c0cf1862347184ac0b0169737f56fdb95f1a678f521ca831719",
+  "test_apk_sha256": "a820b5829d8066b517329183c3419ceb06295f270b9b9bae676ff6411bc9e37e",
+  "api": "36",
+  "fingerprint": "Android/sdk_phone64_x86_64/emu64x:16/BE2A.250530.026.D1/13818094:userdebug/test-keys",
+  "display": "Physical size: 720x1600",
+  "density": "Physical density: 320",
+  "font_scale": "1.0"
+}

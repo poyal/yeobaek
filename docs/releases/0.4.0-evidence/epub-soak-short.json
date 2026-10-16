@@ -1,0 +1,147 @@
+{
+  "requested_seconds": 180,
+  "samples": [
+    {
+      "cycle": 0,
+      "elapsed_ms": 3885,
+      "pss_kib": 231963,
+      "fds": 177
+    },
+    {
+      "cycle": 5,
+      "elapsed_ms": 12854,
+      "pss_kib": 235005,
+      "fds": 166
+    },
+    {
+      "cycle": 10,
+      "elapsed_ms": 21828,
+      "pss_kib": 240365,
+      "fds": 172
+    },
+    {
+      "cycle": 15,
+      "elapsed_ms": 30218,
+      "pss_kib": 240090,
+      "fds": 169
+    },
+    {
+      "cycle": 20,
+      "elapsed_ms": 39040,
+      "pss_kib": 242284,
+      "fds": 170
+    },
+    {
+      "cycle": 25,
+      "elapsed_ms": 47538,
+      "pss_kib": 231770,
+      "fds": 168
+    },
+    {
+      "cycle": 30,
+      "elapsed_ms": 57439,
+      "pss_kib": 244754,
+      "fds": 170
+    },
+    {
+      "cycle": 35,
+      "elapsed_ms": 64817,
+      "pss_kib": 237686,
+      "fds": 169
+    },
+    {
+      "cycle": 40,
+      "elapsed_ms": 72648,
+      "pss_kib": 237024,
+      "fds": 170
+    },
+    {
+      "cycle": 45,
+      "elapsed_ms": 80109,
+      "pss_kib": 248228,
+      "fds": 169
+    },
+    {
+      "cycle": 50,
+      "elapsed_ms": 88291,
+      "pss_kib": 242795,
+      "fds": 174
+    },
+    {
+      "cycle": 55,
+      "elapsed_ms": 95794,
+      "pss_kib": 235393,
+      "fds": 169
+    },
+    {
+      "cycle": 60,
+      "elapsed_ms": 104775,
+      "pss_kib": 229574,
+      "fds": 170
+    },
+    {
+      "cycle": 65,
+      "elapsed_ms": 112692,
+      "pss_kib": 235152,
+      "fds": 169
+    },
+    {
+      "cycle": 70,
+      "elapsed_ms": 120738,
+      "pss_kib": 246464,
+      "fds": 172
+    },
+    {
+      "cycle": 75,
+      "elapsed_ms": 127903,
+      "pss_kib": 244322,
+      "fds": 168
+    },
+    {
+      "cycle": 80,
+      "elapsed_ms": 135425,
+      "pss_kib": 246868,
+      "fds": 181
+    },
+    {
+      "cycle": 85,
+      "elapsed_ms": 143162,
+      "pss_kib": 237548,
+      "fds": 169
+    },
+    {
+      "cycle": 90,
+      "elapsed_ms": 152255,
+      "pss_kib": 251376,
+      "fds": 172
+    },
+    {
+      "cycle": 95,
+      "elapsed_ms": 159591,
+      "pss_kib": 243574,
+      "fds": 169
+    },
+    {
+      "cycle": 100,
+      "elapsed_ms": 167523,
+      "pss_kib": 231376,
+      "fds": 177
+    },
+    {
+      "cycle": 105,
+      "elapsed_ms": 175075,
+      "pss_kib": 226448,
+      "fds": 168
+    }
+  ],
+  "elapsed_ms": 180479,
+  "cycles": 110,
+  "passed": true,
+  "status": "PASS",
+  "api": 30,
+  "variant": "debug",
+  "started": "2026-10-17T03:27:06.860035+09:00",
+  "finished": "2026-10-17T03:30:14.720749+09:00",
+  "apk_sha256": "e8fdbb8c8b96ba742171dd252fe1afa80dfb51c48947030182689639fb986fa6",
+  "test_apk_sha256": "9326444857f8af30aa59f987bdbfe80a0e5cf9f8522291daa0da94b8fd631913"
+}

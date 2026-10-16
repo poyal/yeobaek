@@ -1,0 +1,84 @@
+{
+  "apk_sha256": "9a123fe485430618665c206a293efb6419a0a6e2e0cfafd778a66bd65e23ae0b",
+  "application_id": "com.poyal.yeobaek",
+  "version": "0.4.0",
+  "avd": "yeobaek-release-040",
+  "api": 36,
+  "abi": "x86_64",
+  "display": "720x1600",
+  "density": 320,
+  "font_scale": 1.0,
+  "theme": "LIGHT",
+  "images": [
+    {
+      "file": "settings-main.png",
+      "sha256": "608d359d1ab0d7eb85f58524870956bf822754d05e60d7144f070c2aab6c55cd",
+      "captured_at": "2026-10-17T03:52:01.214978+09:00",
+      "required_ui": [
+        "settings_general",
+        "settings_txt",
+        "settings_epub",
+        "settings_pdf",
+        "settings_image"
+      ]
+    },
+    {
+      "file": "settings-general.png",
+      "sha256": "c59ce3df2b49081667dd37ce1018481ca2579f57298fab575538c19005930af7",
+      "captured_at": "2026-10-17T03:52:06.456577+09:00",
+      "required_ui": [
+        "theme_LIGHT",
+        "backup_export",
+        "backup_import"
+      ]
+    },
+    {
+      "file": "settings-txt.png",
+      "sha256": "fbc39cbe7a4fbd835fe1cd2dc3c8d18e1882606a50b8879cd08f283420c173e0",
+      "captured_at": "2026-10-17T03:52:14.118172+09:00",
+      "required_ui": [
+        "txt_settings_screen"
+      ]
+    },
+    {
+      "file": "settings-epub.png",
+      "sha256": "0059b1cab602d0586df8bdba7a407373ff6b2e6b075ea56c4510891b0c578099",
+      "captured_at": "2026-10-17T03:52:21.835467+09:00",
+      "required_ui": [
+        "epub_settings_screen"
+      ]
+    },
+    {
+      "file": "settings-pdf.png",
+      "sha256": "98e22121a77725202eeff66155ac2606980d2bb12bdbe594038c442947711001",
+      "captured_at": "2026-10-17T03:52:29.525721+09:00",
+      "required_ui": [
+        "pdf_settings_screen"
+      ]
+    },
+    {
+      "file": "settings-image.png",
+      "sha256": "743e1908b7949a98d8286dc8511d6e3a3b50e33ddb41e349ef99ede17ede084f",
+      "captured_at": "2026-10-17T03:52:37.172436+09:00",
+      "required_ui": [
+        "image_settings_screen"
+      ]
+    },
+    {
+      "file": "settings-about.png",
+      "sha256": "1ff7812a9b76d0291c6beff62bb2def36e2e286d54cd1da672838920fdbdd8d6",
+      "captured_at": "2026-10-17T03:52:47.286338+09:00",
+      "required_ui": [
+        "about_screen"
+      ]
+    },
+    {
+      "file": "settings-updates.png",
+      "sha256": "5a892398ffad366a790c1125d453746c2e17fe7ec79c5db82d5e2a8dab45988d",
+      "captured_at": "2026-10-17T03:52:54.963220+09:00",
+      "required_ui": [
+        "updates_screen"
+      ]
+    }
+  ]
+}

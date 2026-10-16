@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "from_version": "0.3.0",
+  "to_version": "0.4.0",
+  "schema_before": 4,
+  "schema_after": 5,
+  "old_tables_and_columns_unchanged": [
+    "books",
+    "positions",
+    "bookmarks",
+    "session",
+    "pdf_positions",
+    "pdf_bookmarks",
+    "image_positions",
+    "image_bookmarks"
+  ],
+  "preferences_unchanged": true,
+  "persisted_saf_grants_unchanged": true,
+  "external_source_unchanged": true,
+  "resume_prompt": true,
+  "position_over_50_percent": true,
+  "bookmark_visible": true,
+  "font_size": 19,
+  "theme": "DARK",
+  "legacy_image_segment": -1,
+  "apk_sha256": "9a123fe485430618665c206a293efb6419a0a6e2e0cfafd778a66bd65e23ae0b"
+}
