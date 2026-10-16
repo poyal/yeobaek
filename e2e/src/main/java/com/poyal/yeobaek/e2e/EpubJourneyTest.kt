@@ -62,8 +62,14 @@ class EpubJourneyTest {
     @Before fun setup() {
         require(pkg in setOf("com.poyal.yeobaek", "com.poyal.yeobaek.debug"))
         require(device.executeShellCommand("getprop ro.kernel.qemu").trim() == "1")
-        device.executeShellCommand("pm clear $pkg"); launch()
+        resetApp(); launch()
         click("nav_settings"); click("settings_general"); click("theme_$theme"); click("page_back"); click("nav_folder")
+    }
+    private fun resetApp() {
+        device.executeShellCommand("pm clear $pkg")
+        // A fresh-app journey needs a fresh picker history too on the API 30 AOSP image:
+        // restoring its last tree can leave the system PickFragment button at 0 x 0.
+        if (android.os.Build.VERSION.SDK_INT == 30) device.executeShellCommand("pm clear com.android.documentsui")
     }
     @Test fun localReadingSearchBookmarksSettingsAndProcessDeath() {
         connect(); openReflow(); shot("01-reflow")
@@ -191,7 +197,7 @@ class EpubJourneyTest {
         Assert.assertEquals(1, backup.getJSONObject("library").getJSONArray("epubBookmarks").length())
         Assert.assertEquals(1, backup.getJSONObject("library").getJSONArray("epubPositions").length())
         File(out, "epub-backup.json").writeText(backup.toString(2))
-        device.executeShellCommand("pm clear $pkg"); launch()
+        resetApp(); launch()
         click("nav_settings"); click("settings_general"); find("backup_import", "general_settings_options"); click("backup_import")
         documentsFolder(); selectDocument(name)
         val restore = device.wait(Until.findObject(By.text("없는 기록 추가")), 10_000) ?: node("backup_restore_confirm")
