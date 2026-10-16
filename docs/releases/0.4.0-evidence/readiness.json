@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "checked_at": "2026-10-17T04:34:39.461205+09:00",
+  "checked_at": "2026-10-17T04:37:14.919270+09:00",
   "source_commit": "6a2842a3b8f5ae66080656ea8076807c3cb51956",
   "apk_sha256": "9a123fe485430618665c206a293efb6419a0a6e2e0cfafd778a66bd65e23ae0b",
   "apk_bytes": 73917357,
@@ -170,8 +170,16 @@
     "manufacturer and cloud document providers",
     "physical frame percentile measurement"
   ],
-  "publication": "NOT_YET_PUBLISHED",
+  "publication": "PASS",
   "known_limitations": [
     "AOSP API30 DocumentsUI can omit its folder selection button when restoring the last tree; fresh-app release journeys reset picker history. See 0.4.0-verification.md."
+  ],
+  "publication_checked_at": "2026-10-17T04:36:10.709064+09:00",
+  "release_url": "https://github.com/poyal/yeobaek/releases/tag/v0.4.0",
+  "tag_commit": "262295d291a7b2fe05afe918178fc8c741683416",
+  "publication_evidence": [
+    "draft-publication.json",
+    "public-publication.json",
+    "public-update.json"
   ]
 }

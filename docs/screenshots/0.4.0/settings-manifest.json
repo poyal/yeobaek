@@ -74,11 +74,13 @@
     },
     {
       "file": "settings-updates.png",
-      "sha256": "5a892398ffad366a790c1125d453746c2e17fe7ec79c5db82d5e2a8dab45988d",
-      "captured_at": "2026-10-17T03:52:54.963220+09:00",
+      "sha256": "0d8b0e93409b7f08ef733ad2d3d9a024ac3fddb9367fc7f066861648e582c745",
+      "captured_at": "2026-10-17T04:36:37.468800+09:00",
       "required_ui": [
         "updates_screen"
-      ]
+      ],
+      "source": "docs/releases/0.4.0-evidence/public-update.png",
+      "verified_latest_version": "0.4.0"
     }
   ]
 }
