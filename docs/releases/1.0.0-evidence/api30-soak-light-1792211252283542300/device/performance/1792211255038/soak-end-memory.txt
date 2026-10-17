@@ -1,0 +1,57 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 1991992 Realtime: 1991992
+
+** MEMINFO in pid 3645 [com.poyal.yeobaek] **
+                   Pss  Private  Private     Swap      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    21258    21192        0        0    23688    30476    22609     3766
+  Dalvik Heap    27724    27588        0        0    31944    53007    28431    24576
+ Dalvik Other     4075     1844        0        0     7212                           
+        Stack      612      612        0        0      624                           
+       Ashmem        2        0        0        0        8                           
+    Other dev       16        0       16        0      224                           
+     .so mmap     2567      204       52        0    43732                           
+    .jar mmap     1293        0       20        0    23684                           
+    .apk mmap     6581        0     5632        0    30332                           
+    .ttf mmap      166        0       60        0      536                           
+    .dex mmap      180        8      172        0      224                           
+    .oat mmap      770        0        4        0    14660                           
+    .art mmap     1753     1104        4        0    20032                           
+   Other mmap     1950       44      852        0     5164                           
+      Unknown      401      384        0        0      824                           
+        TOTAL    69348    52980     6812        0    69348    83483    51040    28342
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    28696                          51976
+         Native Heap:    21192                          23688
+                Code:     6152                         117652
+               Stack:      612                            624
+            Graphics:        0                              0
+       Private Other:     3140
+              System:     9556
+             Unknown:                                    8948
+ 
+           TOTAL PSS:    69348            TOTAL RSS:   202888      TOTAL SWAP (KB):        0
+ 
+ Objects
+               Views:       10         ViewRootImpl:        1
+         AppContexts:        5           Activities:        1
+              Assets:        4        AssetManagers:        0
+       Local Binders:       14        Proxy Binders:       32
+       Parcel memory:        8         Parcel count:       34
+    Death Recipients:        0      OpenSSL Sockets:        0
+            WebViews:        0
+ 
+ SQL
+         MEMORY_USED:      556
+  PAGECACHE_OVERFLOW:       92          MALLOC_SIZE:      117
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b)          cache  Dbname
+         4      120            100  19767/9145/15  /data/user/0/com.poyal.yeobaek/databases/library.db
+         4       16                         0/0/0    (attached) temp
+         4      120            100        15/51/6  /data/user/0/com.poyal.yeobaek/databases/library.db (2)
+         4      120            100        20/57/8  /data/user/0/com.poyal.yeobaek/databases/library.db (1)

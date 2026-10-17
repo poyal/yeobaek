@@ -2,7 +2,7 @@
 
 작성일: 2026-10-13
 
-2026-10-17 현재 범위: TXT·PDF·이미지에 일반 EPUB·DRM 없는 구매 EPUB을 추가했습니다. 아래는 최초 TXT 계획의 이력이며 현재 지원 범위는 [사용자 매뉴얼](README.md), EPUB 설계와 구현은 [EPUB 안내](docs/epub-reader.md), 실행 결과는 [0.4.0 검증 기록](docs/releases/0.4.0-verification.md)을 따릅니다.
+2026-10-17 현재 범위: TXT·PDF·이미지·일반 EPUB·DRM 없는 구매 EPUB을 지원하며, v1.0.0에서 TXT 스와이프 후 정지·손떼기 동작의 플링 방어를 보완했습니다. 아래는 최초 TXT 계획의 이력이며 현재 지원 범위는 [사용자 매뉴얼](README.md), EPUB 설계와 구현은 [EPUB 안내](docs/epub-reader.md), 실행 결과는 [1.0.0 검증 기록](docs/releases/1.0.0-verification.md)을 따릅니다.
 
 상태: TXT 기능 구현 및 로컬 검증 / 프레임 목표 미달·실물 성능 및 접근성 인수 전
 

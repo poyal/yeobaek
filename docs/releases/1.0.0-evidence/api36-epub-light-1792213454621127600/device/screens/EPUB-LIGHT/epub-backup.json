@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "createdAt": 1792213508678,
+  "library": {
+    "books": [
+      {
+        "id": "bd4ae87c-e7f8-4a15-aaa5-59163d71f6ed",
+        "sourceKey": "com.android.externalstorage.documents:primary:Download\/YeobaekEPUB\/Yeobaek-Reflow.epub",
+        "uri": "content:\/\/com.android.externalstorage.documents\/tree\/primary%3ADownload%2FYeobaekEPUB\/document\/primary%3ADownload%2FYeobaekEPUB%2FYeobaek-Reflow.epub",
+        "name": "Yeobaek-Reflow.epub",
+        "folder": "YeobaekEPUB",
+        "charset": "",
+        "charsetOverride": null,
+        "version": "8b1f22c483afb9de331db733b6fb187a219c9b7be534737607afbc66eac119e0",
+        "sourceHash": "8b1f22c483afb9de331db733b6fb187a219c9b7be534737607afbc66eac119e0",
+        "length": 4004,
+        "openedAt": 1792213498001,
+        "format": "EPUB",
+        "pageCount": null
+      }
+    ],
+    "positions": [],
+    "bookmarks": [],
+    "pdfPositions": [],
+    "pdfBookmarks": [],
+    "imagePositions": [],
+    "imageBookmarks": [],
+    "epubPositions": [
+      {
+        "bookId": "bd4ae87c-e7f8-4a15-aaa5-59163d71f6ed",
+        "version": "8b1f22c483afb9de331db733b6fb187a219c9b7be534737607afbc66eac119e0",
+        "locator": "{\"href\":\"EPUB\\\/c2.xhtml\",\"type\":\"application\\\/xhtml+xml\",\"title\":\"2�� · 여백의 시간\",\"locations\":{\"cssSelector\":\":root > :nth-child(2) > :nth-child(1)\",\"yeobaekLayout\":\"720:1004:2.0:1.0:PAGED:true:ORIGINAL:1.0:1.5:1.0\",\"progression\":0,\"position\":2,\"totalProgression\":0.3333333333333333},\"text\":{\"highlight\":\"다음 장의 각주로 이동\"}}",
+        "progress": 0.3333333333333333,
+        "completed": false,
+        "session": 1,
+        "sequence": 4,
+        "locatorVersion": 1
+      }
+    ],
+    "epubBookmarks": [
+      {
+        "id": "5dc5ab25-4a65-44e7-9dd2-4ba51a5f7ef7",
+        "bookId": "bd4ae87c-e7f8-4a15-aaa5-59163d71f6ed",
+        "version": "8b1f22c483afb9de331db733b6fb187a219c9b7be534737607afbc66eac119e0",
+        "locationKey": "d12ff64dd10692155abcf2e95e50e3019e38c39b60b66f99b93a50a7e8fe7cf7",
+        "locator": "{\"href\":\"EPUB\\\/c2.xhtml\",\"type\":\"application\\\/xhtml+xml\",\"title\":\"2장 · 여백의 시간\",\"locations\":{\"cssSelector\":\":root > :nth-child(2) > :nth-child(1)\",\"yeobaekLayout\":\"720:1004:2.0:1.0:SCROLL:true:ORIGINAL:1.0:1.5:1.0\",\"progression\":0,\"position\":2,\"totalProgression\":0.3333333333333333},\"text\":{\"highlight\":\"다음 장의 각주로 이동\"}}",
+        "title": "다음 장의 각주로 이동",
+        "createdAt": 1792213501900,
+        "locatorVersion": 1
+      }
+    ]
+  },
+  "settings": {
+    "overrides": {
+      "common:TXT": {
+        "font": "NOTO_SERIF",
+        "size": "18.0",
+        "line": "1.85",
+        "margin": "24.0",
+        "paper": "FOLLOW_APP"
+      },
+      "common:PDF": {
+        "fit": "WIDTH",
+        "spacing": "8.0",
+        "inverted": "false",
+        "canvas": "AUTO"
+      },
+      "common:IMAGE": {
+        "mode": "VERTICAL",
+        "direction": "LTR",
+        "spread": "SINGLE",
+        "coverAlone": "true",
+        "verticalFit": "WIDTH",
+        "pagedFit": "PAGE",
+        "spacing": "0.0",
+        "inverted": "false",
+        "canvas": "AUTO",
+        "splitWide": "false",
+        "cropMode": "OFF",
+        "cropLeft": "0.0",
+        "cropTop": "0.0",
+        "cropRight": "1.0",
+        "cropBottom": "1.0"
+      },
+      "book:bd4ae87c-e7f8-4a15-aaa5-59163d71f6ed:EPUB": {
+        "mode": "PAGED"
+      }
+    },
+    "folders": {
+      "bd4ae87c-e7f8-4a15-aaa5-59163d71f6ed": "com.android.externalstorage.documents:primary:Download\/YeobaekEPUB"
+    },
+    "favorites": [],
+    "screen": {
+      "brightness": -1,
+      "rotation": "SYSTEM",
+      "awake": false
+    },
+    "sort": "NAME",
+    "crops": {}
+  },
+  "theme": "LIGHT"
+}

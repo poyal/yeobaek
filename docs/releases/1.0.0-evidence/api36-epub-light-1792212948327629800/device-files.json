@@ -1,0 +1,290 @@
+[
+  {
+    "path": "restore/preserved.png",
+    "bytes": 85037,
+    "sha256": "a9b994e91e16baba83df2e6e6e5c3a2e32db6ddb66f891d42da90444291644f8",
+    "archived": true,
+    "archived_path": "device/restore/preserved.png"
+  },
+  {
+    "path": "restore/preserved.xml",
+    "bytes": 36155,
+    "sha256": "730377be7ed52c29b3758a48333409461099325eabedf5f98455105f8c6571b1",
+    "archived": true,
+    "archived_path": "device/restore/preserved.xml"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/01-internal-link.png",
+    "bytes": 209241,
+    "sha256": "ee70fe91772ea5b1a939e3409398abec4df39ca72d2d26202b2fc57a362f3411",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/01-internal-link.xml",
+    "bytes": 40676,
+    "sha256": "6650c92ff9a24c26e7ba4d81d77546d52e06d7490cbbd633f1fa59f49c36072d",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/01-reflow.png",
+    "bytes": 182853,
+    "sha256": "5ef612d8b7f15e0931c969b00b5a6eab96211a0390193759066cbdf1520c3287",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/01-reflow.png"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/01-reflow.xml",
+    "bytes": 40604,
+    "sha256": "ea3422ae76754e6240ab7bc50072bdb2ed17eaedca367ca87fff4d9700847945",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/01-reflow.xml"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/01-selection-copy.png",
+    "bytes": 182186,
+    "sha256": "1744b33c7c437fb41164966adfb7de9242124145cfb1eba6fc3e624dca3abd52",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/01-selection-copy.xml",
+    "bytes": 46890,
+    "sha256": "de3e4ca84aa5babc21b5ea075a6fabc78bd25048ba2205a59ef8dffb4d060c2f",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/02-bookmark.png",
+    "bytes": 171716,
+    "sha256": "291538355c78731e9e84282166f16f7114cba84b7c0d2679369a073113a0ff41",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/02-bookmark.xml",
+    "bytes": 27692,
+    "sha256": "bfa7c958547c385920ad134a19a86d021e30ea5983ffb39e1e4680d6fffeee6c",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/03-contents.png",
+    "bytes": 130361,
+    "sha256": "19725cc12104c6dc7735653091e69eb32d406febcc5019e50c577e5c5212dd4b",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/03-contents.xml",
+    "bytes": 27999,
+    "sha256": "ed8cdeb404369e1997904edbd8ef907605fe969c80ca00f2652a23a9e3d7a586",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/04-search.png",
+    "bytes": 120397,
+    "sha256": "0ef71c34ec369d3a8159fb8b88a1ec8229884f5caa782bb0666e4c5ca6d4661e",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/04-search.xml",
+    "bytes": 35833,
+    "sha256": "354b93da5799304653d4210f6a2f51aea9acd41f376cea5a86e4b2e003e80790",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/05-settings.png",
+    "bytes": 84080,
+    "sha256": "ecd2671e14a584f1f1b8b11e9854856134f005ff9b84a0d74ea56168d8a94917",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/05-settings.xml",
+    "bytes": 37118,
+    "sha256": "49564746adaeea5d2fb952f1c596394bca7c247bf945605b84cf46cb60b3bfe5",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/06-paged.png",
+    "bytes": 171244,
+    "sha256": "2adbad564d5a0215e4fb08becedd3ac491012b711bc516d4d5dcf61f62f93545",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/06-paged.xml",
+    "bytes": 36892,
+    "sha256": "8937e6c648ea058f01f7e564fbfad8560e703a240b7976ba9543946ab90416cb",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/07-resume.png",
+    "bytes": 79260,
+    "sha256": "da81ce5681ee6103461b99ab0486c1c8d93ca5a2a783c9c5261a03faf195cd61",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/07-resume.xml",
+    "bytes": 25477,
+    "sha256": "c2e09eab0a3e87e3b6debfe1bb6f673840c54057be121e1741a4f0d60dbdbe70",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/08-restored.png",
+    "bytes": 171244,
+    "sha256": "2adbad564d5a0215e4fb08becedd3ac491012b711bc516d4d5dcf61f62f93545",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/08-restored.png"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/08-restored.xml",
+    "bytes": 40617,
+    "sha256": "64619865e11106cd15099e3c75ba52eb15eb040c0bae02a4917606c9ee933071",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/08-restored.xml"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/09-landscape-focus.png",
+    "bytes": 27475,
+    "sha256": "52046ffb6d59ac7e09d8a09fd97613abe99412831780cb76d96e8e3baaa68708",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/09-landscape-focus.xml",
+    "bytes": 26110,
+    "sha256": "df29696eb0a30a6c57632da5a91a6cc0745bf5e941b8b4fe3a1fab6fb92c77de",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/09-landscape.png",
+    "bytes": 46561,
+    "sha256": "a9facaa77cac14270b59f3114e801bcba0d5cc0dc1a42b71074d33958331b7a0",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/09-landscape.xml",
+    "bytes": 38370,
+    "sha256": "e8ffe862e417dec36601db869a5133a6d45d870bf566410c2950e7a0d6531e30",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/10-large-settings.png",
+    "bytes": 83755,
+    "sha256": "2044be7d65cf3345d975e0d1d0093bfa4113249965533253176d507583ea7fd9",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/10-large-settings.xml",
+    "bytes": 28680,
+    "sha256": "396645b920b916a9d8a3ccbe1801122af6e74c3b6d747fb13c9cf28521405ea5",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/11-main-settings-entry.png",
+    "bytes": 75774,
+    "sha256": "b062723b30d41868ce85d3ad97f2b40043ff4a5f897a607ebd7c153502aedcf4",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/11-main-settings-entry.xml",
+    "bytes": 35361,
+    "sha256": "15e7792d225e5c4cadc7f38bef6170d1fff463c7b6ba64757487a7cddb669aff",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/12-fixed-zoom.png",
+    "bytes": 69337,
+    "sha256": "c8c79c044d05f4aa63c228ac68ee2787ffdb48a4dd38ff3ecb7093b007ce1ba0",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/12-fixed-zoom.png"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/12-fixed-zoom.xml",
+    "bytes": 40700,
+    "sha256": "2c57a7a9b53894125ad7e2756a434b55b716bd3bf3ebebe870dbdd0012c89d99",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/12-fixed-zoom.xml"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/13-fixed-complete.png",
+    "bytes": 57537,
+    "sha256": "26c4652bf83bb9eb8c6c06a8336a0e9c80c4d0e54f7f7ccf3d351bb3570253ec",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/13-fixed-complete.xml",
+    "bytes": 22936,
+    "sha256": "0296b985414772119fc90073d75376e2267814e21b155fd933c7a25bc51397b2",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/13-fixed-settings.png",
+    "bytes": 73441,
+    "sha256": "6fd6b7fcd9d26ce03f7191c1637e03cb3d5754acd221a0d9ecb89b00242bb55e",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/13-fixed-settings.xml",
+    "bytes": 33595,
+    "sha256": "5235655d717d63934b20c20f94662446864fe4de1f2d4a0121405156813d041a",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/14-permission-recovery.png",
+    "bytes": 74184,
+    "sha256": "5f9f323a2a4c9aaa629810aede3ca7fc01e7e2bb436b7f889f4f910c396d03a1",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/14-permission-recovery.xml",
+    "bytes": 24165,
+    "sha256": "b89370e7144d2b71aa491002112dc43140c196ab7c6fed23ac9fa1730132990e",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/15-drm.png",
+    "bytes": 72817,
+    "sha256": "791d2ebed2efa84f14b0bb4bc99589842892482b2de5f8c970eefc309bd8ae41",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/15-drm.xml",
+    "bytes": 24133,
+    "sha256": "9b44ffafde1432af8c58ab39ea31699e8ef3dedb79048e3d5c2ff472d3ee61fb",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/16-export.png",
+    "bytes": 77294,
+    "sha256": "eaa853ff94eee2f0381343bef3db7f49c0867ae731c343adf92d667d764b1d03",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/16-export.xml",
+    "bytes": 35349,
+    "sha256": "c8f55963036819137d69e660bab5ce76fee0d1ec21c21371421b616bbab7649b",
+    "archived": false
+  },
+  {
+    "path": "captures/EPUB-LIGHT/epub-backup.json",
+    "bytes": 3813,
+    "sha256": "d9dd3a09850bc81edbafeb13dcbc1708b4cb4dc03091e962db9a6106885b0958",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/epub-backup.json"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/FAIL-backupFreshRestoreAndChangedOriginalKeepRecords.png",
+    "bytes": 28912,
+    "sha256": "2c9123124a75c8fdb3929a193f2498e2c40abf33b693168752ed26188b4f03da",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/FAIL-backupFreshRestoreAndChangedOriginalKeepRecords.png"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/FAIL-backupFreshRestoreAndChangedOriginalKeepRecords.xml",
+    "bytes": 43872,
+    "sha256": "0ac1a1dc97b9fcfc1734546f7ec7e6a92c8875200d7e013d254b863fbf0bf0ff",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/FAIL-backupFreshRestoreAndChangedOriginalKeepRecords.xml"
+  },
+  {
+    "path": "captures/EPUB-LIGHT/process-death.txt",
+    "bytes": 66,
+    "sha256": "a91db8cf1a4c02902ef7b120edc08ab435057fd28f50ae91957ad0467220995c",
+    "archived": true,
+    "archived_path": "device/screens/EPUB-LIGHT/process-death.txt"
+  }
+]

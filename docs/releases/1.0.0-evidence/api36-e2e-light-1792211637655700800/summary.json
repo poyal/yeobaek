@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "exit_code": 0,
+  "expected_tests": 2,
+  "passed_tests": 2,
+  "tests": [
+    "com.poyal.yeobaek.e2e.ReaderJourneyTest#completeReadingJourneyAndScreens",
+    "com.poyal.yeobaek.e2e.ReaderJourneyTest#sourceFailureEmptyEncodingAndSettingIsolation"
+  ],
+  "missing": [],
+  "unexpected": []
+}

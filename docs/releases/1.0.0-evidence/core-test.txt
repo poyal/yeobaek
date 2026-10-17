@@ -1,0 +1,16 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.13/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :core:txt:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:txt:processResources NO-SOURCE
+> Task :core:txt:processTestResources NO-SOURCE
+> Task :core:txt:compileKotlin
+> Task :core:txt:compileJava NO-SOURCE
+> Task :core:txt:classes UP-TO-DATE
+> Task :core:txt:jar
+> Task :core:txt:compileTestKotlin
+> Task :core:txt:compileTestJava NO-SOURCE
+> Task :core:txt:testClasses UP-TO-DATE
+> Task :core:txt:test
+
+BUILD SUCCESSFUL in 18s
+4 actionable tasks: 4 executed

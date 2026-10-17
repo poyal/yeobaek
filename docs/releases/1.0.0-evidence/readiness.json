@@ -1,0 +1,81 @@
+{
+  "status": "PASS",
+  "checked_at": "2026-10-17T14:07:31.743629+09:00",
+  "source_commit": "8ec0a56222dbdbea86afc569abe0258ecde67386",
+  "apk_sha256": "7361417c705f2e863c78e6db856c134925239cea2542582da44c46691ecfee2d",
+  "unit_tests": 60,
+  "instrumentation_tests_per_api": 49,
+  "release_e2e_tests": 17,
+  "release_suites": [
+    {
+      "directory": "api30-soak-light-1792211252283542300",
+      "status": "PASS",
+      "tests": 1
+    },
+    {
+      "directory": "api36-about-light-1792211980812124900",
+      "status": "PASS",
+      "tests": 1
+    },
+    {
+      "directory": "api36-e2e-dark-1792211787334265700",
+      "status": "PASS",
+      "tests": 2
+    },
+    {
+      "directory": "api36-e2e-light-1792211637655700800",
+      "status": "PASS",
+      "tests": 2
+    },
+    {
+      "directory": "api36-epub-light-1792212948327629800",
+      "status": "FAIL",
+      "tests": 0
+    },
+    {
+      "directory": "api36-epub-light-1792213132462896800",
+      "status": "FAIL",
+      "tests": 0
+    },
+    {
+      "directory": "api36-epub-light-1792213454621127600",
+      "status": "PASS",
+      "tests": 3
+    },
+    {
+      "directory": "api36-load-light-1792212170575860200",
+      "status": "PASS",
+      "tests": 1
+    },
+    {
+      "directory": "api36-recovery-light-1792212064890896700",
+      "status": "PASS",
+      "tests": 4
+    },
+    {
+      "directory": "api36-repeat-light-1792212585891544300",
+      "status": "PASS",
+      "tests": 1
+    },
+    {
+      "directory": "api36-restore-dark-1792211936987675200",
+      "status": "PASS",
+      "tests": 1
+    },
+    {
+      "directory": "api36-restore-dark-1792211965818408100",
+      "status": "PASS",
+      "tests": 1
+    }
+  ],
+  "upgrade": "PASS",
+  "reboot": "PASS",
+  "not_run": [
+    "physical Galaxy reproduction",
+    "physical-device frame overrun, battery and thermal testing",
+    "TalkBack spoken interaction",
+    "16KiB page OS",
+    "purchased publisher EPUB compatibility",
+    "new 30-minute EPUB soak (TXT-only change)"
+  ]
+}

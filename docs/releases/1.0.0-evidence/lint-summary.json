@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "counts": {
+    "Fatal": 0,
+    "Error": 0,
+    "Warning": 47,
+    "Information": 0
+  }
+}

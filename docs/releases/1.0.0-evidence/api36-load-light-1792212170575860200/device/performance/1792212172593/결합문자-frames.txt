@@ -1,0 +1,77 @@
+Applications Graphics Acceleration Info:
+Uptime: 574659 Realtime: 574659
+
+** Graphics info for pid 3444 [com.poyal.yeobaek] **
+
+Stats since: 220993645100ns
+Total frames rendered: 7060
+Janky frames: 378 (5.35%)
+Janky frames (legacy): 1524 (21.59%)
+50th percentile: 17ms
+90th percentile: 26ms
+95th percentile: 31ms
+99th percentile: 73ms
+Number Missed Vsync: 60
+Number High input latency: 8371
+Number Slow UI thread: 130
+Number Slow bitmap uploads: 1
+Number Slow issue draw commands: 297
+Number Frame deadline missed: 378
+Number Frame deadline missed (legacy): 226
+HISTOGRAM: 5ms=52 6ms=9 7ms=56 8ms=63 9ms=54 10ms=40 11ms=49 12ms=58 13ms=39 14ms=26 15ms=34 16ms=328 17ms=3158 18ms=1455 19ms=380 20ms=80 21ms=52 22ms=41 23ms=41 24ms=63 25ms=123 26ms=167 27ms=148 28ms=80 29ms=53 30ms=41 31ms=26 32ms=32 34ms=39 36ms=22 38ms=7 40ms=11 42ms=25 44ms=24 46ms=5 48ms=16 53ms=30 57ms=18 61ms=11 65ms=11 69ms=10 73ms=16 77ms=4 81ms=3 85ms=4 89ms=3 93ms=4 97ms=2 101ms=1 105ms=1 109ms=7 113ms=1 117ms=0 121ms=2 125ms=3 129ms=3 133ms=0 150ms=13 200ms=7 250ms=5 300ms=3 350ms=0 400ms=0 450ms=0 500ms=0 550ms=0 600ms=0 650ms=0 700ms=0 750ms=0 800ms=0 850ms=0 900ms=1 950ms=0 1000ms=0 1050ms=0 1100ms=0 1150ms=0 1200ms=0 1250ms=0 1300ms=0 1350ms=0 1400ms=0 1450ms=0 1500ms=0 1550ms=0 1600ms=0 1650ms=0 1700ms=0 1750ms=0 1800ms=0 1850ms=0 1900ms=0 1950ms=0 2000ms=0 2050ms=0 2100ms=0 2150ms=0 2200ms=0 2250ms=0 2300ms=0 2350ms=0 2400ms=0 2450ms=0 2500ms=0 2550ms=0 2600ms=0 2650ms=0 2700ms=0 2750ms=0 2800ms=0 2850ms=0 2900ms=0 2950ms=0 3000ms=0 3050ms=0 3100ms=0 3150ms=0 3200ms=0 3250ms=0 3300ms=0 3350ms=0 3400ms=0 3450ms=0 3500ms=0 3550ms=0 3600ms=0 3650ms=0 3700ms=0 3750ms=0 3800ms=0 3850ms=0 3900ms=0 3950ms=0 4000ms=0 4050ms=0 4100ms=0 4150ms=0 4200ms=0 4250ms=0 4300ms=0 4350ms=0 4400ms=0 4450ms=0 4500ms=0 4550ms=0 4600ms=0 4650ms=0 4700ms=0 4750ms=0 4800ms=0 4850ms=0 4900ms=0 4950ms=0
+50th gpu percentile: 16ms
+90th gpu percentile: 18ms
+95th gpu percentile: 20ms
+99th gpu percentile: 4950ms
+GPU HISTOGRAM: 1ms=146 2ms=20 3ms=11 4ms=16 5ms=53 6ms=115 7ms=89 8ms=104 9ms=127 10ms=122 11ms=72 12ms=64 13ms=115 14ms=340 15ms=1302 16ms=2264 17ms=1127 18ms=462 19ms=155 20ms=60 21ms=41 22ms=20 23ms=18 24ms=20 25ms=18 4950ms=179
+
+Pipeline=Skia (OpenGL)
+Memory policy:
+  Max surface area: 2073600
+  Max resource usage: 99.53MB (x48)
+  Background retention: 50% (altUiHidden = true)
+  GPU Context timeout: 10
+Contexts: 1 (stopped = 0)
+CPU Caches:
+  Glyph Cache: 420.74 KB (1 entry)
+  skia/sk_resource_cache/mipmap_0x7532485ef230: 23.07 KB (1 entry)
+  Glyph Count: 56 
+Total CPU memory usage:
+  454462 bytes, 443.81 KB (0.00 bytes is purgeable)
+GPU Caches:
+  Other:
+    Other: 40.91 KB (1 entry)
+  Image:
+    Texture: 34.84 KB (15 entries)
+  Scratch:
+    RenderTarget: 4.81 MB (1 entry)
+    Texture: 4.05 MB (27 entries)
+    Buffer Object: 142.00 KB (4 entries)
+Total GPU memory usage:
+  9518324 bytes, 9.08 MB (4.95 MB is purgeable)
+
+GraphicBufferAllocator buffers:
+            Handle |         Size |     W (Stride) x H | Layers |   Format |      Usage | Requestor
+    0x7532785d9fe0 |      unknown |  720 (   0) x 1600 |      1 |        1 | 0x     b00 | VRI[MainActivity]#0(BLAST Consumer)0
+    0x7532785df7d0 |      unknown |  720 (   0) x 1600 |      1 |        1 | 0x     b00 | VRI[MainActivity]#0(BLAST Consumer)0
+    0x7532785e06b0 |      unknown |  720 (   0) x 1600 |      1 |        1 | 0x     b00 | VRI[MainActivity]#0(BLAST Consumer)0
+Total allocated by GraphicBufferAllocator (estimate): 0.00 KB
+Imported gralloc buffers:
++ name:VRI[MainActivity]#0(BLAST Consumer)0, id:358, size:4500.31KiB, w/h:720x1600, usage: 0xb00, req fmt:1, fourcc/mod:875708993/0, dataspace: 0x8810000, compressed: false
++ name:VRI[MainActivity]#0(BLAST Consumer)0, id:357, size:4500.31KiB, w/h:720x1600, usage: 0xb00, req fmt:1, fourcc/mod:875708993/0, dataspace: 0x8810000, compressed: false
++ name:VRI[MainActivity]#0(BLAST Consumer)0, id:356, size:4500.31KiB, w/h:720x1600, usage: 0xb00, req fmt:1, fourcc/mod:875708993/0, dataspace: 0x8810000, compressed: false
+Total imported by gralloc: 13500.94KiB
+
+Profile data in ms:
+
+	com.poyal.yeobaek/com.poyal.yeobaek.MainActivity/android.view.ViewRootImpl@a6ac647 (visibility=0)
+View hierarchy:
+
+  com.poyal.yeobaek/com.poyal.yeobaek.MainActivity/android.view.ViewRootImpl@a6ac647
+  17 views, 27.72 kB of render nodes
+
+
+Total ViewRootImpl   : 1
+Total attached Views : 17
+Total RenderNode     : 27.72 kB (used) / 55.70 kB (capacity)
+

@@ -1,0 +1,184 @@
+[
+  {
+    "path": "restore/preserved.png",
+    "bytes": 85037,
+    "sha256": "a9b994e91e16baba83df2e6e6e5c3a2e32db6ddb66f891d42da90444291644f8",
+    "archived": true,
+    "archived_path": "device/restore/preserved.png"
+  },
+  {
+    "path": "restore/preserved.xml",
+    "bytes": 36155,
+    "sha256": "730377be7ed52c29b3758a48333409461099325eabedf5f98455105f8c6571b1",
+    "archived": true,
+    "archived_path": "device/restore/preserved.xml"
+  },
+  {
+    "path": "captures/RECOVERY/39-cache-rebuilt.png",
+    "bytes": 173816,
+    "sha256": "6051d8987258b90aabac1d631881ff1ff3b83c0d8ff9837c705465498256ada5",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/39-cache-rebuilt.xml",
+    "bytes": 37471,
+    "sha256": "6800e5fe7402b0cb89ba7a0e874e8d93c904dd54f0437e759584413418208795",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/40-missing-source.png",
+    "bytes": 71297,
+    "sha256": "ce824ad44be6290b0bb62d27d01bb9c32e97786a1f23875983d99d7b7d7f6e60",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/40-missing-source.xml",
+    "bytes": 24198,
+    "sha256": "ceb561ba1ea643bff15ba8575451551fff70c88f90b985acd0eb1a0f753cf5d7",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/41-changed-source.png",
+    "bytes": 72297,
+    "sha256": "2e185f0dae6300ff033da5b9682f17e836995dddb245d952a08a9b72d46cfdc8",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/41-changed-source.xml",
+    "bytes": 24208,
+    "sha256": "8aed63c4654c615c0bce2d7bcd32c003640810e2b4e9dfe3aaf3570852c2544f",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/42-old-bookmark-preserved.png",
+    "bytes": 72901,
+    "sha256": "71178b9b085bcfa168f1a5f7e4f4aa5954ea1b1f4091607be133b8a099eda7d2",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/42-old-bookmark-preserved.xml",
+    "bytes": 27237,
+    "sha256": "69d139abe567c236d22ce51889a5b847d9bf7f0acdef76ea905ca06d5742956b",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/43-record-deleted.png",
+    "bytes": 75926,
+    "sha256": "687031e163d6acf790191e2e080a426de24b4e25078061d8391c1e8d4e6d0bba",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/43-record-deleted.xml",
+    "bytes": 27457,
+    "sha256": "c995fdbf971bf2cb8a8c9c23c260ad3cd35f95551cd045626b24d47707a4dae2",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/44-thousand-files.png",
+    "bytes": 61050,
+    "sha256": "a70b89a87834b930eb66fa1dc444339b13b7b56d4fabe6a1f6a5e37994d02096",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/44-thousand-files.xml",
+    "bytes": 46068,
+    "sha256": "62c5777d2c14850aef0f2dc84b266e6f1bff0e9df22bba6577e96beb89caa9ca",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/45-system-font-200.png",
+    "bytes": 120993,
+    "sha256": "03cbeab742fd651896c9f0926bf4d22f8b24e3b9b6318d3b7c9b78730d2d31c8",
+    "archived": true,
+    "archived_path": "device/screens/RECOVERY/45-system-font-200.png"
+  },
+  {
+    "path": "captures/RECOVERY/45-system-font-200.xml",
+    "bytes": 33938,
+    "sha256": "4026ac9dedd22d645d383875206f7ddf5b33898faa110412fbd270af88df69eb",
+    "archived": true,
+    "archived_path": "device/screens/RECOVERY/45-system-font-200.xml"
+  },
+  {
+    "path": "captures/RECOVERY/46-large-txt-options.png",
+    "bytes": 78429,
+    "sha256": "eb91a2ea2a03a902360e8903e6c7895c6bf75e787eaec9864302e508bde5c1e5",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/46-large-txt-options.xml",
+    "bytes": 27264,
+    "sha256": "99fa3dc3fb5027e1674f5cc1ca9014f23b795468bff3e2d169695bdbd251b53a",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/47-keyboard-search.png",
+    "bytes": 75349,
+    "sha256": "265cd70ba068775af76040a1c07f7b2391087a7ce5aa8204008fa93df392f916",
+    "archived": true,
+    "archived_path": "device/screens/RECOVERY/47-keyboard-search.png"
+  },
+  {
+    "path": "captures/RECOVERY/47-keyboard-search.xml",
+    "bytes": 49183,
+    "sha256": "0d0c96278cbd69953d51a66655171d22d059d81d31a3c8a87670cc5b5e621d51",
+    "archived": true,
+    "archived_path": "device/screens/RECOVERY/47-keyboard-search.xml"
+  },
+  {
+    "path": "captures/RECOVERY/48-large-search-results.png",
+    "bytes": 88521,
+    "sha256": "4a3a059b8fe6ddcd2119bbff2ec9c6b97622c7bdbcecc49f87ec0eda38c86907",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/48-large-search-results.xml",
+    "bytes": 32411,
+    "sha256": "ad16ee26b7ef7e8afbe82b10237d3105f2c2123f1f232398a85e046008634def",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/49-reconnect-picker.png",
+    "bytes": 53576,
+    "sha256": "514ac80dc34a47d05cab089e896abca9a0a5744fb2a09c2d60fd88c4a62efd4d",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/49-reconnect-picker.xml",
+    "bytes": 54825,
+    "sha256": "2df9206a25357104f11dd082c4412c0ae901686f525353f7d46085acf347b79b",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/50-reconnected-bookmark.png",
+    "bytes": 142354,
+    "sha256": "a16d716a16285cf0ea0a3d0ba399f470d2102f0d68d58ebf94d4ac5d42d25f53",
+    "archived": true,
+    "archived_path": "device/screens/RECOVERY/50-reconnected-bookmark.png"
+  },
+  {
+    "path": "captures/RECOVERY/50-reconnected-bookmark.xml",
+    "bytes": 27234,
+    "sha256": "084628d5cc09c37044f80d7cfdce680ce588a0c436cf4da385b394fe7e4fee7c",
+    "archived": true,
+    "archived_path": "device/screens/RECOVERY/50-reconnected-bookmark.xml"
+  },
+  {
+    "path": "captures/RECOVERY/51-folder-refreshed-on-resume.png",
+    "bytes": 69910,
+    "sha256": "f0c2f305868fbbfdc404a28d39db42c72ad919531441742801a4b06eaf0fbe40",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/51-folder-refreshed-on-resume.xml",
+    "bytes": 43105,
+    "sha256": "dc9228e2327333a3b05e09f9f443703bd41f6a09abc6d6df40754f4a7f351a33",
+    "archived": false
+  },
+  {
+    "path": "captures/RECOVERY/picker-step.xml",
+    "bytes": 54825,
+    "sha256": "2df9206a25357104f11dd082c4412c0ae901686f525353f7d46085acf347b79b",
+    "archived": false
+  }
+]

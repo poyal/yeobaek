@@ -1,0 +1,27 @@
+diff --git a/e2e/src/main/java/com/poyal/yeobaek/e2e/EpubJourneyTest.kt b/e2e/src/main/java/com/poyal/yeobaek/e2e/EpubJourneyTest.kt
+index af3de68..b39c68a 100644
+--- a/e2e/src/main/java/com/poyal/yeobaek/e2e/EpubJourneyTest.kt
++++ b/e2e/src/main/java/com/poyal/yeobaek/e2e/EpubJourneyTest.kt
+@@ -158,11 +158,19 @@ class EpubJourneyTest {
+     }
+     private fun selectDocument(name: String) {
+         repeat(30) {
+-            val item = device.findObject(By.text(name))
+-            if (item != null && item.visibleBounds.height() > 0) { item.click(); device.waitForIdle(); return }
++            if (android.os.Build.VERSION.SDK_INT >= 33) instrumentation.uiAutomation.clearCache()
+             val list = device.wait(Until.findObject(By.res(Pattern.compile(".*:id/dir_list"))), 5000)
+                 ?: error("No document list")
+-            list.scroll(Direction.DOWN, .65f)
++            val area = list.visibleBounds
++            val item = list.findObject(By.text(name))
++            val bounds = item?.visibleBounds
++            // A clipped last-row title can extend under the system navigation bar. Clicking
++            // it can press Back or Recents instead of opening the backup. Scroll it fully into
++            // the document list and query again after the system picker updates its layout.
++            if (bounds != null && bounds.height() >= 24 && bounds.top >= area.top + 8 && bounds.bottom <= area.bottom - 24) {
++                item.click(); device.waitForIdle(); return
++            }
++            list.scroll(if (bounds != null && bounds.height() > 0 && bounds.top < area.top + 8) Direction.UP else Direction.DOWN, .5f)
+             device.waitForIdle()
+         }
+         throw AssertionError("Backup document not found: $name")

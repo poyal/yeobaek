@@ -2,7 +2,9 @@
 
 앱을 사용하려면 [여백 사용자 매뉴얼](../README.md)을 먼저 읽어 주세요. 설치부터 읽기·백업·문제 해결까지 실제 화면과 함께 안내합니다. [전체 화면과 촬영 조건](screenshots/README.md)에서 v0.4.0 EPUB 화면과 기존 형식의 v0.3.0 촬영본을 볼 수 있습니다.
 
-최신 배포 파일과 변경 사항은 [v0.4.0 릴리즈 안내](releases/v0.4.0.md), 실제 실행 증거는 [0.4.0 검증 기록](releases/0.4.0-verification.md)에 있습니다. [v0.3.0 안내](releases/v0.3.0.md)·[검증](releases/0.3.0-verification.md)도 보존합니다. [v0.2.0 안내](releases/v0.2.0.md)·[검증](releases/0.2.0-verification.md), [v0.1.0 안내](releases/v0.1.0.md)·[검증](releases/0.1.0-verification.md)도 보존합니다.
+최신 배포 파일과 변경 사항은 [v1.0.0 릴리즈 안내](releases/v1.0.0.md), 실제 실행 증거는 [1.0.0 검증 기록](releases/1.0.0-verification.md)에 있습니다. [v0.4.0 안내](releases/v0.4.0.md)·[검증](releases/0.4.0-verification.md), [v0.3.0 안내](releases/v0.3.0.md)·[검증](releases/0.3.0-verification.md)도 보존합니다. [v0.2.0 안내](releases/v0.2.0.md)·[검증](releases/0.2.0-verification.md), [v0.1.0 안내](releases/v0.1.0.md)·[검증](releases/0.1.0-verification.md)도 보존합니다.
+
+**v1.0.0**은 TXT 스와이프 후 멈췄다가 손을 뗄 때의 잘못된 관성 스크롤 방어를 보완합니다. 직전 100ms의 움직임과 입력 수신 시각을 확인하고, 실제 양방향 스와이프·방향 전환을 유지합니다.
 
 **v0.4.0**은 DRM 없는 EPUB 2·3, 일반 본문과 고정 지면 읽기, EPUB 기록 백업, 설정 화면 통일과 TXT 정지 터치 보정을 추가합니다. [EPUB 안내](epub-reader.md)에서 지원 범위와 구조를 확인하세요.
 
@@ -26,7 +28,7 @@
 | 10 | [PDF·만화 확장 조사](format-roadmap.md) | 후속 엔진과 전용 옵션을 검토합니다. |
 | 11 | [출처 및 조사 한계](references.md) | 사실의 출처와 미검증 내용을 구분합니다. |
 
-문서의 **확인 사실**은 공식 문서·개발사 자료·기존 Android 프로젝트의 소스 검토를 바탕으로 합니다. **설계 제안**과 **목표 수치**는 여백을 위한 판단이며, 구현·실기기 측정으로 확정해야 합니다. 실제 구현은 [구현 문서](implementation.md), 로컬 실행 증거와 실물 기기 미실행 항목은 [검증 기록](releases/0.4.0-verification.md)에 분리했습니다.
+문서의 **확인 사실**은 공식 문서·개발사 자료·기존 Android 프로젝트의 소스 검토를 바탕으로 합니다. **설계 제안**과 **목표 수치**는 여백을 위한 판단이며, 구현·실기기 측정으로 확정해야 합니다. 실제 구현은 [구현 문서](implementation.md), 로컬 실행 증거와 실물 기기 미실행 항목은 [검증 기록](releases/1.0.0-verification.md)에 분리했습니다.
 
 조아라·노벨피아는 사용자께서 지정하신 스크롤 경험의 참고 대상입니다. 해당 앱이 사용하는 내부 기술이나 성능을 추정해 사실로 기록하지 않습니다.
 
@@ -35,6 +37,7 @@
 ## 형식별 구현과 검증
 
 - [빌드·실행·엔진 구조·테스트 명령](implementation.md)
+- [1.0.0 실제 배포 APK 검증](releases/1.0.0-verification.md)
 - [대용량 PDF 검증](pdf-load-verification.md) · [대용량 이미지·압축파일 검증](image-load-verification.md)
 - [EPUB 사용법과 구현](epub-reader.md) · [0.4.0 실제 배포 APK 검증](releases/0.4.0-verification.md)
 - [0.3.0 실제 배포 APK 검증](releases/0.3.0-verification.md) · [개발 단계의 변경 화면 보고서](reader-upgrade-report/index.html)

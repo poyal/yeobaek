@@ -1,0 +1,9 @@
+{
+  "apk_changed": false,
+  "action": "Reset AOSP DocumentsUI history before repeating EPUB suite",
+  "device": "emulator-5584",
+  "checked_at": "2026-10-17T13:58:52.1729863+09:00",
+  "avd": "yeobaek-release-040",
+  "failed_run": "api36-epub-light-1792212948327629800",
+  "test_apk_changed": false
+}

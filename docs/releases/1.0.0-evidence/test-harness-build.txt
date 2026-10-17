@@ -1,0 +1,44 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.13/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Warning: SDK processing. This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
+> Task :e2e:preBuild UP-TO-DATE
+> Task :e2e:preDebugBuild UP-TO-DATE
+> Task :e2e:checkTestedAppObfuscationDebug UP-TO-DATE
+> Task :e2e:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :e2e:checkDebugAarMetadata UP-TO-DATE
+> Task :e2e:processDebugNavigationResources UP-TO-DATE
+> Task :e2e:compileDebugNavigationResources UP-TO-DATE
+> Task :e2e:generateDebugResValues UP-TO-DATE
+> Task :e2e:mapDebugSourceSetPaths UP-TO-DATE
+> Task :e2e:generateDebugResources UP-TO-DATE
+> Task :e2e:mergeDebugResources UP-TO-DATE
+> Task :e2e:processDebugManifest UP-TO-DATE
+> Task :e2e:processDebugResources UP-TO-DATE
+> Task :e2e:javaPreCompileDebug UP-TO-DATE
+> Task :e2e:mergeDebugShaders UP-TO-DATE
+> Task :e2e:compileDebugShaders NO-SOURCE
+> Task :e2e:generateDebugAssets UP-TO-DATE
+> Task :e2e:mergeDebugAssets UP-TO-DATE
+> Task :e2e:compressDebugAssets UP-TO-DATE
+> Task :e2e:desugarDebugFileDependencies UP-TO-DATE
+> Task :e2e:checkDebugDuplicateClasses UP-TO-DATE
+> Task :e2e:mergeExtDexDebug UP-TO-DATE
+> Task :e2e:mergeLibDexDebug UP-TO-DATE
+> Task :e2e:mergeDebugJniLibFolders UP-TO-DATE
+> Task :e2e:mergeDebugNativeLibs NO-SOURCE
+> Task :e2e:stripDebugDebugSymbols NO-SOURCE
+> Task :e2e:validateSigningDebug UP-TO-DATE
+> Task :e2e:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :e2e:compileDebugKotlin
+> Task :e2e:compileDebugJavaWithJavac NO-SOURCE
+> Task :e2e:dexBuilderDebug
+> Task :e2e:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :e2e:processDebugJavaRes UP-TO-DATE
+> Task :e2e:mergeDebugJavaResource UP-TO-DATE
+> Task :e2e:mergeProjectDexDebug
+> Task :e2e:packageDebug
+> Task :e2e:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :e2e:assembleDebug
+
+BUILD SUCCESSFUL in 14s
+29 actionable tasks: 4 executed, 25 up-to-date
