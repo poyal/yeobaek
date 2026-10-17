@@ -1,0 +1,32 @@
+{
+  "status": "PASS",
+  "mode": "draft",
+  "checked_at": "2026-10-17T14:09:11.016361+09:00",
+  "release_url": "https://github.com/poyal/yeobaek/releases/tag/untagged-1f30838956c97b4d8d4a",
+  "release_id": 415595382,
+  "tag": "v1.0.0",
+  "source_commit": "8ec0a56222dbdbea86afc569abe0258ecde67386",
+  "test_source_commit": "760100e26119dfb6968a6020fbd26ff095fccc12",
+  "tag_commit": "7c9aff6d57a02a08ffe13b2be98ef8ce0d24adab",
+  "draft": true,
+  "published_at": null,
+  "files": [
+    {
+      "name": "yeobaek-1.0.0.apk",
+      "bytes": 73917353,
+      "sha256": "7361417c705f2e863c78e6db856c134925239cea2542582da44c46691ecfee2d",
+      "url": "https://github.com/poyal/yeobaek/releases/download/untagged-1f30838956c97b4d8d4a/yeobaek-1.0.0.apk",
+      "download": "PASS",
+      "github_digest": "PASS"
+    },
+    {
+      "name": "yeobaek-1.0.0.sha256",
+      "bytes": 85,
+      "sha256": "0982934e47ca38c885f102331cd8c51f58c242494a70c6504fe8c0701d8395e5",
+      "url": "https://github.com/poyal/yeobaek/releases/download/untagged-1f30838956c97b4d8d4a/yeobaek-1.0.0.sha256",
+      "download": "PASS",
+      "github_digest": "PASS"
+    }
+  ],
+  "unauthenticated_public_api": false
+}

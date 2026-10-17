@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "checked_at": "2026-10-17T14:10:05.381494+09:00",
+  "installed_version": "1.0.0",
+  "versionCode": 6,
+  "latest_version": "1.0.0",
+  "checks": [
+    "actual release app manual update check",
+    "current and latest versions match",
+    "current-version status shown",
+    "no redundant download or installation control"
+  ]
+}
