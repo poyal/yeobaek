@@ -16,8 +16,8 @@ android {
         applicationId = "com.poyal.yeobaek"
         minSdk = 30
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 6
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {
@@ -65,6 +65,7 @@ android {
         sourceSets.getByName("androidTest").java.srcDir("src/imageLoadTest/java")
     }
     sourceSets.getByName("androidTest").assets.srcDir("schemas")
+    sourceSets.getByName("androidTest").assets.srcDir("src/test/resources")
     sourceSets.getByName("main").assets.srcDir("src/main/res/font")
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }

@@ -75,7 +75,8 @@ import java.util.Locale
         override suspend fun onPreFling(available: Velocity): Velocity {
             val suppressed = flingGuard.suppressFling(android.os.SystemClock.uptimeMillis())
             diagnostics.record("fling_start", "session=${opened.token} vx=${available.x} vy=${available.y} forward=$forwardIntent " +
-                "suppressed=$suppressed touchTravelPx=${flingGuard.maxTravel}")
+                "suppressed=$suppressed touchTravelPx=${flingGuard.maxTravel} " +
+                "releaseTravelPx=${flingGuard.releaseTravel} releaseDurationMs=${flingGuard.releaseDuration}")
             return if (suppressed) Velocity(0f, available.y) else Velocity.Zero
         }
         override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {

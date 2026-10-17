@@ -89,6 +89,53 @@ class ReaderScrollTest {
         }
     }
 
+    private fun event(action: Int, down: Long, time: Long, atX: Float, atY: Float) {
+        SystemClock.sleep((time - SystemClock.uptimeMillis()).coerceAtLeast(0))
+        ui.runOnUiThread {
+            val pointer = MotionEvent.PointerProperties().apply { id = 0; toolType = MotionEvent.TOOL_TYPE_FINGER }
+            val coords = MotionEvent.PointerCoords().apply { this.x = atX; this.y = atY; pressure = 1f; size = 1f }
+            val touch = MotionEvent.obtain(down, time, action, 1, arrayOf(pointer), arrayOf(coords),
+                0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0)
+            try { readerView.dispatchTouchEvent(touch) } finally { touch.recycle() }
+        }
+    }
+
+    @Test fun reportedSwipeHeldStillBeforeReleaseDoesNotFlingBackwards() = withReader(
+        (0 until 3000).joinToString("\n") { "문장 $it · 움직인 뒤 멈추고 손을 떼어도 읽던 자리를 유지합니다." }
+    ) { length ->
+        // Start in the middle so an erroneous reverse fling cannot be hidden by the top edge.
+        ui.runOnIdle { vm.seek(length / 2) }
+        ui.waitUntil(30000) {
+            ui.onAllNodesWithTag("layout_loading").fetchSemanticsNodes().isEmpty() &&
+                list.layoutInfo.visibleItemsInfo.any { (it.key as String).substringAfterLast(':').toLong() > length / 3 }
+        }
+        ui.waitForIdle()
+        val points = InstrumentationRegistry.getInstrumentation().context.assets.open("scroll/swipe-hold-125.csv")
+            .bufferedReader().use { it.readLines().map { line ->
+                val (time, y) = line.split(',')
+                time.toLong() to y.toFloat()
+            } }
+        val body = ui.onNodeWithTag("reader_body").fetchSemanticsNode().boundsInRoot
+        val scale = body.height / 3000f
+        val startY = body.center.y + 222f * scale
+        val down = SystemClock.uptimeMillis()
+        points.dropLast(1).forEachIndexed { index, (time, y) ->
+            event(if (index == 0) MotionEvent.ACTION_DOWN else MotionEvent.ACTION_MOVE,
+                down, down + time, body.center.x, startY + (y - points.first().second) * scale)
+        }
+        lateinit var stopped: Pair<Int, Int>
+        ui.runOnUiThread { stopped = list.firstVisibleItemIndex to list.firstVisibleItemScrollOffset }
+        val (time, y) = points.last()
+        event(MotionEvent.ACTION_UP, down, down + time, body.center.x, startY + (y - points.first().second) * scale)
+        ui.waitForIdle()
+        ui.runOnIdle { assertEquals(stopped, list.firstVisibleItemIndex to list.firstVisibleItemScrollOffset) }
+        val out = ByteArrayOutputStream()
+        runBlocking { vm.scrollDiagnostics.export(out) }
+        val fling = out.toString("UTF-8").lineSequence().last { it.contains("fling_start session=$session") }
+        assertTrue("The stopped swipe must suppress even a bogus velocity: $fling", fling.contains("suppressed=true"))
+        assertTrue("Release history must reach the fling callback: $fling", fling.contains("releaseDurationMs=100"))
+    }
+
     @Test fun sentencesStayContinuousAcrossManyForwardAndBackwardWindowChanges() = withReader(
         (0 until 15000).joinToString("\n") { "문장 $it · 책을 읽으면서 천천히 다음 이야기를 따라갑니다. Aa 123" }
     ) {
@@ -104,16 +151,6 @@ class ReaderScrollTest {
         val body = ui.onNodeWithTag("reader_body").fetchSemanticsNode().boundsInRoot
         val x = body.center.x
         val y = body.center.y
-        fun event(action: Int, down: Long, time: Long, atX: Float, atY: Float) {
-            SystemClock.sleep((time - SystemClock.uptimeMillis()).coerceAtLeast(0))
-            ui.runOnUiThread {
-                val pointer = MotionEvent.PointerProperties().apply { id = 0; toolType = MotionEvent.TOOL_TYPE_FINGER }
-                val coords = MotionEvent.PointerCoords().apply { this.x = atX; this.y = atY; pressure = 1f; size = 1f }
-                val touch = MotionEvent.obtain(down, time, action, 1, arrayOf(pointer), arrayOf(coords),
-                    0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0)
-                try { readerView.dispatchTouchEvent(touch) } finally { touch.recycle() }
-            }
-        }
         val swipe = SystemClock.uptimeMillis()
         event(MotionEvent.ACTION_DOWN, swipe, swipe, x, y + 200f)
         for (i in 1..8) event(MotionEvent.ACTION_MOVE, swipe, swipe + i * 12, x, y + 200f - i * 40f)
