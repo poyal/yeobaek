@@ -1,8 +1,0 @@
-{
-  "test_apk_sha256": "322d43c5b8b12e59cff76b7c979f54a9bf3f85e76955e75ab840c570205feae3",
-  "status": "PASS",
-  "avd": "yeobaek-api36",
-  "serial": "emulator-5580",
-  "apk_sha256": "1efb11f1ec7907ae3f57b20d16f153711005ef482e46fc1874bdb70983692513",
-  "tests": 4
-}

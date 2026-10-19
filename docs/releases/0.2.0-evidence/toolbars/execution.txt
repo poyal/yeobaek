@@ -1,3 +1,0 @@
-reader toolbar, settings and large font PASS
-pdf toolbar, settings and large font PASS
-image toolbar, settings and large font PASS

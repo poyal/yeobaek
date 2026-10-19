@@ -1,9 +1,0 @@
-{
-  "passed": true,
-  "checks": [
-    "empty app restore",
-    "permission loss and relink",
-    "reading position retained",
-    "book size override restored"
-  ]
-}

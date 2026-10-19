@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw
 
 p = argparse.ArgumentParser()
 p.add_argument('runs', nargs='+', type=Path)
-p.add_argument('--output', type=Path, default=Path('docs/releases/0.1.0-screens'))
+p.add_argument('--output', type=Path, default=Path('.tools/verification/screens'))
 args = p.parse_args()
 args.output.mkdir(parents=True, exist_ok=True)
 required = {

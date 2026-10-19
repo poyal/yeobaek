@@ -1,9 +1,0 @@
-image folder -> folder passed
-skip empty folder passed
-text end passed
-dismiss does not repeat passed
-pdf end passed
-archive last item passed
-exit to folder passed
-recent resolves original parent passed
-{"serial": "emulator-5580", "image_folder_next": true, "skip_empty_folder": true, "text_next": true, "pdf_next": true, "archive_no_next": true, "dismiss_no_repeat": true, "restored_end_no_auto_prompt": true, "recent_parent_resolved": true, "exit_to_source_folder": true}

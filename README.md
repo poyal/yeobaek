@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="design/final/assets/icon-light.svg" alt="여백의 리듬 아이콘" width="88">
+  <img src="assets/brand/icon-light.svg" alt="여백의 리듬 아이콘" width="88">
 </p>
 
 <h1 align="center">여백 사용자 매뉴얼</h1>
@@ -28,7 +28,7 @@
 
 처음이라면 **설치 → 시작 폴더 선택 → 책 열기 → 읽기 설정 → 기록 백업** 순서로 따라 해 보세요. EPUB·설정 첫 화면·일반 설정은 **v0.4.0**, 기존 TXT·PDF·만화 사용 예시는 **v0.3.0**에서 촬영했습니다. v0.4.0은 설정 메뉴를 첫 화면으로 옮기고 카드 배경을 통일했습니다. 책과 그림은 사용법을 위한 창작 예제이며, 이미지를 누르면 크게 볼 수 있습니다.
 
-**v1.0.0:** TXT에서 스와이프 후 멈췄다가 손을 뗄 때의 역방향 관성 스크롤 방어를 보완했습니다. [변경 사항](docs/releases/v1.0.0.md) · [검증 결과](docs/releases/1.0.0-verification.md) · [EPUB 상세 안내](docs/epub-reader.md)
+**v1.0.0:** TXT에서 스와이프 후 멈췄다가 손을 뗄 때의 역방향 관성 스크롤 방어를 보완했습니다. [변경 사항](https://github.com/poyal/yeobaek/releases/tag/v1.0.0) · [검증 결과](docs/releases/v1.0.0/AGENTS.md) · [EPUB 상세 안내](docs/architecture.md#epub-읽기)
 
 ## 목차
 
@@ -180,7 +180,7 @@ TXT는 진행률로, PDF와 이미지는 페이지 번호로 이동합니다. EP
   <tr><td><a href="docs/screenshots/0.4.0/epub-reader.png"><img src="docs/screenshots/0.4.0/epub-reader.png" alt="EPUB 장별 세로 읽기" width="260"></a></td><td><a href="docs/screenshots/0.4.0/epub-settings.png"><img src="docs/screenshots/0.4.0/epub-settings.png" alt="카드 배경을 적용한 EPUB 설정" width="260"></a></td></tr>
 </table>
 
-원본 파일이 바뀌면 **처음부터 열기 / 취소**를 선택합니다. 이전 위치와 책갈피는 보관하며 다른 내용의 위치로 자동 이동하지 않습니다. 이미지로만 된 책에는 검색·선택할 텍스트가 없을 수 있습니다. [지원 범위와 저장 방식](docs/epub-reader.md)
+원본 파일이 바뀌면 **처음부터 열기 / 취소**를 선택합니다. 이전 위치와 책갈피는 보관하며 다른 내용의 위치로 자동 이동하지 않습니다. 이미지로만 된 책에는 검색·선택할 텍스트가 없을 수 있습니다. [지원 범위와 저장 방식](docs/architecture.md#epub-읽기)
 
 <a id="pdf"></a>
 
@@ -355,7 +355,7 @@ TXT·PDF·이미지의 빠른 설정 아래쪽 **독서 화면 · 모든 책 공
 | --- | --- |
 | 파일을 넣었는데 보이지 않아요 | 연결한 폴더와 현재 하위 폴더를 확인하고 새로고침하세요. 파일명 검색어와 표시 필터도 확인하세요. |
 | 폴더를 선택할 수 없어요 | 저장소 최상위 대신 그 안의 책 폴더를 선택하세요. 다운로드 폴더 안에 별도 폴더를 만들어도 됩니다. |
-| Android 11에서 폴더 선택 버튼이 안 보여요 | AOSP 파일 선택기가 이전 폴더를 복원할 때 버튼이 사라지는 경우를 관찰했습니다. 파일 앱의 **다른 앱으로 열기 → 여백**으로 책을 열 수 있습니다. [확인한 환경과 제약](docs/releases/0.4.0-verification.md)을 참고하세요. |
+| Android 11에서 폴더 선택 버튼이 안 보여요 | AOSP 파일 선택기가 이전 폴더를 복원할 때 버튼이 사라지는 경우를 관찰했습니다. 파일 앱의 **다른 앱으로 열기 → 여백**으로 책을 열 수 있습니다. [확인한 환경과 제약](docs/releases/v0.4.0/AGENTS.md)을 참고하세요. |
 | 한글이 깨져 보여요 | **정보 → 글자가 깨져 보이나요?**에서 인코딩별 미리보기를 확인하고 적용하세요. |
 | 읽던 책을 열 수 없어요 | 파일을 옮기거나 이름을 바꿨는지, 원본이 삭제됐는지 확인하세요. **파일 다시 찾기**로 동일한 원본을 연결할 수 있습니다. |
 | 인터넷 없이 읽을 수 없어요 | 원본이 클라우드에만 있으면 공급자의 다운로드가 필요할 수 있습니다. 읽기 캐시는 영구 보관용 원본 사본이 아닙니다. |
@@ -383,12 +383,12 @@ EPUB의 DRM 해제·서점 로그인·ACSM/LCP·오디오/비디오·책의 스�
 
 스크롤 문제는 **설정 → 앱 정보·문의 → 스크롤 진단 로그 저장**으로 저장한 파일을 함께 전달하면 확인에 도움이 됩니다. 로그는 기기에 최대 128MiB로 순환 보관하며 책 이름·본문·검색어는 기록하지 않습니다. 자동으로 외부에 전송하지 않습니다. 공유할 화면에 개인 책이나 경로가 포함되어 있는지도 확인해 주세요.
 
-강제 종료 직전의 마지막 약 1초 위치는 저장되지 않을 수 있습니다. 실물 기기의 성능·발열과 TalkBack 실제 발화는 아직 별도 확인이 필요합니다. 버전별 검사 환경과 남은 사항은 [릴리즈 검증 기록](docs/releases/1.0.0-verification.md)에 정리되어 있습니다.
+강제 종료 직전의 마지막 약 1초 위치는 저장되지 않을 수 있습니다. 실물 기기의 성능·발열과 TalkBack 실제 발화는 아직 별도 확인이 필요합니다. 버전별 검사 환경과 남은 사항은 [릴리즈 검증 기록](docs/releases/v1.0.0/AGENTS.md)에 정리되어 있습니다.
 
 ## 문서와 제작
 
-- [전체 화면과 촬영 조건](docs/screenshots/README.md) · [v1.0.0 변경 사항](docs/releases/v1.0.0.md)
-- [개발·빌드·검증 안내](docs/implementation.md) · [설계 문서 목차](docs/README.md) · [개발 계획](plan.md)
-- [종이의 여백 × 리듬 디자인](design/final/README.md) · [이전 시안](design/archive/README.md)
+- [전체 화면과 촬영 조건](docs/screenshots/README.md) · [v1.0.0 변경 사항](https://github.com/poyal/yeobaek/releases/tag/v1.0.0)
+- [개발·빌드·검증 안내](docs/architecture.md) · [문서 모음](docs/README.md) · [공통 개발 규칙](docs/development.md)
+- [종이의 여백 × 리듬 디자인](docs/ui-guidelines.md)
 
 내장 명조 글꼴은 Noto Serif CJK KR이며 [SIL Open Font License](app/src/main/assets/licenses/NotoSerifCJK-OFL.txt)를 함께 제공합니다. PDF·압축·EPUB 엔진의 라이선스와 구성요소 고지도 [앱 라이선스 자산](app/src/main/assets/licenses/)에 포함되어 있습니다.

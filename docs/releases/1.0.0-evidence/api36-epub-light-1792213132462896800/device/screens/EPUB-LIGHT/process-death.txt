@@ -1,4 +1,0 @@
-before_pid=5670
-after_pid=5864
-before_percent=33
-after_percent=33

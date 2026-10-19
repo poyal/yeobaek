@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.poyal.yeobaek.SearchNavigationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-15T15:08:17.359Z" hostname="POYAL" time="0.096">
-  <properties/>
-  <testcase name="previousAcrossPageBoundaryDoesNotRetargetSecondPage" classname="com.poyal.yeobaek.SearchNavigationTest" time="0.064"/>
-  <testcase name="nextAcrossHundredthMatchDoesNotRetargetVisibleRows" classname="com.poyal.yeobaek.SearchNavigationTest" time="0.032"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

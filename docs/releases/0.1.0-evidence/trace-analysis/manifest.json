@@ -1,8 +1,0 @@
-{
-  "trace": "ReaderBenchmark_scrollLongParagraph_iter000_2026-10-13-10-58-59.perfetto-trace",
-  "sha256": "d46e6f94cd519214833920293ccb1361a6e0a694990c56848589a55849d5ec89",
-  "macro_run": "20261013-195427-emulator-5584-macro-LIGHT",
-  "trace_processor": "v58.2 mac-arm64",
-  "processor_sha256": "d29864d1ba3b36855527bb1b0ca3aa7f703cdce338b9680bb922c5c151b358fa",
-  "note": "Single trace, inclusive slice durations overlap and must not be added as exclusive CPU time."
-}

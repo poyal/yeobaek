@@ -1,3 +1,0 @@
-before=11443
-termination=am force-stop (am kill retained process)
-after=11547

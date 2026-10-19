@@ -6,7 +6,7 @@
 
 ## v0.4.0 EPUB과 설정
 
-2026-10-17 KST, 최종 release APK를 `yeobaek-release-040`에서 실행했습니다. Android 16(API 36), x86_64, 720×1600, density 320, 기본 fontScale 1.0이며 큰 글씨 화면만 2.0입니다. 앱은 한국어, 시스템 파일 선택기는 영문입니다. PNG 내용을 편집하지 않았습니다. [APK·시험 결과](../releases/0.4.0-verification.md), [EPUB 캡처 출처·해시](0.4.0/epub-manifest.json), [설정 캡처 출처·해시](0.4.0/settings-manifest.json).
+2026-10-17 KST, 최종 release APK를 `yeobaek-release-040`에서 실행했습니다. Android 16(API 36), x86_64, 720×1600, density 320, 기본 fontScale 1.0이며 큰 글씨 화면만 2.0입니다. 앱은 한국어, 시스템 파일 선택기는 영문입니다. PNG 내용을 편집하지 않았습니다. [APK·시험 결과](../releases/v0.4.0/AGENTS.md), [EPUB 캡처 출처·해시](0.4.0/epub-manifest.json), [설정 캡처 출처·해시](0.4.0/settings-manifest.json).
 
 <table>
 <tr><th>형식별 설정 바로가기</th><th>일반 설정</th></tr>
@@ -36,7 +36,7 @@
 | 상태 표시줄 | Android 데모 모드로 시각 9:27, 알림 숨김 |
 | 책 원본 | `여백 서재` 아래 창작 TXT·검색 가능한 한글 PDF·이미지 폴더·CBZ |
 
-[공개 APK](https://github.com/poyal/yeobaek/releases/download/v0.3.0/yeobaek-0.3.0.apk)의 SHA-256을 [배포 검증 기록](../releases/0.3.0-verification.md)과 대조하고, 촬영 시 기기에 설치된 APK도 같은 해시인지 검사했습니다.
+[공개 APK](https://github.com/poyal/yeobaek/releases/download/v0.3.0/yeobaek-0.3.0.apk)의 SHA-256을 [배포 검증 기록](../releases/v0.3.0/AGENTS.md)과 대조하고, 촬영 시 기기에 설치된 APK도 같은 해시인지 검사했습니다.
 
 ```text
 e8b51930dcac76138b765fb370b714cd469a361517cfa69509f4409a226a8c59
