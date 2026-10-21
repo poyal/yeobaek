@@ -50,6 +50,7 @@ class EpubJourneyTest {
         throw AssertionError("Missing $tag after scrolling")
     }
     private fun percent() = node("epub_progress").text.substringAfterLast('·').trim().removeSuffix("%").toFloat().toInt()
+    private fun fixedPage() = node("epub_progress").text.substringBefore(" · ")
     private fun openReflow() { find("file_Yeobaek-Reflow.epub", "library_list"); click("file_Yeobaek-Reflow.epub"); ready() }
     private fun connect() {
         click("connect_folder")
@@ -133,12 +134,12 @@ class EpubJourneyTest {
     @Test fun externalFixedLayoutZoomDrmAndPermissionRecovery() {
         context.assets.open("epub/Yeobaek-Fixed.epub").use { input -> File(context.cacheDir, "external-fixed.epub").outputStream().use { input.copyTo(it) } }
         context.assets.open("epub/Yeobaek-Reflow.epub").use { input -> File(context.cacheDir, "external-reflow.epub").outputStream().use { input.copyTo(it) } }
-        openExternal("external-fixed.epub"); ready(); Assert.assertEquals("1 / 3 페이지", node("epub_progress").text)
-        click("epub_next"); SystemClock.sleep(800); Assert.assertEquals("2 / 3 페이지", node("epub_progress").text)
+        openExternal("external-fixed.epub"); ready(); Assert.assertEquals("1 / 3 페이지", fixedPage())
+        click("epub_next"); SystemClock.sleep(800); Assert.assertEquals("2 / 3 페이지", fixedPage())
         body().pinchOpen(.65f); shot("12-fixed-zoom")
         click("epub_settings"); Assert.assertFalse(device.hasObject(By.res("epub_size"))); click("epub_canvas_DARK"); shot("13-fixed-settings")
-        click("page_back"); ready(); Assert.assertEquals("2 / 3 페이지", node("epub_progress").text)
-        click("epub_next"); SystemClock.sleep(700); Assert.assertEquals("3 / 3 페이지", node("epub_progress").text)
+        click("page_back"); ready(); Assert.assertEquals("2 / 3 페이지", fixedPage())
+        click("epub_next"); SystemClock.sleep(700); Assert.assertEquals("3 / 3 페이지", fixedPage())
         click("epub_next"); node("reading_end_dialog"); shot("13-fixed-complete"); click("reading_end_exit")
         openExternal("external-reflow.epub"); ready(); click("epub_next"); SystemClock.sleep(700); click("epub_bookmark"); click("epub_back")
         context.revokeUriPermission(Uri.parse("content://com.poyal.yeobaek.e2e.inputs/external-reflow.epub"), Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -226,7 +227,7 @@ class EpubJourneyTest {
             check(device.wait(Until.gone(By.text("EPUB이 변경되었어요")), 5000))
             Assert.assertFalse(device.hasObject(By.res("epub_footer")))
             click("recent_Yeobaek-Reflow.epub"); check(clickOptional(By.text("처음부터 열기"))); ready()
-            Assert.assertEquals("1 / 3 페이지", node("epub_progress").text)
+            Assert.assertEquals("1 / 3 페이지", fixedPage())
             click("epub_bookmarks"); node("epub_mark_0"); Assert.assertTrue(device.hasObject(By.text("변경 전 EPUB"))); shot("20-old-bookmark")
         } finally { device.executeShellCommand("cp $original $source"); device.executeShellCommand("rm $original") }
     }
