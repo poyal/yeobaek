@@ -16,7 +16,10 @@ class PerformanceJourneyTest {
     private val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private val out = File(InstrumentationRegistry.getInstrumentation().context.getExternalFilesDir(null), "performance/${System.currentTimeMillis()}").apply { mkdirs() }
     private fun node(id: String, wait: Long = 15000) = device.wait(Until.findObject(By.res(id)), wait) ?: throw AssertionError("요소 없음: $id")
-    private fun click(id: String) { node(id).click(); device.waitForIdle() }
+    private fun click(id: String) {
+        if (id.startsWith("folder_") && !device.hasObject(By.res(id))) scrollFind(id)
+        node(id).click(); device.waitForIdle()
+    }
     @Before fun prepare() {
         require(pkg.startsWith("com.poyal.yeobaek"))
         device.executeShellCommand("am force-stop $pkg")
