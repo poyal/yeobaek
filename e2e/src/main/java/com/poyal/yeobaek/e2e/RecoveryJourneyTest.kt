@@ -22,7 +22,10 @@ class RecoveryJourneyTest {
     private fun click(tag: String) {
         if (tag.startsWith("folder_") && !device.hasObject(By.res(tag))) find(tag)
         node(tag).click(); device.waitForIdle()
-        if (tag in setOf("reader_txt", "pdf_settings", "image_settings")) { node("quick_details").click(); device.waitForIdle() }
+        if (tag in setOf("reader_txt", "pdf_settings", "image_settings")) {
+            find("quick_details", "quick_options")
+            node("quick_details").click(); device.waitForIdle()
+        }
     }
     private fun capture(id: String) { device.waitForIdle(); SystemClock.sleep(1200); check(device.takeScreenshot(File(out, "$id.png"))); device.dumpWindowHierarchy(File(out, "$id.xml")) }
     private fun find(tag: String, list: String = "library_list") { repeat(30) { if (device.hasObject(By.res(tag))) return; node(list).scroll(Direction.DOWN, .7f) }; throw AssertionError(tag) }
