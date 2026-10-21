@@ -146,7 +146,7 @@ class ReaderJourneyTest {
         capture("38-landscape-reader")
         device.setOrientationNatural(); device.unfreezeRotation(); SystemClock.sleep(1000)
         click("reader_back"); click("nav_recent"); capture("24-recent")
-        click("manage_비가 그친 오후.txt"); capture("25-delete-confirm"); click("sheet_close")
+        click("manage_비가 그친 오후.txt"); click("manage_비가 그친 오후.txt_records"); capture("25-delete-confirm"); click("sheet_close")
         click("nav_settings"); capture("26-app-settings")
         click("settings_general"); scrollTo("disconnect", "general_settings_options"); capture("27-storage"); click("disconnect"); capture("28-disconnect-confirm"); click("disconnect_cancel"); click("page_back")
         click("nav_folder"); capture("29-library-continue")

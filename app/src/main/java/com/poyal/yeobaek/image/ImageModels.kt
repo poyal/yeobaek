@@ -1,6 +1,7 @@
 package com.poyal.yeobaek.image
 
 import com.poyal.yeobaek.data.Book
+import com.poyal.yeobaek.data.MenuVisibility
 import com.poyal.yeobaek.data.ImagePosition
 import java.io.IOException
 import java.util.UUID
@@ -17,6 +18,8 @@ data class ImagePreferences(
     val verticalFit: ImageFit = ImageFit.WIDTH, val pagedFit: ImageFit = ImageFit.PAGE,
     val splitWide: Boolean = false, val cropMode: CropMode = CropMode.OFF, val crop: CropRect = CropRect(),
     val pageCrops: Map<String, CropRect> = emptyMap(),
+    val doubleTapZoom: Boolean = false, val pinchZoom: Boolean = true, val tapToTurn: Boolean = true,
+    val menuVisibility: MenuVisibility = MenuVisibility.TAP,
     val spacing: Float = 0f, val inverted: Boolean = false, val canvas: ImageCanvas = ImageCanvas.AUTO,
 ) { val fit get() = if (mode == ImageMode.VERTICAL) verticalFit else pagedFit }
 data class ImagePage(val key: String, val name: String, val path: String, val size: Long = -1,

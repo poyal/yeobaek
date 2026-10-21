@@ -12,16 +12,17 @@ private val Context.txtStore by preferencesDataStore("txt_preferences")
 private val Context.pdfStore by preferencesDataStore("pdf_preferences")
 private val Context.imageStore by preferencesDataStore("image_preferences")
 
+enum class MenuVisibility { TAP, ALWAYS }
 enum class AppTheme { SYSTEM, LIGHT, DARK }
 enum class TxtPaper { FOLLOW_APP, LIGHT, SEPIA, DARK }
 @kotlinx.serialization.Serializable
 data class AppPreferences(val theme: AppTheme = AppTheme.SYSTEM, val tree: String = "", val label: String = "")
 @kotlinx.serialization.Serializable
-data class TxtPreferences(val font: TxtFont = TxtFont.NOTO_SERIF, val size: Float = 18f, val line: Float = 1.85f, val margin: Float = 24f, val paper: TxtPaper = TxtPaper.FOLLOW_APP)
+data class TxtPreferences(val font: TxtFont = TxtFont.NOTO_SERIF, val size: Float = 18f, val line: Float = 1.85f, val margin: Float = 24f, val paper: TxtPaper = TxtPaper.FOLLOW_APP, val menuVisibility: MenuVisibility = MenuVisibility.TAP)
 enum class PdfFit { WIDTH, PAGE }
 enum class PdfCanvas { AUTO, LIGHT, DARK }
 @kotlinx.serialization.Serializable
-data class PdfPreferences(val fit: PdfFit = PdfFit.WIDTH, val spacing: Float = 8f, val inverted: Boolean = false, val canvas: PdfCanvas = PdfCanvas.AUTO)
+data class PdfPreferences(val fit: PdfFit = PdfFit.WIDTH, val spacing: Float = 8f, val inverted: Boolean = false, val canvas: PdfCanvas = PdfCanvas.AUTO, val doubleTapZoom: Boolean = false, val pinchZoom: Boolean = true, val menuVisibility: MenuVisibility = MenuVisibility.TAP)
 
 class Preferences(private val context: Context) {
     suspend fun explicitReaderFields(): Map<String, Map<String, String>> {

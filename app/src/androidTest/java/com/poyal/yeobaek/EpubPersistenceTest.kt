@@ -12,6 +12,41 @@ import org.junit.Test
 import java.util.UUID
 
 class EpubPersistenceTest {
+    @Test fun completedBookSurvivesRestoreButRealNavigationReturnsToReading() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val db = Room.inMemoryDatabaseBuilder(context, LibraryDatabase::class.java).build()
+        val file = EpubFixtures.write(java.io.File(context.cacheDir, "epub-completion.epub"))
+        val document = com.poyal.yeobaek.epub.EpubEngine(context).open(file)
+        val first = document.publication.locatorFromLink(document.publication.readingOrder.first())!!
+        val last = document.publication.locatorFromLink(document.publication.readingOrder.last())!!
+        val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate)
+        val errors = mutableListOf<String>()
+        val controller = com.poyal.yeobaek.epub.EpubReaderController(scope, db.library(), context.cacheDir, errors::add)
+        val book = Book("complete", "complete", "content://complete", "책.epub", "폴더", version = "v1", format = "EPUB")
+        try {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                controller.show(com.poyal.yeobaek.epub.OpenEpub(book, document, last, initialCompleted = true))
+                controller.rendered()
+            }
+            kotlinx.coroutines.withTimeout(5000) { while (db.library().epubPosition(book.id, book.version) == null) kotlinx.coroutines.delay(20) }
+            assertTrue(db.library().epubPosition(book.id, book.version)!!.completed)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                controller.restoring()
+                controller.position(last.copy(title = "다시 배치된 제목"))
+                controller.flush()
+            }
+            assertTrue(db.library().epubPosition(book.id, book.version)!!.completed)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                controller.userNavigation(); controller.position(first); controller.flush()
+            }
+            assertFalse(db.library().epubPosition(book.id, book.version)!!.completed)
+            assertTrue(errors.toString(), errors.isEmpty())
+        } finally {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { controller.close() }
+            scope.coroutineContext[kotlinx.coroutines.Job]?.cancel()
+            db.close(); file.delete()
+        }
+    }
     @Test fun migrationFromFourPreservesExistingRecordsAndEpubWritesRejectStaleSessions() = runBlocking {
         val inst = InstrumentationRegistry.getInstrumentation()
         val context = inst.targetContext

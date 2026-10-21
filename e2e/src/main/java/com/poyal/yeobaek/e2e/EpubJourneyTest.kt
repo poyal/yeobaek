@@ -49,7 +49,7 @@ class EpubJourneyTest {
         repeat(20) { if (device.hasObject(By.res(tag))) return; node(list).scroll(Direction.DOWN, .65f) }
         throw AssertionError("Missing $tag after scrolling")
     }
-    private fun percent() = node("epub_progress").text.substringAfterLast('·').trim().removeSuffix("%").toInt()
+    private fun percent() = node("epub_progress").text.substringAfterLast('·').trim().removeSuffix("%").toFloat().toInt()
     private fun openReflow() { find("file_Yeobaek-Reflow.epub", "library_list"); click("file_Yeobaek-Reflow.epub"); ready() }
     private fun connect() {
         click("connect_folder")

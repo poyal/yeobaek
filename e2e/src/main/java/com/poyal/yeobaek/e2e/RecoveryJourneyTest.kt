@@ -57,7 +57,7 @@ class RecoveryJourneyTest {
             device.executeShellCommand("cp /sdcard/Download/Yeobaek/Recovery/Replacement.txt $source")
             click("recent_Original.txt"); node("change_accept"); capture("41-changed-source"); click("change_accept"); ready()
             click("reader_bookmarks"); node("bookmark_delete"); capture("42-old-bookmark-preserved"); click("sheet_close"); click("reader_back")
-            click("nav_recent"); click("manage_Original.txt"); click("forget_confirm")
+            click("nav_recent"); click("manage_Original.txt"); click("manage_Original.txt_records"); click("forget_confirm")
             Assert.assertFalse(device.hasObject(By.res("recent_Original.txt"))); capture("43-record-deleted")
         } finally {
             device.executeShellCommand("cp $backup $source"); device.executeShellCommand("rm $backup")

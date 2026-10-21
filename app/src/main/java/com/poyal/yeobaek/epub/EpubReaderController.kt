@@ -53,9 +53,13 @@ class EpubReaderController(private val scope: CoroutineScope, private val dao: L
     private var index: EpubSearchIndex? = null
     private var searchOrigin: Locator? = null
 
+    var userNavigated = false
+        private set
+    fun userNavigation() { userNavigated = true }
+    fun restoring() { userNavigated = false }
     fun show(value: OpenEpub) {
         opened = value; locator.value = value.initial; revision = 0; sequence = 0; dirty = false
-        ready.value = false; chrome.value = true; completed.value = false; returnLocation.value = null; pending.value = null
+        ready.value = false; chrome.value = true; completed.value = value.initialCompleted; userNavigated = false; returnLocation.value = null; pending.value = null
         marks.value = emptyList(); search.value = EpubSearchState(); searchOrigin = null
         marksJob = scope.launch { dao.epubBookmarks(value.book.id).collect { marks.value = it } }
     }
@@ -74,7 +78,10 @@ class EpubReaderController(private val scope: CoroutineScope, private val dao: L
     }
     fun position(value: Locator) {
         if (!ready.value || opened == null) return
-        if (locator.value != value) { locator.value = value; dirty = true; completed.value = false }
+        val previous = locator.value
+        val moved = previous?.href != value.href || previous?.locations?.progression != value.locations.progression || previous?.locations?.position != value.locations.position
+        if (previous != value) { locator.value = value; dirty = true }
+        if (userNavigated && moved) { completed.value = false; dirty = true }
         saveJob?.cancel(); saveJob = scope.launch { delay(300); capture(); flush() }
     }
     suspend fun capture(): Locator? {
@@ -95,7 +102,7 @@ class EpubReaderController(private val scope: CoroutineScope, private val dao: L
         catch (e: CancellationException) { dirty = true; throw e }
         catch (_: Exception) { if (opened?.token == doc.token) dirty = true; error("EPUB 읽기 위치를 저장하지 못했습니다.") }
     }
-    fun finish() { completed.value = true; dirty = true; scope.launch { flush() } }
+    fun finish() { userNavigated = false; completed.value = true; dirty = true; scope.launch { flush() } }
     suspend fun close() = withContext(NonCancellable) {
         capture(); flush()
         ready.value = false
@@ -105,7 +112,7 @@ class EpubReaderController(private val scope: CoroutineScope, private val dao: L
         withContext(Dispatchers.IO) { index?.close(); index = null; old?.document?.close() }
     }
     fun dispose() { renderer = null; opened?.document?.close(); index?.close() }
-    fun move(value: Locator) { pending.value = value }
+    fun move(value: Locator) { userNavigation(); pending.value = value }
     fun follow(link: Link) {
         val doc = opened ?: return
         scope.launch {

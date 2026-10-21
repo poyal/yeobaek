@@ -57,15 +57,9 @@ import java.util.Locale
     val pdfPositions by vm.pdfPositions.collectAsStateWithLifecycle()
     val books by vm.books.collectAsStateWithLifecycle()
     val textPositions = if (!state.hasReader || state.resume != null) vm.positions.collectAsStateWithLifecycle().value else emptyList()
-    val positions = textPositions + pdfPositions.mapNotNull { p -> books.find { it.id == p.bookId && it.version == p.version }?.let { book ->
-        ReadingPosition(book.id, book.version, (p.locator().progress(book.pageCount ?: 1) * book.length).toLong(), completed = p.completed)
-    } }
-    val allPositions = positions + epubPositions.mapNotNull { p -> books.find { it.id == p.bookId && it.version == p.version }?.let { book ->
-        ReadingPosition(book.id, book.version, (p.progress * book.length).toLong(), completed = p.completed)
-    } } + imagePositions.mapNotNull { p -> books.find { it.id == p.bookId && it.version == p.version }?.let { book ->
-        ReadingPosition(book.id, book.version, (p.locator().progress(book.pageCount ?: 1) * book.length * 1000).toLong(), completed = p.completed)
-    } }
-    val displayBooks = books.map { if (it.format.startsWith("IMAGE_")) it.copy(length = it.length * 1000) else it }
+    val progress = remember(books, textPositions, pdfPositions, imagePositions, epubPositions) {
+        readingProgressByBook(books, textPositions, pdfPositions, imagePositions, epubPositions)
+    }
     val appColors = LocalPaper.current
     val showingTxtSettings = state.screen == "txt_settings"
     val showingGeneralSettings = state.screen == "general_settings"
@@ -115,12 +109,14 @@ import java.util.Locale
                 else if (state.pdfReader != null) PdfReaderScreen(vm, state.pdfReader!!, pdf, Modifier.weight(1f))
                 else if (state.reader != null) ReaderScreen(vm, state.reader!!, txt, Modifier.weight(1f))
                 else {
-                    when (state.screen) {
-                        "settings" -> AppSettings(vm, Modifier.weight(1f))
-                        "about" -> AboutScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
-                        "updates" -> UpdatesScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
-                        "recent" -> RecentScreen(vm, displayBooks, allPositions, Modifier.weight(1f))
-                        else -> LibraryScreen(vm, state, app, displayBooks.firstOrNull(), allPositions, chooseFolder, Modifier.weight(1f))
+                    pageState.SaveableStateProvider("list:${state.screen}") {
+                        when (state.screen) {
+                            "settings" -> AppSettings(vm, Modifier.weight(1f))
+                            "about" -> AboutScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
+                            "updates" -> UpdatesScreen(vm.updates, { vm.screen("settings") }, Modifier.weight(1f))
+                            "recent" -> RecentScreen(vm, books, progress, Modifier.weight(1f))
+                            else -> LibraryScreen(vm, state, app, books.firstOrNull(), progress, chooseFolder, Modifier.weight(1f))
+                        }
                     }
                     Rule()
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -142,11 +138,11 @@ import java.util.Locale
         }
     }
     state.resume?.let { book ->
-        val p = allPositions.firstOrNull { it.bookId == book.id && it.version == book.version }
+        val p = progress[book.id] ?: ReadingProgress.Unknown
         AlertDialog(shape = RoundedCornerShape(8.dp), modifier = Modifier.semantics { testTagsAsResourceId = true }, onDismissRequest = { vm.chooseResume(false) }, icon = { Icon(Icons.Outlined.MenuBook, null) },
             title = { Heading("이어서\n읽으시겠습니까?") },
             text = { Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Surface(color = appColors.alt, shape = RoundedCornerShape(4.dp)) { Column(Modifier.fillMaxWidth().padding(16.dp)) { Filename(book.name); Small("마지막 읽은 위치 · ${percent(displayBooks.find { it.id == book.id } ?: book, p)}") } }
+                Surface(color = appColors.alt, shape = RoundedCornerShape(4.dp)) { Column(Modifier.fillMaxWidth().padding(16.dp)) { Filename(book.name); Small("마지막 읽은 위치 · ${p.label}") } }
                 Small("마지막으로 읽던 위치부터\n이야기를 이어갈 수 있어요.")
             } },
             confirmButton = { PaperButton("이어서 읽기", "resume_accept", onClick = { vm.chooseResume(true) }) },
@@ -227,17 +223,13 @@ import java.util.Locale
     }
 }
 
-private fun percent(book: Book, position: ReadingPosition?): String {
-    val ratio = if (position?.completed == true) 1.0 else if (book.length > 0) (position?.offset ?: 0).toDouble() / book.length else 0.0
-    return String.format(Locale.US, "%.1f%%", ratio * 100)
-}
-@Composable private fun LibraryScreen(vm: AppViewModel, state: UiState, app: AppPreferences, recent: Book?, positions: List<ReadingPosition>, chooseFolder: () -> Unit, modifier: Modifier) {
+@Composable private fun LibraryScreen(vm: AppViewModel, state: UiState, app: AppPreferences, recent: Book?, progress: Map<String, ReadingProgress>, chooseFolder: () -> Unit, modifier: Modifier) {
     val p = LocalPaper.current
     val settings by vm.settings.collectAsStateWithLifecycle()
     val knownBooks by vm.books.collectAsStateWithLifecycle()
     var query by rememberSaveable(state.path.lastOrNull()?.uri) { mutableStateOf("") }
     val entries = remember(state.entries, query, settings.sort) { sortEntries(state.entries.filter { it.name.contains(query, ignoreCase = true) }, settings.sort) }
-    val booksBySource = remember(knownBooks) { knownBooks.map { if (it.format.startsWith("IMAGE_")) it.copy(length = it.length * 1000) else it }.associateBy { it.sourceKey } }
+    val booksBySource = remember(knownBooks) { knownBooks.associateBy { it.sourceKey } }
     LazyColumn(modifier.fillMaxWidth().testTag("library_list"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
         item {
             Small("나의 읽는 자리")
@@ -247,28 +239,19 @@ private fun percent(book: Book, position: ReadingPosition?): String {
             }
             Spacer(Modifier.height(24.dp))
         }
-        if (settings.favorites.isNotEmpty()) item {
-            Small("즐겨찾는 폴더")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { settings.favorites.forEach { folder ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = { vm.openFavorite(folder) }, modifier = Modifier.testTag("favorite_${folder.name}")) { Icon(Icons.Outlined.StarOutline, null); Text(folder.name) }
-                    Tool(Icons.Outlined.Close, "${folder.name} 즐겨찾기 해제", "remove_favorite_${folder.name}") { vm.removeFavorite(folder.uri) }
-                }
-            } }
-        }
         if (app.tree.isEmpty() && state.path.isEmpty()) item {
             EmptyState("읽을 이야기가 있는\n폴더를 골라 주세요.", "파일은 기기에 그대로 두고 읽습니다.\n다음 실행에도 이 폴더에서 시작해요.") {
                 PaperButton("시작 폴더 선택", "connect_folder", Modifier.fillMaxWidth(), onClick = chooseFolder)
             }
         } else {
             if (recent != null) item {
-                val position = positions.firstOrNull { it.bookId == recent.id && it.version == recent.version }
+                val position = progress[recent.id] ?: ReadingProgress.Unknown
                 Surface(onClick = { vm.openBook(recent) }, color = p.soft, shape = RoundedCornerShape(4.dp), border = BorderStroke(1.dp, p.line), modifier = Modifier.fillMaxWidth().testTag("continue_card")) {
                     Column(Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Outlined.MenuBook, null, Modifier.size(16.dp), tint = p.accent); Small("다시 펼치는 이야기", Modifier.padding(start = 8.dp)) }
                         Text(if (recent.format == "IMAGE_FOLDER") recent.name else recent.name.substringBeforeLast(".", recent.name), Modifier.fillMaxWidth().padding(vertical = 12.dp), fontFamily = Serif, fontSize = 23.sp, lineHeight = 32.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) { Text(percent(recent, position), Modifier.weight(1f), color = p.accent, fontWeight = FontWeight.SemiBold, fontSize = 14.sp); Icon(Icons.Outlined.ChevronRight, null, Modifier.size(20.dp)) }
-                        LinearProgressIndicator(progress = { if (recent.length > 0) ((position?.offset ?: 0).toFloat() / recent.length).coerceIn(0f, 1f) else 0f }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(2.dp), color = p.accent, trackColor = p.line)
+                        Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) { Text(position.label, Modifier.weight(1f), color = p.accent, fontWeight = FontWeight.SemiBold, fontSize = 14.sp); Icon(Icons.Outlined.ChevronRight, null, Modifier.size(20.dp)) }
+                        LinearProgressIndicator(progress = { position.fraction?.toFloat() ?: 0f }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(2.dp), color = p.accent, trackColor = p.line)
                     }
                 }
                 Spacer(Modifier.height(24.dp))
@@ -277,8 +260,6 @@ private fun percent(book: Book, position: ReadingPosition?): String {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (state.path.size > 1) Tool(Icons.Outlined.ArrowUpward, "상위 폴더", "folder_up", onClick = vm::up) else Icon(Icons.Outlined.FolderOpen, null, Modifier.size(18.dp), tint = p.accent)
                     Text(state.path.joinToString(" / ") { it.name }.ifEmpty { app.label }, Modifier.weight(1f).padding(start = 8.dp), color = p.muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val starred = settings.favorites.any { it.uri == state.path.lastOrNull()?.uri }
-                    Tool(if (starred) Icons.Outlined.Star else Icons.Outlined.StarOutline, if (starred) "즐겨찾기 해제" else "폴더 즐겨찾기", "folder_favorite", onClick = vm::favorite)
                     Tool(Icons.Outlined.Refresh, "새로고침", "folder_refresh", onClick = vm::refresh)
                 }
                 Rule()
@@ -292,46 +273,38 @@ private fun percent(book: Book, position: ReadingPosition?): String {
                         onClick = vm::showAll
                     )
                 }
-                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().testTag("folder_search"), singleLine = true,
-                    label = { Text("현재 폴더에서 찾기") }, trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Outlined.Close, "검색 지우기") } })
-                Row(Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) { FolderSort.entries.forEach { sort ->
-                    Choice(when (sort) { FolderSort.NAME -> "이름순"; FolderSort.MODIFIED -> "최신순"; FolderSort.SIZE -> "큰 파일순" }, settings.sort == sort, "sort_$sort", Modifier.weight(1f)) { vm.setFolderSort(sort) }
-                } }
+                LibrarySearchRow(query = query, onQueryChange = { query = it },
+                    options = listOf(FolderSort.NAME to "이름순", FolderSort.MODIFIED to "최신순", FolderSort.SIZE to "큰 파일순"),
+                    selection = settings.sort, onSelectionChange = vm::setFolderSort,
+                    selectorTag = "folder_sort", selectorDescription = "폴더와 파일 정렬", optionTag = { "sort_$it" },
+                    searchTag = "folder_search", searchDescription = "현재 폴더에서 찾기", modifier = Modifier.padding(bottom = 12.dp))
                 if (state.folderBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
             }
             if (state.folderError != null) item { EmptyState("폴더를 다시 연결해 주세요.", state.folderError) { PaperButton("폴더 다시 연결", "reconnect_folder", onClick = chooseFolder) } }
             else {
                 val folders = entries.filter { it.directory }
-                items(folders.chunked(2), key = { it.first().uri }) { row ->
-                    Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        row.forEach { entry -> Surface(onClick = { vm.enter(entry) }, color = p.alt, shape = RoundedCornerShape(4.dp), modifier = Modifier.weight(1f).testTag("folder_${entry.name}")) {
-                            Row(Modifier.fillMaxWidth().padding(12.dp).heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
-                                FolderFileThumbnail(vm, entry)
-                                val book = booksBySource[vm.entryKey(entry.uri)]
-                                val position = book?.let { b -> positions.firstOrNull { it.bookId == b.id && it.version == b.version } }
-                                Column(Modifier.weight(1f).padding(start = 8.dp)) {
-                                    Filename(entry.name)
-                                    if (position != null) Small(if (position.completed) "완독" else "읽는 중 · ${percent(book!!, position)}")
-                                }
-                            }
-                        } }
-                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                items(folders, key = { it.uri }) { entry ->
+                    Surface(onClick = { vm.enter(entry) }, color = p.alt, shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth().testTag("folder_${entry.name}")) {
+                        Row(Modifier.fillMaxWidth().padding(vertical = 12.dp).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.width(36.dp), contentAlignment = Alignment.Center) { FolderFileThumbnail(vm, entry) }
+                            Text(entry.name, Modifier.weight(1f).padding(start = 12.dp, end = 8.dp), fontSize = 13.sp,
+                                lineHeight = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            val book = booksBySource[vm.entryKey(entry.uri)]?.takeIf { it.format == "IMAGE_FOLDER" }
+                            book?.let { ReadingProgressCircle(progress[it.id] ?: ReadingProgress.Unknown, Modifier.testTag("status_${entry.name}")) }
+                            Spacer(Modifier.width(48.dp))
+                        }
                     }
                 }
                 val files = entries.filter { !it.directory && (state.showAll || it.supported) }
                 if (files.isEmpty() && folders.isEmpty() && !state.folderBusy) item { EmptyState(if (query.isEmpty()) "아직 책이 없어요." else "검색 결과가 없어요.", if (query.isEmpty()) "이 폴더에 TXT·EPUB·PDF·이미지 또는 압축파일을 넣고 새로고침해 주세요." else "파일명이나 검색어를 확인해 주세요.") }
                 items(files, key = { it.uri }) { file ->
                     Column {
-                        Row(Modifier.fillMaxWidth().clickable { vm.enter(file) }.testTag("file_${file.name}").heightIn(min = 72.dp), verticalAlignment = Alignment.CenterVertically) {
-                            FolderFileThumbnail(vm, file)
-                            val book = booksBySource[vm.entryKey(file.uri)]
-                            val position = book?.let { b -> positions.firstOrNull { it.bookId == b.id && it.version == b.version } }
-                            Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 12.dp)) {
-                                Filename(file.name); Small(if (file.supported) "${file.formatLabel} · ${(file.size ?: 0) / 1024} KB" else "지원 여부 확인 필요")
-                                if (position != null && book != null) Small(if (position.completed) "완독" else "읽는 중 · ${percent(book, position)}", Modifier.testTag("status_${file.name}"))
-                            }
-                            Tool(Icons.Outlined.MoreHoriz, "${file.name} 정보", "file_info_${file.name}", onClick = { vm.info(file) })
-                        }; Rule()
+                        val book = booksBySource[vm.entryKey(file.uri)]
+                        BookFileRow(file.name, fileMetadata(file), progress = if (file.supported) book?.let { progress[it.id] } ?: ReadingProgress.Unread else null,
+                            tag = "file_${file.name}", menuTag = "file_info_${file.name}", onOpen = { vm.enter(file) }, onInfo = { vm.info(file) },
+                            onManage = book?.let { { vm.sheet("forget:${it.id}") } }) { FolderFileThumbnail(vm, file) }
+                        Rule()
                     }
                 }
             }
@@ -377,21 +350,30 @@ private fun percent(book: Book, position: ReadingPosition?): String {
     }
 }
 
-@Composable private fun RecentScreen(vm: AppViewModel, books: List<Book>, positions: List<ReadingPosition>, modifier: Modifier) {
-    val p = LocalPaper.current
-    Column(modifier) { PageHeader("최근 읽기") { vm.screen("folder") }
+@Composable private fun RecentScreen(vm: AppViewModel, books: List<Book>, progress: Map<String, ReadingProgress>, modifier: Modifier) {
+    var query by rememberSaveable { mutableStateOf("") }
+    var filter by rememberSaveable { mutableStateOf("ALL") }
+    val filters = listOf("ALL" to "전체", "READING" to "읽는 중", "COMPLETED" to "완독")
+    val visible = remember(books, progress, query, filter) { books.filter {
+        it.name.contains(query, ignoreCase = true) && (filter == "ALL" || progress[it.id]?.status?.name == filter)
+    } }
+    Column(modifier) {
+        PageHeader("최근 읽기") { vm.screen("folder") }
         LazyColumn(Modifier.fillMaxSize().testTag("recent_list"), contentPadding = PaddingValues(24.dp)) {
-            item { Heading("접어 둔 문장으로,\n다시 돌아오는 시간."); Spacer(Modifier.height(24.dp)); Small("${books.size}권의 읽기 기록"); Spacer(Modifier.height(24.dp)) }
-            if (books.isEmpty()) item { EmptyState("첫 이야기를 펼쳐 보세요.", "읽기 시작한 책은 여기에 남습니다.") }
-            items(books, key = { it.id }) { book ->
-                val position = positions.firstOrNull { it.bookId == book.id && it.version == book.version }
-                Column(Modifier.clickable { vm.openBook(book) }.testTag("recent_${book.name}").padding(vertical = 20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Outlined.Description, null, Modifier.size(24.dp), tint = p.accent); Column(Modifier.weight(1f).padding(start = 12.dp)) { Filename(book.name); Small("${percent(book, position)} · 읽던 위치") }; Tool(Icons.Outlined.MoreHoriz, "독서 기록 관리", "manage_${book.name}", onClick = { vm.sheet("forget:${book.id}") }) }
-                    LinearProgressIndicator(progress = { if (book.length > 0) ((position?.offset ?: 0).toFloat() / book.length).coerceIn(0f, 1f) else 0f }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp).height(2.dp), color = p.accent, trackColor = p.line)
-                    Small(book.folder, Modifier.padding(top = 8.dp))
-                }; Rule()
+            item {
+                LibrarySearchRow(query = query, onQueryChange = { query = it }, options = filters,
+                    selection = filter, onSelectionChange = { filter = it },
+                    selectorTag = "recent_filter", selectorDescription = "독서 상태 필터", optionTag = { "recent_filter_$it" },
+                    searchTag = "recent_search", searchDescription = "최근 읽은 파일 검색", modifier = Modifier.padding(bottom = 12.dp))
+                Small("${visible.size}권 · 최근 읽은 순서", Modifier.padding(bottom = 12.dp))
+                Rule()
             }
-            item { Small("파일을 옮기지 않아도\n읽던 자리는 여기 남아 있어요.", Modifier.padding(top = 32.dp)) }
+            if (visible.isEmpty()) item { EmptyState(if (books.isEmpty()) "첫 이야기를 펼쳐 보세요." else "검색 결과가 없어요.",
+                if (books.isEmpty()) "읽기 시작한 책은 여기에 남습니다." else "검색어나 독서 상태 필터를 확인해 주세요.") }
+            items(visible, key = { it.id }) { book ->
+                RecentBookRow(vm, book, progress[book.id] ?: ReadingProgress.Unknown)
+                Rule()
+            }
         }
     }
 }
@@ -408,6 +390,7 @@ private fun percent(book: Book, position: ReadingPosition?): String {
     Surface(color = colors.surface, border = BorderStroke(1.dp, LocalPaper.current.line), shape = RoundedCornerShape(12.dp)) {
         Text("어떤 이야기는\n잠시 머물러도 좋았다.", Modifier.fillMaxWidth().padding(20.dp), style = prefs.textStyle(), color = colors.ink)
     }
+    ReaderGestureSettings(vm, "TXT", prefs.menuVisibility)
     SettingsSection("글꼴과 크기", Icons.Outlined.TextFields) {
         TxtFontPicker(prefs.font) { font -> vm.changeSetting("TXT", "font", font) }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Text("글자 크기", Modifier.weight(1f), fontSize = 13.sp); Tool(Icons.Outlined.Remove, "글자 작게", "font_smaller", outlined = true, onClick = { vm.changeSetting("TXT", "size", prefs.size - 1) }); Text(prefs.size.toInt().toString(), Modifier.testTag("font_size")); Tool(Icons.Outlined.Add, "글자 크게", "font_larger", outlined = true, onClick = { vm.changeSetting("TXT", "size", prefs.size + 1) }) }
@@ -489,7 +472,7 @@ private fun percent(book: Book, position: ReadingPosition?): String {
     val entry = state.info
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(entry?.name ?: reader?.book?.name ?: "책 정보", fontSize = 16.sp)
-        Small(if (reader != null) "TXT · ${reader.document.charset}\n${reader.document.length} 문자\n${reader.book.folder}" else "${(entry?.size ?: 0) / 1024} KB\n${entry?.mime ?: ""}")
+        Small(if (reader != null) "TXT · ${reader.document.charset}\n${reader.document.length} 문자\n${reader.book.folder}" else "${entry?.let(::fileMetadata) ?: "파일 정보 없음"}\n${entry?.mime ?: ""}")
         if (reader != null) PaperButton("글자가 깨져 보이나요?", "info_encoding", Modifier.fillMaxWidth(), true, onClick = { vm.sheet("encoding") })
         Small("원본 파일은 기기의 폴더에 그대로 있습니다.")
     }

@@ -9,6 +9,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.OverScroller
 import com.poyal.yeobaek.pdf.PDF_INVERSION
 import com.poyal.yeobaek.ReadingEndSignal
+import com.poyal.yeobaek.ui.ReaderTouchGuard
 import kotlinx.coroutines.*
 import kotlin.math.*
 
@@ -81,17 +82,32 @@ class ImageDocumentView(context: Context) : View(context) {
     private var downX = 0f
     private var downY = 0f
     private var pinched = false
+    private val touchGuard = ReaderTouchGuard(ViewConfiguration.get(context).scaledTouchSlop.toFloat())
+    private var doubleTapPending = false
+    private fun tap(e: MotionEvent) {
+        if (preferences.tapToTurn && preferences.mode == ImageMode.PAGED && zoom <= 1.01f && (e.x < width * .25f || e.x > width * .75f)) {
+            turn((if (e.x > width * .75f) 1 else -1) * (if (preferences.direction == ImageDirection.LTR) 1 else -1))
+        } else performClick()
+    }
     private val gestures = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent): Boolean { scroller.forceFinished(true); return true }
         override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-            if (preferences.mode == ImageMode.PAGED && zoom <= 1.01f && (e.x < width * .25f || e.x > width * .75f)) {
-                turn((if (e.x > width * .75f) 1 else -1) * (if (preferences.direction == ImageDirection.LTR) 1 else -1))
-            } else performClick()
+            if (!disposed && touchGuard.isTap(e.downTime)) tap(e)
             return true
         }
-        override fun onDoubleTap(e: MotionEvent): Boolean { scaleTo(if (zoom > 1.1f) 1f else 2f, e.x, e.y); return true }
+        override fun onDoubleTap(e: MotionEvent): Boolean { doubleTapPending = touchGuard.isTap(e.downTime); return true }
+        override fun onDoubleTapEvent(e: MotionEvent): Boolean {
+            if (e.actionMasked == MotionEvent.ACTION_UP) {
+                if (!disposed && doubleTapPending && touchGuard.isTap(e.downTime)) {
+                    if (preferences.doubleTapZoom) scaleTo(if (zoom > 1.1f) 1f else 2f, e.x, e.y) else tap(e)
+                }
+                doubleTapPending = false
+            }
+            return true
+        }
+        override fun onLongPress(e: MotionEvent) { touchGuard.reject() }
         override fun onScroll(e1: MotionEvent?, e2: MotionEvent, dx: Float, dy: Float): Boolean {
-            if (!scales.isInProgress) {
+            if (!touchGuard.multiplePointers && !scales.isInProgress) {
                 if (preferences.mode == ImageMode.VERTICAL && abs(dy) > abs(dx)) endSignal.advance(dy > 0)
                 scroll = (scroll + dy).coerceIn(0f, maxScroll())
                 val overflow = (if (preferences.mode == ImageMode.VERTICAL) widths.getOrElse(pageAt(scroll)) { 0f } else groupWidth) - width
@@ -101,6 +117,7 @@ class ImageDocumentView(context: Context) : View(context) {
             return true
         }
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
+            if (touchGuard.multiplePointers) return false
             if (scales.isInProgress || abs(vx) > abs(vy)) return false
             scroller.fling(0, scroll.toInt(), 0, -vy.toInt(), 0, 0, 0, maxScroll().toInt()); postInvalidateOnAnimation(); return true
         }
@@ -128,7 +145,7 @@ class ImageDocumentView(context: Context) : View(context) {
     fun configure(value: ImagePreferences, background: Int) {
         if (preferences == value && background == backgroundColor) return
         val position = locator()
-        val relayout = preferences.copy(inverted = value.inverted, canvas = value.canvas) != value
+        val relayout = preferences.copy(inverted = value.inverted, canvas = value.canvas, doubleTapZoom = value.doubleTapZoom, pinchZoom = value.pinchZoom, tapToTurn = value.tapToTurn, menuVisibility = value.menuVisibility) != value
         preferences = value; backgroundColor = background
         if (relayout) { pending = position; layoutPages(); restore() }
         invalidate()
@@ -247,6 +264,7 @@ class ImageDocumentView(context: Context) : View(context) {
             else { endSignal.advance(delta > 0); changed() }
         }
     }
+    fun resetZoom() { scroller.forceFinished(true); scaleTo(1f, width / 2f, topPad + contentHeight / 2f) }
     fun retry() { failures.clear(); invalidate() }
     private fun changed() {
         visible = emptySet()
@@ -385,13 +403,23 @@ class ImageDocumentView(context: Context) : View(context) {
     }
     override fun computeScroll() { if (scroller.computeScrollOffset()) { scroll = scroller.currY.toFloat(); changed(); postInvalidateOnAnimation() }; applyDeferred() }
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> touchGuard.begin(event.downTime, event.x, event.y, !scroller.isFinished)
+            MotionEvent.ACTION_MOVE -> {
+                for (i in 0 until event.historySize) touchGuard.move(event.getHistoricalX(i), event.getHistoricalY(i))
+                touchGuard.move(event.x, event.y)
+            }
+            MotionEvent.ACTION_UP -> touchGuard.move(event.x, event.y)
+            MotionEvent.ACTION_CANCEL -> { touchGuard.reject(); doubleTapPending = false }
+        }
+        if (event.pointerCount > 1) touchGuard.multiple()
         parent?.requestDisallowInterceptTouchEvent(true)
         if (event.actionMasked == MotionEvent.ACTION_DOWN) touching = true
         if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) touching = false
         if (event.actionMasked == MotionEvent.ACTION_CANCEL) endSignal.cancel()
         if (event.actionMasked == MotionEvent.ACTION_DOWN) { downX = event.x; downY = event.y; pinched = false }
         if (event.pointerCount > 1) pinched = true
-        scales.onTouchEvent(event); gestures.onTouchEvent(event)
+        if (preferences.pinchZoom) scales.onTouchEvent(event); gestures.onTouchEvent(event)
         if (event.actionMasked == MotionEvent.ACTION_UP) {
             val dx = event.x - downX; val dy = event.y - downY
             if (!pinched && zoom <= 1.01f && preferences.mode == ImageMode.PAGED && abs(dx) > 48 * density && abs(dx) > abs(dy) * 1.2f) {
@@ -414,6 +442,6 @@ class ImageDocumentView(context: Context) : View(context) {
         }
         return super.performAccessibilityAction(action, arguments)
     }
-    fun dispose() { if (!disposed) { disposed = true; scope.cancel(); cache.evictAll(); scroller.forceFinished(true) } }
+    fun dispose() { if (!disposed) { touchGuard.clear(); doubleTapPending = false; disposed = true; scope.cancel(); cache.evictAll(); scroller.forceFinished(true) } }
     override fun onDetachedFromWindow() { super.onDetachedFromWindow(); dispose() }
 }

@@ -33,15 +33,17 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.poyal.yeobaek.*
 import com.poyal.yeobaek.data.TxtPreferences
+import com.poyal.yeobaek.data.MenuVisibility
 import com.poyal.yeobaek.rendering.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.util.Locale
 
 @Composable fun ReaderScreen(vm: AppViewModel, opened: OpenBook, prefs: TxtPreferences, modifier: Modifier = Modifier,
     list: LazyListState = key(opened.token) { rememberLazyListState() }) {
     val colors = readerColors(prefs.paper, LocalPaper.current)
     var chrome by rememberSaveable(opened.token) { mutableStateOf(true) }
+    val menu by rememberUpdatedState(prefs.menuVisibility)
+    LaunchedEffect(prefs.menuVisibility) { if (prefs.menuVisibility == MenuVisibility.ALWAYS) chrome = true }
     val seek by vm.seek.collectAsStateWithLifecycle()
     val searchQuery by remember(vm) { vm.ui.map { it.searchQuery }.distinctUntilChanged() }.collectAsStateWithLifecycle("")
     var highlights by remember(opened.token) { mutableStateOf<Map<Long, List<IntRange>>>(emptyMap()) }
@@ -55,6 +57,7 @@ import java.util.Locale
     var loading by remember(opened.token) { mutableStateOf(true) }
     var failure by remember(opened.token) { mutableStateOf<String?>(null) }
     var forwardIntent by remember(opened.token) { mutableStateOf(false) }
+    var retainedCompletion by remember(opened.token) { mutableStateOf((vm.currentPosition ?: opened.initial)?.completed == true) }
     val flingGuard = remember(opened.token) { ReaderFlingGuard() }
     val diagnostics = vm.scrollDiagnostics
     DisposableEffect(opened.token) {
@@ -64,7 +67,10 @@ import java.util.Locale
     val endScroll = remember(opened.token) { object : NestedScrollConnection {
         var lastScrollLog = 0L
         override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-            if (source == NestedScrollSource.UserInput && available.y != 0f) forwardIntent = available.y < 0f
+            if (source == NestedScrollSource.UserInput && available.y != 0f) {
+                forwardIntent = available.y < 0f
+                retainedCompletion = false
+            }
             val now = android.os.SystemClock.uptimeMillis()
             if (now - lastScrollLog >= 100) {
                 diagnostics.record("scroll_input", "session=${opened.token} dy=${available.y} source=$source", now)
@@ -124,6 +130,7 @@ import java.util.Locale
                 loading = true; failure = null
                 try {
                     val newSeek = request?.takeIf { it.serial != consumedSeek }
+                    retainedCompletion = newSeek == null && (retainedCompletion || vm.currentPosition?.completed == true)
                     val target = (newSeek?.offset ?: anchor).coerceIn(0, opened.document.length)
                     diagnostics.record("restore_start", "session=${opened.token} generation=$activeGeneration layout=$key target=$target seek=${newSeek?.serial}")
                     forwardIntent = newSeek != null && target == opened.document.length
@@ -144,7 +151,7 @@ import java.util.Locale
                         val measured = snapshotFlow { replacement.viewport(list) }.filterNotNull().first()
                         anchor = measured.anchor
                         fraction = measured.fraction
-                        vm.position(anchor, key, fraction, measured.atEnd && next.last().end == opened.document.length)
+                        vm.position(anchor, key, fraction, retainedCompletion || measured.atEnd && next.last().end == opened.document.length)
                     } else {
                         anchor = 0; fraction = 0f
                         vm.position(0, key, 0f, false)
@@ -193,7 +200,7 @@ import java.util.Locale
                         anchor = viewport.anchor
                         fraction = viewport.fraction
                         layoutKey = key
-                        val complete = window.blocks.lastOrNull()?.end == opened.document.length && viewport.atEnd && opened.document.length > 0
+                        val complete = retainedCompletion || (window.blocks.lastOrNull()?.end == opened.document.length && viewport.atEnd && opened.document.length > 0)
                         val now = android.os.SystemClock.uptimeMillis()
                         if (now - lastLog >= 250 || lastBlock != viewport.block.start || anchor < previousAnchor && forwardIntent) {
                             diagnostics.record("position", "session=${opened.token} generation=${window.generation} block=${viewport.block.start} " +
@@ -225,9 +232,12 @@ import java.util.Locale
                 state = list,
                 modifier = Modifier.fillMaxSize().testTag("reader_body").nestedScroll(endScroll)
                     .observeReaderFlingGesture(flingGuard)
-                    .semantics { stateDescription = if (list.isScrollInProgress) "스크롤 중" else "정지"; customActions = listOf(CustomAccessibilityAction(if (chrome) "독서 메뉴 숨기기" else "독서 메뉴 표시") { chrome = !chrome; true }) }
-                    .onKeyEvent { if (it.type == KeyEventType.KeyUp && it.key == Key.Enter) { chrome = !chrome; true } else false }
-                    .pointerInput(opened.token) { detectTapGestures(onTap = { chrome = !chrome }, onLongPress = {}) },
+                    .semantics {
+                        stateDescription = if (list.isScrollInProgress) "스크롤 중" else "정지"
+                        customActions = if (menu == MenuVisibility.TAP) listOf(CustomAccessibilityAction(if (chrome) "독서 메뉴 숨기기" else "독서 메뉴 표시") { chrome = !chrome; true }) else emptyList()
+                    }
+                    .onKeyEvent { if (it.type == KeyEventType.KeyUp && it.key == Key.Enter) { if (menu == MenuVisibility.TAP) chrome = !chrome; true } else false }
+                    .pointerInput(opened.token) { detectTapGestures(onTap = { if (menu == MenuVisibility.TAP) chrome = !chrome }, onLongPress = {}) },
                 contentPadding = PaddingValues(start = prefs.margin.dp, end = prefs.margin.dp,
                     top = (64f * density.fontScale.coerceAtLeast(1f)).dp, bottom = (84f * density.fontScale.coerceAtLeast(1f)).dp),
             ) {
@@ -238,7 +248,7 @@ import java.util.Locale
                     BasicText(annotated, Modifier.fillMaxWidth().testTag("text_${block.start}"), style = style.copy(color = colors.ink))
                 }
             }
-            AnimatedVisibility(chrome, Modifier.align(Alignment.TopCenter), enter = fadeIn(), exit = fadeOut()) {
+            AnimatedVisibility(chrome || menu == MenuVisibility.ALWAYS, Modifier.align(Alignment.TopCenter), enter = fadeIn(), exit = fadeOut()) {
                 Surface(color = colors.surface) {
                     Column { Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp).testTag("reader_header"), verticalAlignment = Alignment.CenterVertically) {
                         Tool(Icons.Outlined.ArrowBack, "폴더로 돌아가기", "reader_back", onClick = vm::closeReader)
@@ -248,7 +258,7 @@ import java.util.Locale
                     }; Rule() }
                 }
             }
-            AnimatedVisibility(chrome, Modifier.align(Alignment.BottomCenter), enter = fadeIn(), exit = fadeOut()) {
+            AnimatedVisibility(chrome || menu == MenuVisibility.ALWAYS, Modifier.align(Alignment.BottomCenter), enter = fadeIn(), exit = fadeOut()) {
                 Surface(color = colors.surface) {
                     ReaderToolbar(listOf(
                         ReaderToolbarItem(ReaderAction.MOVE, "reader_move") { vm.sheet("move") },
@@ -275,6 +285,6 @@ import java.util.Locale
 }
 
 @Composable private fun ReaderProgress(vm: AppViewModel) {
-    val progress by vm.progress.collectAsStateWithLifecycle()
-    Text(String.format(Locale.US, "%.1f%%", progress * 100), Modifier.testTag("reader_percent"), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = LocalPaper.current.accent)
+    val progress by vm.progressDisplay.collectAsStateWithLifecycle()
+    Text(progress.label, Modifier.testTag("reader_percent"), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = LocalPaper.current.accent)
 }

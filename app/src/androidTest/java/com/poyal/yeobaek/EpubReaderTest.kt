@@ -117,7 +117,7 @@ class EpubReaderTest {
         try {
             withContext(Dispatchers.Main) { vm.chooseResume(false); vm.screen("folder"); vm.open(entry) }
             waitReady(vm); bookId = vm.currentBook!!.id
-            compose.onNodeWithTag("epub_progress").assertTextEquals("1 / 3 페이지")
+            compose.onNodeWithTag("epub_progress").assertTextContains("1 / 3 페이지", substring = true)
             compose.onNodeWithTag("epub_next").performClick()
             compose.waitUntil(10_000) { vm.epubReader.locator.value?.href.toString().contains("chapter2") }
             compose.onNodeWithTag("epub_body").performTouchInput { pinch(center * .8f, center * .4f, center * 1.2f, center * 1.6f) }

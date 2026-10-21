@@ -27,4 +27,5 @@ data class EpubReaderPreferences(
     val font: EpubFont = EpubFont.ORIGINAL, val size: Float = 1f,
     val line: Float = 1.5f, val margin: Float = 1f,
     val paper: TxtPaper = TxtPaper.FOLLOW_APP, val canvas: PdfCanvas = PdfCanvas.AUTO,
+    val menuVisibility: MenuVisibility = MenuVisibility.TAP,
 )

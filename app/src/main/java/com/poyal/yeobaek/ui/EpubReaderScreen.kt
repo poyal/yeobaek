@@ -37,9 +37,12 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
 
 @Composable fun EpubReaderScreen(vm: AppViewModel, opened: OpenEpub, prefs: EpubReaderPreferences, modifier: Modifier = Modifier) {
     val reader = vm.epubReader
+    val completed by reader.completed.collectAsStateWithLifecycle()
     val at by reader.locator.collectAsStateWithLifecycle()
     val marks by reader.marks.collectAsStateWithLifecycle()
-    val chrome by reader.chrome.collectAsStateWithLifecycle()
+    val toggledChrome by reader.chrome.collectAsStateWithLifecycle()
+    val chrome = toggledChrome || prefs.menuVisibility == MenuVisibility.ALWAYS
+    LaunchedEffect(prefs.menuVisibility) { if (prefs.menuVisibility == MenuVisibility.ALWAYS) reader.chrome.value = true }
     val ready by reader.ready.collectAsStateWithLifecycle()
     val returnLocation by reader.returnLocation.collectAsStateWithLifecycle()
     val colors = epubColors(prefs, opened.document.fixed, LocalPaper.current)
@@ -77,8 +80,9 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
                             Tool(Icons.Outlined.ArrowBack, "닫기", "epub_back", onClick = { vm.closeReader() })
                             Column(Modifier.weight(1f)) {
                                 Filename(opened.book.name)
-                                val status = if (opened.document.fixed) "${opened.document.resourceIndex(at) + 1} / ${opened.document.publication.readingOrder.size} 페이지"
-                                    else "${at?.title ?: "본문"} · ${(opened.document.progress(at) * 100).roundToInt()}%"
+                                val progress = ReadingProgress.at(opened.document.progress(at), completed).label
+                                val status = if (opened.document.fixed) "${opened.document.resourceIndex(at) + 1} / ${opened.document.publication.readingOrder.size} 페이지 · $progress"
+                                    else "${at?.title ?: "본문"} · $progress"
                                 Text(status, Modifier.testTag("epub_progress"), fontSize = 11.sp, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                             val marked = at?.let { loc -> marks.any { it.version == opened.book.version && it.locationKey == epubLocationKey(loc) } } == true
@@ -112,6 +116,7 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
     val fixed = state.epubReader?.document?.fixed == true
     SettingsPage("EPUB 읽기 설정", "epub_settings_screen", vm::closeEpubSettings, contentTag = "epub_options") {
         SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "EPUB", showTitle = false) }
+        ReaderGestureSettings(vm, "EPUB", prefs.menuVisibility)
         if (!fixed) {
             SettingsSection("읽기 방식", Icons.Outlined.MenuBook) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

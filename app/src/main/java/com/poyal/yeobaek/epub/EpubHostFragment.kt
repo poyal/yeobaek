@@ -46,7 +46,17 @@ class EpubHostFragment : Fragment(), EpubRenderer {
         super.onCreate(savedInstanceState)
     }
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        FrameLayout(requireContext()).apply { id = R.id.epub_navigator_container }
+        object : FrameLayout(requireContext()) {
+            private var downX = 0f
+            private var downY = 0f
+            private val slop = ViewConfiguration.get(context).scaledTouchSlop
+            override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+                if (event.actionMasked == MotionEvent.ACTION_DOWN) { downX = event.x; downY = event.y }
+                if (event.actionMasked == MotionEvent.ACTION_MOVE && event.pointerCount == 1 &&
+                    (kotlin.math.abs(event.x - downX) > slop || kotlin.math.abs(event.y - downY) > slop)) vm.epubReader.userNavigation()
+                return super.dispatchTouchEvent(event)
+            }
+        }.apply { id = R.id.epub_navigator_container }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         childFragmentManager.fragments.toList().forEach { childFragmentManager.beginTransaction().remove(it).commitNow() }
@@ -58,7 +68,7 @@ class EpubHostFragment : Fragment(), EpubRenderer {
             view.post {
                 if (!isAdded || this.view !== view) return@post
                 viewLifecycleOwner.lifecycleScope.launch {
-                    combine(vm.epub, vm.app) { prefs, app -> prefs to app.theme }.distinctUntilChanged().collectLatest { (prefs, theme) ->
+                    combine(vm.epub, vm.app) { prefs, app -> prefs.copy(menuVisibility = MenuVisibility.TAP) to app.theme }.distinctUntilChanged().collectLatest { (prefs, theme) ->
                         val anchor = capture() ?: vm.epubReader.locator.value ?: opened.initial
                         // Readium's JavaScript callback can resume after its WebView was removed.
                         currentCoroutineContext().ensureActive()
@@ -75,6 +85,7 @@ class EpubHostFragment : Fragment(), EpubRenderer {
         }
     }
     private fun show(opened: OpenEpub, anchor: Locator?, prefs: EpubReaderPreferences, appTheme: AppTheme) {
+        vm.epubReader.restoring()
         val generation = ++renderGeneration
         locationJob?.cancel(); loaded = false
         vm.epubReader.ready.value = false
@@ -142,13 +153,19 @@ class EpubHostFragment : Fragment(), EpubRenderer {
         navigator = native
         childFragmentManager.beginTransaction().replace(R.id.epub_navigator_container, native, "epub_native").commitNow()
         native.addInputListener(object : InputListener {
-            override fun onTap(event: TapEvent): Boolean { vm.epubReader.chrome.value = !vm.epubReader.chrome.value; return true }
+            override fun onTap(event: TapEvent): Boolean { if (vm.epub.value.menuVisibility == MenuVisibility.TAP) vm.epubReader.chrome.value = !vm.epubReader.chrome.value; return true }
         })
         locationJob = viewLifecycleOwner.lifecycleScope.launch {
             native.currentLocator.collectLatest { at ->
                 if (loaded && active()) {
                     vm.epubReader.position(at)
                     vm.readingProgress(opened.token, vm.epubReader.completed.value)
+                    if (vm.epubReader.userNavigated) {
+                        delay(300)
+                        if (active() && generation == renderGeneration && atEnd(opened, native)) {
+                            vm.epubReader.finish(); vm.readingFinished(opened.token)
+                        }
+                    }
                 }
             }
         }
@@ -177,18 +194,35 @@ class EpubHostFragment : Fragment(), EpubRenderer {
         return if (at.locations.progression != null && at.locations.otherLocations["yeobaekLayout"] == layoutKey())
             at.copy(text = Locator.Text(), locations = at.locations.copy(fragments = emptyList())) else at
     }
-    override fun move(locator: Locator): Boolean = loaded && navigator?.go(restoreLocator(locator)) == true
+    override fun move(locator: Locator): Boolean {
+        if (!loaded) return false
+        vm.epubReader.userNavigation()
+        return navigator?.go(restoreLocator(locator)) == true
+    }
+    private suspend fun atEnd(opened: OpenEpub, native: EpubNavigatorFragment): Boolean {
+        if (!active() || navigator !== native || !loaded) return false
+        val before = native.currentLocator.value
+        val doc = opened.document
+        if (doc.resourceIndex(before) != doc.publication.readingOrder.lastIndex) return false
+        val end = if (doc.fixed) true else if (!native.overflow.value.scroll) page >= pageCount - 1 else {
+            native.evaluateJavascript("(function(){var e=document.scrollingElement||document.documentElement;return e.scrollTop+e.clientHeight>=e.scrollHeight-2;})()") == "true"
+        }
+        return end && active() && navigator === native && native.currentLocator.value == before
+    }
     override fun advance(forward: Boolean): Boolean {
         val opened = vm.ui.value.epubReader ?: return false
         val native = navigator ?: return false
         if (!loaded) return false
+        vm.epubReader.userNavigation()
         val document = opened.document
         val resource = document.resourceIndex(native.currentLocator.value)
         val last = resource == document.publication.readingOrder.lastIndex
         if (!document.fixed && native.overflow.value.scroll) {
             val next = resource + if (forward) 1 else -1
             if (next in document.publication.readingOrder.indices) return native.go(document.publication.readingOrder[next])
-            if (forward && last) { vm.epubReader.finish(); vm.readingFinished(opened.token) }
+            if (forward && last) viewLifecycleOwner.lifecycleScope.launch {
+                if (atEnd(opened, native)) { vm.epubReader.finish(); vm.readingFinished(opened.token) }
+            }
             return false
         }
         val moved = if (forward) native.goForward() else native.goBackward()

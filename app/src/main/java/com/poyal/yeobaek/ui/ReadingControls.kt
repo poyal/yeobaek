@@ -37,12 +37,16 @@ import kotlinx.coroutines.CancellationException
 import kotlin.math.min
 
 @Composable fun FolderFileThumbnail(vm: AppViewModel, entry: DocumentEntry) {
+    if (entry.directory) {
+        Icon(Icons.Outlined.Folder, null, Modifier.size(28.dp), tint = LocalPaper.current.accent)
+        return
+    }
     val bitmap by produceState<android.graphics.Bitmap?>(null, entry.uri, entry.modified, entry.size) {
         try { value = vm.thumbnails.load(entry) } catch (e: CancellationException) { throw e } catch (_: Exception) { value = null }
     }
     val image = bitmap
     if (image != null) Image(image.asImageBitmap(), null, Modifier.size(36.dp, 48.dp), contentScale = ContentScale.Fit)
-    else Icon(if (entry.directory) Icons.Outlined.Folder else if (entry.image) Icons.Outlined.Image else if (entry.archive) Icons.Outlined.FolderZip else Icons.Outlined.Description, null, Modifier.size(28.dp), tint = LocalPaper.current.accent)
+    else Icon(if (entry.image) Icons.Outlined.Image else if (entry.archive) Icons.Outlined.FolderZip else Icons.Outlined.Description, null, Modifier.size(28.dp), tint = LocalPaper.current.accent)
 }
 
 @Composable fun ReaderWindowSettings(vm: AppViewModel, reading: Boolean) {
@@ -82,7 +86,7 @@ import kotlin.math.min
     Small(if (scope == SettingsScope.COMMON) "개별 설정이 없는 책에 적용됩니다." else "바꾼 항목만 따로 저장합니다. 폴더 설정은 하위 폴더에 적용되지 않습니다.")
     if (scope != SettingsScope.COMMON && book != null) {
         val values = settings.overrides[settings.scopeKey(scope, format, book.id)].orEmpty()
-        val labels = mapOf("publisherStyles" to "원본 서식", "font" to "글꼴", "size" to "글자 크기", "line" to "줄 간격", "margin" to "좌우 여백", "paper" to "본문 색상",
+        val labels = mapOf("menuVisibility" to "독서 메뉴 표시", "doubleTapZoom" to "두 번 탭 확대", "pinchZoom" to "두 손가락 확대", "tapToTurn" to "가장자리 탭 넘김", "publisherStyles" to "원본 서식", "font" to "글꼴", "size" to "글자 크기", "line" to "줄 간격", "margin" to "좌우 여백", "paper" to "본문 색상",
             "fit" to "화면 맞춤", "inverted" to "색상 반전", "spacing" to "페이지 간격", "canvas" to "배경", "mode" to "읽기 방식",
             "direction" to "읽기 방향", "spread" to "두 쪽 보기", "coverAlone" to "표지 단독", "verticalFit" to "세로 맞춤", "pagedFit" to "페이지 맞춤",
             "splitWide" to "펼침면 분할", "cropMode" to "여백 자르기", "cropLeft" to "왼쪽 여백", "cropTop" to "위 여백", "cropRight" to "오른쪽 여백", "cropBottom" to "아래 여백")
@@ -132,6 +136,17 @@ import kotlin.math.min
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { ImageFit.entries.forEach { fit -> Choice(if (fit == ImageFit.WIDTH) "너비 맞춤" else "전체 이미지", image.fit == fit, "image_fit_$fit", Modifier.weight(1f)) { vm.setImage(if (image.mode == ImageMode.VERTICAL) image.copy(verticalFit = fit) else image.copy(pagedFit = fit)) } } }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { ImageDirection.entries.forEach { direction -> Choice(if (direction == ImageDirection.LTR) "왼쪽부터" else "오른쪽부터", image.direction == direction, "image_direction_$direction", Modifier.weight(1f)) { vm.setImage(image.copy(direction = direction)) } } }
                 ImageCropOptions(vm, image)
+            }
+        }
+        when (format) {
+            "TXT" -> ReaderGestureSettings(vm, format, txt.menuVisibility, quick = true)
+            "PDF" -> {
+                ReaderGestureSettings(vm, format, pdf.menuVisibility, pdf.doubleTapZoom, quick = true)
+                PaperButton("확대 초기화", "pdf_zoom_reset", outlined = true, onClick = { vm.pdfReader.resetZoom(); vm.sheet(null) })
+            }
+            else -> {
+                ReaderGestureSettings(vm, format, image.menuVisibility, image.doubleTapZoom, quick = true)
+                PaperButton("확대 초기화", "image_zoom_reset", outlined = true, onClick = { vm.imageReader.resetZoom(); vm.sheet(null) })
             }
         }
         PaperButton("자세한 읽기 설정", "quick_details", Modifier.fillMaxWidth(), outlined = true, onClick = { when (format) { "TXT" -> vm.openTxtSettings(); "PDF" -> vm.openPdfSettings(); else -> vm.openImageSettings() } })
@@ -199,7 +214,7 @@ import kotlin.math.min
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { it?.let(vm::exportBackup) }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let(vm::inspectBackup) }
     SettingsSection("독서 기록 백업", Icons.Outlined.SaveAlt, Modifier.testTag("backup_settings")) {
-        Small("읽던 위치 · 책갈피 · 설정 · 즐겨찾기\n책 원본과 진단 로그는 포함하지 않습니다.")
+        Small("읽던 위치 · 책갈피 · 설정\n책 원본과 진단 로그는 포함하지 않습니다.")
         PaperButton("백업 파일 저장", "backup_export", Modifier.fillMaxWidth(), enabled = !busy, onClick = { export.launch("여백-독서기록-${java.time.LocalDate.now()}.json") })
         PaperButton("백업 가져오기", "backup_import", Modifier.fillMaxWidth(), outlined = true, enabled = !busy, onClick = { restore.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) })
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())

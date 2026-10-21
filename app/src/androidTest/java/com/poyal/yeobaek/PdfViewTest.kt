@@ -66,7 +66,7 @@ class PdfViewTest {
                 view.move(PdfLocator(0, .12f, .25f, 2f))
                 assertEquals(.25f, view.locator().y, .01f)
                 assertEquals(.12f, view.locator().x, .01f)
-                view.configure(PdfPreferences(inverted = true, spacing = 24f), android.graphics.Color.BLACK)
+                view.configure(PdfPreferences(inverted = true, spacing = 24f, doubleTapZoom = true), android.graphics.Color.BLACK)
                 assertEquals(.25f, view.locator().y, .01f)
                 assertEquals(2f, view.locator().zoom, .001f)
             }

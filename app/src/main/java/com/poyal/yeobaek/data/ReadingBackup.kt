@@ -77,7 +77,6 @@ class ReadingBackups(private val context: Context, private val dao: LibraryDao,
             val keys = imported.keys + current.overrides.keys + existing.keys
             current.copy(overrides = keys.associateWith { imported[it].orEmpty() + existing[it].orEmpty() + current.overrides[it].orEmpty() },
                 folders = incoming.folders.mapKeys { aliases[it.key] ?: it.key } + current.folders,
-                favorites = (current.favorites + incoming.favorites).distinctBy { it.uri },
                 crops = incoming.crops.mapKeys { (key, _) -> val id = key.substringBefore(':'); "${aliases[id] ?: id}:${key.substringAfter(':')}" } + current.crops,
                 screen = if (current.screen == ScreenSettings()) incoming.screen else current.screen,
                 sort = if (current.sort == FolderSort.NAME) incoming.sort else current.sort)
@@ -120,7 +119,6 @@ fun validateBackup(value: ReadingBackup) {
     require(value.settings.crops.values.all { it.valid() })
     require(value.settings.screen.brightness.isFinite() && value.settings.screen.brightness in -1f..1f &&
         value.settings.screen.rotation in setOf("SYSTEM", "PORTRAIT", "LANDSCAPE"))
-    require(value.settings.favorites.all { it.directory && it.uri.startsWith("content://") })
 }
 
 internal fun validEpubLocator(value: String): Boolean = runCatching {

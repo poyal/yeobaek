@@ -7,6 +7,8 @@ import java.util.UUID
 
 class ImageReaderController(private val scope: CoroutineScope, private val dao: LibraryDao, private val error: (String) -> Unit) {
     var opened: OpenImages? = null; private set
+    val zoomReset = MutableStateFlow(0L)
+    fun resetZoom() { zoomReset.value++ }
     val locator = MutableStateFlow(ImageLocator())
     val seek = MutableStateFlow<ImageSeek?>(null)
     val marks = MutableStateFlow<List<ImageBookmark>>(emptyList())

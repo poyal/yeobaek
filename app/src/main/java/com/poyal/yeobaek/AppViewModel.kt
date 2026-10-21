@@ -153,13 +153,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         action { settingsStore.update { it.copy(crops = if (crop == null) it.crops - key else it.crops + (key to crop)) } }
     }
     fun setFolderSort(value: FolderSort) = action { settingsStore.update { it.copy(sort = value) } }
-    fun favorite() {
-        val folder = ui.value.path.lastOrNull() ?: return
-        action { settingsStore.update { old -> old.copy(favorites = if (old.favorites.any { it.uri == folder.uri }) old.favorites.filterNot { it.uri == folder.uri } else old.favorites + folder) } }
-    }
-    fun removeFavorite(uri: String) = action { settingsStore.update { it.copy(favorites = it.favorites.filterNot { entry -> entry.uri == uri }) } }
     fun entryKey(uri: String) = folders.key(uri)
-    fun openFavorite(entry: DocumentEntry) = navigate(listOf(entry), entry)
 
     private val _bookmarks = MutableStateFlow<List<Bookmark>>(emptyList())
     val bookmarks = _bookmarks.asStateFlow()
@@ -167,6 +161,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val seek = _seek.asStateFlow()
     private val _progress = MutableStateFlow(0f)
     val progress = _progress.asStateFlow()
+    private val _progressDisplay = MutableStateFlow(ReadingProgress.Unknown)
+    val progressDisplay = _progressDisplay.asStateFlow()
     private val _locator = MutableStateFlow(0L)
     val locator = _locator.asStateFlow()
     private var folderJob: Job? = null
@@ -248,6 +244,22 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun showAll() { _ui.update { it.copy(showAll = !it.showAll) } }
     fun clearError() { _ui.update { it.copy(error = null) } }
+    private val metadataSlots = kotlinx.coroutines.sync.Semaphore(2)
+    private val metadataCache = android.util.LruCache<String, DocumentEntry>(128)
+    suspend fun bookMetadata(book: Book): DocumentEntry? {
+        val key = "${book.uri}:${book.openedAt}"
+        metadataCache.get(key)?.let { return it }
+        metadataSlots.acquire()
+        return try {
+            withContext(Dispatchers.IO) { folders.info(book.uri) }.also { metadataCache.put(key, it) }
+        } catch (e: CancellationException) { throw e }
+        catch (_: Exception) { null }
+        finally { metadataSlots.release() }
+    }
+    fun bookInfo(book: Book) = action {
+        info(bookMetadata(book) ?: DocumentEntry("", book.uri, book.name, book.format == "IMAGE_FOLDER", null, null,
+            when (book.format) { "TXT" -> "text/plain"; "PDF" -> "application/pdf"; "EPUB" -> "application/epub+zip"; else -> "" }))
+    }
     fun info(entry: DocumentEntry?) { _ui.update { it.copy(info = entry, sheet = if (entry != null) "info" else null) } }
     private fun message(e: Exception) = when (e) {
         is SecurityException -> "폴더 접근 권한이 없습니다. 시작 폴더를 다시 연결해 주세요."
@@ -266,7 +278,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 val previous = app.value.tree
                 val entry = withContext(Dispatchers.IO) { folders.connect(uri) }
                 prefs.setFolder(uri.toString(), entry.name)
-                // Keep grants used by reading history and favorite folders.
+                // Keep grants used by reading history.
                 _ui.update { it.copy(path = listOf(entry), folderError = null, screen = "folder") }
                 queryFolder(uri.toString(), entry)
             } catch (e: CancellationException) { throw e }
@@ -322,7 +334,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         folderJob?.cancelAndJoin()
         val old = app.value.tree
         prefs.setFolder("", "")
-        // Disconnecting the home folder does not invalidate books or favorites.
+        // Disconnecting the home folder does not invalidate books.
         _ui.update { it.copy(path = emptyList(), entries = emptyList(), folderError = null, sheet = null) }
     }
     fun clearCache() = action {
@@ -386,7 +398,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         sourceHash = file.nameWithoutExtension, length = file.length(), pageCount = if (document.fixed) document.publication.readingOrder.size else null,
                         charset = "", charsetOverride = null)
                 val saved = dao.epubPosition(book.id, book.version)
-                val opened = OpenEpub(book, document, decodeEpubLocator(saved?.locator))
+                val opened = OpenEpub(book, document, decodeEpubLocator(saved?.locator), initialCompleted = saved?.completed == true)
                 if (original != null && original.sourceHash.isNotBlank() && original.sourceHash != book.sourceHash) {
                     _ui.update { it.copy(changedEpub = opened, preparing = null) }
                 } else showEpub(opened)
@@ -611,7 +623,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         activeSession = 0; sequence = 0; latest = opened.initial; dirty = false; searchOrigin = null
         _locator.value = opened.initial?.offset ?: 0
         cancelSearch(); marksJob?.cancel(); _seek.value = null
-        _progress.value = if (opened.document.length == 0L) 0f else ((opened.initial?.offset ?: 0).toFloat() / opened.document.length)
+        _progressDisplay.value = ReadingProgress.text(opened.initial?.offset ?: 0, opened.document.length, opened.initial?.completed == true)
+        _progress.value = _progressDisplay.value.fraction?.toFloat() ?: 0f
         _ui.update { it.copy(reader = opened, imageReader = null, pdfReader = null, epubReader = null, sheet = null, info = null, missingBook = null, preparing = null, error = null, changed = null, searchHits = emptyList(), searchResult = null, searchQuery = "", searchPageStart = 0) }
         marksJob = viewModelScope.launch { dao.bookmarks(opened.book.id).collect { _bookmarks.value = it } }
     }
@@ -640,7 +653,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val at = offset.coerceIn(0, reader.document.length)
         latest = ReadingPosition(reader.book.id, reader.document.version, at, layoutKey = layout, fraction = fraction, completed = completed)
         _locator.value = at
-        _progress.value = if (completed && reader.document.length > 0) 1f else if (reader.document.length == 0L) 0f else at.toFloat() / reader.document.length
+        _progressDisplay.value = ReadingProgress.text(at, reader.document.length, completed)
+        _progress.value = _progressDisplay.value.fraction?.toFloat() ?: 0f
         dirty = true
         idleSave?.cancel()
         idleSave = viewModelScope.launch { delay(300); flushPosition() }

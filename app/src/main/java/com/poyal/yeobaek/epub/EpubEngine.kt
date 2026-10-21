@@ -27,7 +27,7 @@ import java.util.zip.ZipFile
 
 class EpubFailure(message: String) : IOException(message)
 
-data class OpenEpub(val book: Book, val document: EpubDocument, val initial: Locator?, val token: String = UUID.randomUUID().toString())
+data class OpenEpub(val book: Book, val document: EpubDocument, val initial: Locator?, val token: String = UUID.randomUUID().toString(), val initialCompleted: Boolean = false)
 
 class EpubDocument(val file: File, val publication: Publication, positions: List<Locator> = emptyList()) : java.io.Closeable {
     val fixed = publication.metadata.presentation.layout == EpubLayout.FIXED

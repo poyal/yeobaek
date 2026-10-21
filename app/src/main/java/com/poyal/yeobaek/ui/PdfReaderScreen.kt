@@ -40,6 +40,8 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
 
 @Composable fun PdfReaderScreen(vm: AppViewModel, opened: OpenPdf, prefs: PdfPreferences, modifier: Modifier = Modifier) {
     val reader = vm.pdfReader
+    val zoomReset by reader.zoomReset.collectAsStateWithLifecycle()
+    var consumedZoomReset by remember(opened.token) { mutableLongStateOf(zoomReset) }
     val locator by reader.locator.collectAsStateWithLifecycle()
     val seek by reader.seek.collectAsStateWithLifecycle()
     val marks by reader.marks.collectAsStateWithLifecycle()
@@ -47,7 +49,9 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
     val selection by reader.selection.collectAsStateWithLifecycle()
     val p = pdfColors(prefs, LocalPaper.current)
     val context = LocalContext.current
+    val nativeMenu by rememberUpdatedState(prefs.menuVisibility)
     var chrome by rememberSaveable(opened.token) { mutableStateOf(true) }
+    LaunchedEffect(prefs.menuVisibility) { if (prefs.menuVisibility == MenuVisibility.ALWAYS) chrome = true }
     var view by remember(opened.token) { mutableStateOf<PdfDocumentView?>(null) }
     val density = LocalDensity.current
     var headerHeight by remember { mutableIntStateOf(with(density) { 60.dp.roundToPx() }) }
@@ -61,7 +65,7 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
                     native.onReady = reader::ready
                     native.onPosition = { reader.position(it); vm.readingProgress(opened.token, it.completed) }
                     native.onEndReached = { vm.readingFinished(opened.token) }
-                    native.onTap = { chrome = !chrome }
+                    native.onTap = { if (nativeMenu == MenuVisibility.TAP) chrome = !chrome }
                     native.onSelection = reader::select
                     native.onClearSelection = reader::clearSelection
                     native.onFailure = { failure = it }
@@ -69,19 +73,20 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
                     native.open(opened.document, locator)
                     view = native
                 } }, modifier = Modifier.fillMaxSize().testTag("pdf_body"), onRelease = { it.dispose() }, update = { native ->
+                    if (zoomReset != consumedZoomReset) { native.resetZoom(); consumedZoomReset = zoomReset }
                     native.setContentInsets(headerHeight, footerHeight)
                     native.configure(prefs, p.alt.toArgb()); native.highlight = highlight; native.selection = selection
                     seek?.takeIf { it.serial != consumed }?.let { native.move(it.locator); consumed = it.serial; reader.seek.compareAndSet(it, null) }
                 })
             }
-            if (chrome) {
+            if (chrome || prefs.menuVisibility == MenuVisibility.ALWAYS) {
                 Surface(color = p.surface, contentColor = p.ink, modifier = Modifier.align(Alignment.TopCenter).onSizeChanged { headerHeight = it.height }) {
                     Column {
                         Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
                             Tool(Icons.Outlined.ArrowBack, "닫기", "pdf_back", onClick = { vm.closeReader() })
                             Column(Modifier.weight(1f)) {
                                 Text(opened.book.name, fontSize = 13.sp, lineHeight = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text("${locator.page + 1} / ${opened.document.pages.size} 페이지", Modifier.testTag("pdf_page"), fontSize = 11.sp, lineHeight = 16.sp, color = p.muted)
+                                Text("${locator.page + 1} / ${opened.document.pages.size} 페이지 · ${ReadingProgress.page(locator.page, locator.y, opened.document.pages.size, locator.completed).label}", Modifier.testTag("pdf_page"), fontSize = 11.sp, lineHeight = 16.sp, color = p.muted)
                             }
                             val marked = marks.any { it.version == opened.book.version && it.page == locator.page }
                             Tool(if (marked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, if (marked) "책갈피 해제" else "책갈피 추가", "pdf_bookmark", Modifier.semantics { selected = marked }, onClick = reader::toggleBookmark)
@@ -123,6 +128,7 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
 @Composable fun PdfSettingsScreen(vm: AppViewModel, prefs: PdfPreferences) {
     SettingsPage("PDF 읽기 설정", "pdf_settings_screen", vm::closePdfSettings, contentTag = "pdf_options") {
         SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "PDF", showTitle = false) }
+        ReaderGestureSettings(vm, "PDF", prefs.menuVisibility, prefs.doubleTapZoom, prefs.pinchZoom)
         SettingsSection("화면 맞춤과 간격", Icons.Outlined.FitScreen) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PdfFit.entries.forEach { fit -> Choice(if (fit == PdfFit.WIDTH) "너비에 맞춤" else "페이지에 맞춤", prefs.fit == fit, "pdf_fit_${fit.name}", Modifier.weight(1f)) { vm.changeSetting("PDF", "fit", fit) } }

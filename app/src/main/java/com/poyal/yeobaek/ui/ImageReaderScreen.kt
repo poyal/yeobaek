@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.poyal.yeobaek.AppViewModel
+import com.poyal.yeobaek.data.MenuVisibility
+import com.poyal.yeobaek.data.ReadingProgress
 import com.poyal.yeobaek.image.*
 import com.poyal.yeobaek.pdf.PDF_INVERSION
 import kotlinx.coroutines.CancellationException
@@ -40,6 +42,8 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
 
 @Composable fun ImageReaderScreen(vm: AppViewModel, opened: OpenImages, prefs: ImagePreferences, modifier: Modifier = Modifier) {
     val reader = vm.imageReader
+    val zoomReset by reader.zoomReset.collectAsStateWithLifecycle()
+    var consumedZoomReset by remember(opened.token) { mutableLongStateOf(zoomReset) }
     val locator by reader.locator.collectAsStateWithLifecycle()
     val seek by reader.seek.collectAsStateWithLifecycle()
     val marks by reader.marks.collectAsStateWithLifecycle()
@@ -47,7 +51,9 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
     val pages by opened.source.pages.collectAsStateWithLifecycle()
     val p = LocalPaper.current
     val density = LocalDensity.current
+    val nativeMenu by rememberUpdatedState(prefs.menuVisibility)
     var chrome by rememberSaveable(opened.token) { mutableStateOf(true) }
+    LaunchedEffect(prefs.menuVisibility) { if (prefs.menuVisibility == MenuVisibility.ALWAYS) chrome = true }
     var view by remember(opened.token) { mutableStateOf<ImageDocumentView?>(null) }
     var headerHeight by remember { mutableIntStateOf(with(density) { 60.dp.roundToPx() }) }
     var footerHeight by remember { mutableIntStateOf(with(density) { 76.dp.roundToPx() }) }
@@ -59,23 +65,24 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                 native.onReady = reader::ready
                 native.onPosition = { reader.position(it); vm.readingProgress(opened.token, it.completed) }
                 native.onEndReached = { vm.readingFinished(opened.token) }
-                native.onTap = { chrome = !chrome }; native.onFailure = { failure = it }
+                native.onTap = { if (nativeMenu == MenuVisibility.TAP) chrome = !chrome }; native.onFailure = { failure = it }
                 native.configure(prefs, imageBackground(prefs, p).toArgb()); native.open(opened.source, locator)
                 view = native
             } }, modifier = Modifier.fillMaxSize().clipToBounds().testTag("image_body"), onRelease = { it.dispose() }, update = { native ->
+                if (zoomReset != consumedZoomReset) { native.resetZoom(); consumedZoomReset = zoomReset }
                 native.setContentInsets(headerHeight, footerHeight)
                 native.configure(prefs, imageBackground(prefs, p).toArgb())
                 seek?.takeIf { it.serial != consumed }?.let { native.move(it.locator); consumed = it.serial; reader.seek.compareAndSet(it, null) }
             })
         }
-        if (chrome) {
+        if (chrome || prefs.menuVisibility == MenuVisibility.ALWAYS) {
             Surface(color = p.surface, contentColor = p.ink, modifier = Modifier.align(Alignment.TopCenter).onSizeChanged { headerHeight = it.height }) {
                 Column {
                     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
                         Tool(Icons.Outlined.ArrowBack, "닫기", "image_back", onClick = { vm.closeReader() })
                         Column(Modifier.weight(1f)) {
                             Text(opened.book.name, fontSize = 13.sp, lineHeight = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${locator.page + 1} / ${pages.size} 페이지${if (prefs.splitWide && prefs.mode == ImageMode.PAGED && locator.segment >= 0) if (locator.segment == 0) " · 왼쪽" else " · 오른쪽" else ""}", Modifier.testTag("image_page"), fontSize = 11.sp, color = p.muted)
+                            Text("${locator.page + 1} / ${pages.size} 페이지 · ${ReadingProgress.page(locator.page, locator.y, pages.size, locator.completed).label}${if (prefs.splitWide && prefs.mode == ImageMode.PAGED && locator.segment >= 0) if (locator.segment == 0) " · 왼쪽" else " · 오른쪽" else ""}", Modifier.testTag("image_page"), fontSize = 11.sp, color = p.muted)
                         }
                         val marked = marks.any { it.version == opened.book.version && it.pageKey == locator.key }
                         Tool(if (marked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, if (marked) "책갈피 해제" else "책갈피 추가",
@@ -141,6 +148,7 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                 Small("가로로 긴 이미지는 한 쪽으로 표시합니다.")
             }
         }
+        ReaderGestureSettings(vm, "IMAGE", prefs.menuVisibility, prefs.doubleTapZoom, prefs.pinchZoom, prefs.tapToTurn.takeIf { prefs.mode == ImageMode.PAGED })
         SettingsSection("화면 맞춤과 간격", Icons.Outlined.FitScreen) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ImageFit.entries.forEach { fit -> Choice(if (fit == ImageFit.WIDTH) "너비에 맞춤" else "전체 이미지", prefs.fit == fit, "image_fit_$fit", Modifier.weight(1f)) {

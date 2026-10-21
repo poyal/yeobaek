@@ -152,7 +152,7 @@ class ImageViewTest {
                 view.configure(ImagePreferences(mode = ImageMode.PAGED, spread = ImageSpread.DOUBLE), android.graphics.Color.WHITE)
                 assertEquals(1, view.locator().page)
                 view.move(ImageLocator(1)); view.turn(1); assertEquals(3, view.locator().page)
-                view.configure(ImagePreferences(mode = ImageMode.PAGED, direction = ImageDirection.RTL), android.graphics.Color.WHITE)
+                view.configure(ImagePreferences(mode = ImageMode.PAGED, direction = ImageDirection.RTL, doubleTapZoom = true), android.graphics.Color.WHITE)
                 view.move(ImageLocator(1))
             }
             compose.onNodeWithTag("image_canvas").performTouchInput { swipeRight() }

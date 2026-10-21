@@ -9,6 +9,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.OverScroller
 import com.poyal.yeobaek.data.*
 import com.poyal.yeobaek.ReadingEndSignal
+import com.poyal.yeobaek.ui.ReaderTouchGuard
 import kotlinx.coroutines.*
 import kotlin.math.*
 
@@ -64,14 +65,29 @@ class PdfDocumentView(context: Context) : View(context) {
     private var selecting: Triple<Int, Float, Float>? = null
     private var selectionEnd: Pair<Float, Float>? = null
     private var lastSelection = 0L
+    private val touchGuard = ReaderTouchGuard(ViewConfiguration.get(context).scaledTouchSlop.toFloat())
+    private var doubleTapPending = false
+    private fun tap() {
+        if (selection != null) onClearSelection() else performClick()
+    }
     private val gestures = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent): Boolean { scroller.forceFinished(true); return true }
         override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-            if (selection != null) onClearSelection() else onTap(); return true
+            if (!disposed && touchGuard.isTap(e.downTime)) tap()
+            return true
         }
-        override fun onDoubleTap(e: MotionEvent): Boolean { scaleTo(if (zoom > 1.1f) 1f else 2f, e.x, e.y); return true }
+        override fun onDoubleTap(e: MotionEvent): Boolean { doubleTapPending = touchGuard.isTap(e.downTime); return true }
+        override fun onDoubleTapEvent(e: MotionEvent): Boolean {
+            if (e.actionMasked == MotionEvent.ACTION_UP) {
+                if (!disposed && doubleTapPending && touchGuard.isTap(e.downTime)) {
+                    if (settings.doubleTapZoom) scaleTo(if (zoom > 1.1f) 1f else 2f, e.x, e.y) else tap()
+                }
+                doubleTapPending = false
+            }
+            return true
+        }
         override fun onScroll(e1: MotionEvent?, e2: MotionEvent, dx: Float, dy: Float): Boolean {
-            if (!scaleDetector.isInProgress && selecting == null) {
+            if (!touchGuard.multiplePointers && !scaleDetector.isInProgress && selecting == null) {
                 if (abs(dy) > abs(dx)) endSignal.advance(dy > 0)
                 scroll = (scroll + dy).coerceIn(0f, maxScroll())
                 val page = pageAt(scroll)
@@ -82,10 +98,12 @@ class PdfDocumentView(context: Context) : View(context) {
             return true
         }
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
+            if (touchGuard.multiplePointers) return false
             if (selecting != null || scaleDetector.isInProgress) return false
             scroller.fling(0, scroll.toInt(), 0, -vy.toInt(), 0, 0, 0, maxScroll().toInt()); postInvalidateOnAnimation(); return true
         }
         override fun onLongPress(e: MotionEvent) {
+            touchGuard.reject()
             endSignal.cancel()
             hit(e.x, e.y)?.let { point -> selecting = point; onSelection(point.first, point.second, point.third, point.second, point.third) }
         }
@@ -123,6 +141,7 @@ class PdfDocumentView(context: Context) : View(context) {
         scroller.forceFinished(true); pendingLocator = value; zoom = value.zoom.coerceIn(1f, 5f)
         layoutPages(); restorePending(); changed()
     }
+    fun resetZoom() { scroller.forceFinished(true); scaleTo(1f, width / 2f, topPad + contentHeight / 2f) }
     fun retry() { failed.clear(); invalidate() }
     private fun layoutPages() {
         visibleTiles = emptySet()
@@ -268,11 +287,21 @@ class PdfDocumentView(context: Context) : View(context) {
         if (scroller.computeScrollOffset()) { scroll = scroller.currY.toFloat(); changed(); postInvalidateOnAnimation() }
     }
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> touchGuard.begin(event.downTime, event.x, event.y, !scroller.isFinished)
+            MotionEvent.ACTION_MOVE -> {
+                for (i in 0 until event.historySize) touchGuard.move(event.getHistoricalX(i), event.getHistoricalY(i))
+                touchGuard.move(event.x, event.y)
+            }
+            MotionEvent.ACTION_UP -> touchGuard.move(event.x, event.y)
+            MotionEvent.ACTION_CANCEL -> { touchGuard.reject(); doubleTapPending = false }
+        }
+        if (event.pointerCount > 1) touchGuard.multiple()
         parent?.requestDisallowInterceptTouchEvent(true)
         if (event.actionMasked == MotionEvent.ACTION_DOWN) touching = true
         if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) touching = false
         if (event.actionMasked == MotionEvent.ACTION_CANCEL) endSignal.cancel()
-        scaleDetector.onTouchEvent(event)
+        if (settings.pinchZoom) scaleDetector.onTouchEvent(event)
         gestures.onTouchEvent(event)
         val anchor = selecting
         if (anchor != null && event.actionMasked in listOf(MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP)) {
@@ -287,6 +316,7 @@ class PdfDocumentView(context: Context) : View(context) {
         if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) { selecting = null; selectionEnd = null; changed() }
         return true
     }
+    override fun performClick(): Boolean { super.performClick(); onTap(); return true }
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
         super.onInitializeAccessibilityNodeInfo(info); info.isScrollable = true
         info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD)
@@ -301,6 +331,7 @@ class PdfDocumentView(context: Context) : View(context) {
     }
     fun dispose() {
         if (disposed) return
+        touchGuard.clear(); doubleTapPending = false
         disposed = true; scope.cancel(); cache.evictAll(); jobs.clear(); scroller.forceFinished(true)
     }
     override fun onDetachedFromWindow() { super.onDetachedFromWindow(); dispose() }
