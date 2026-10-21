@@ -68,9 +68,9 @@ class EpubJourneyTest {
     }
     private fun resetApp() {
         device.executeShellCommand("pm clear $pkg")
-        // A fresh-app journey needs a fresh picker history too on the API 30 AOSP image:
-        // restoring its last tree can leave the system PickFragment button at 0 x 0.
-        if (android.os.Build.VERSION.SDK_INT == 30) device.executeShellCommand("pm clear com.android.documentsui")
+        // Fresh-app journeys also need fresh picker history on the dedicated AVD.
+        // API 30 can restore a zero-size action button; API 36 can restore its tree after navigation starts.
+        device.executeShellCommand("pm clear com.android.documentsui")
     }
     @Test fun localReadingSearchBookmarksSettingsAndProcessDeath() {
         connect(); openReflow(); shot("01-reflow")
