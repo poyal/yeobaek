@@ -13,6 +13,7 @@
 
 | 버전 | 사용자 매뉴얼 | AI용 최종 검증 | 패치노트 |
 | --- | --- | --- | --- |
+| v1.0.1 | [README](releases/v1.0.1/README.md) | [AGENTS](releases/v1.0.1/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.1) |
 | v1.0.0 | [README](releases/v1.0.0/README.md) | [AGENTS](releases/v1.0.0/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.0) |
 | v0.4.0 | [README](releases/v0.4.0/README.md) | [AGENTS](releases/v0.4.0/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v0.4.0) |
 | v0.3.0 | [README](releases/v0.3.0/README.md) | [AGENTS](releases/v0.3.0/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v0.3.0) |

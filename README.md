@@ -28,7 +28,7 @@
 
 처음이라면 **설치 → 시작 폴더 선택 → 책 열기 → 읽기 설정 → 기록 백업** 순서로 따라 해 보세요. EPUB·설정 첫 화면·일반 설정은 **v0.4.0**, 기존 TXT·PDF·만화 사용 예시는 **v0.3.0**에서 촬영했습니다. v0.4.0은 설정 메뉴를 첫 화면으로 옮기고 카드 배경을 통일했습니다. 책과 그림은 사용법을 위한 창작 예제이며, 이미지를 누르면 크게 볼 수 있습니다.
 
-**v1.0.0:** TXT에서 스와이프 후 멈췄다가 손을 뗄 때의 역방향 관성 스크롤 방어를 보완했습니다. [변경 사항](https://github.com/poyal/yeobaek/releases/tag/v1.0.0) · [검증 결과](docs/releases/v1.0.0/AGENTS.md) · [EPUB 상세 안내](docs/architecture.md#epub-읽기)
+**최신 공개 버전: v1.0.1.** [변경 사항](https://github.com/poyal/yeobaek/releases/tag/v1.0.1) · [검증 결과](docs/releases/v1.0.1/AGENTS.md) · [EPUB 상세 안내](docs/architecture.md#epub-읽기)
 
 ## 목차
 
