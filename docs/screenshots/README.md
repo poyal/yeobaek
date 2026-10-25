@@ -2,7 +2,24 @@
 
 [사용자 매뉴얼로 돌아가기](../../README.md)
 
-**v0.4.0 EPUB·설정 화면**과 **v0.3.0 기존 독서 흐름**을 각각 전용 에뮬레이터에서 실행해 촬영했습니다. 산문·PDF·그림은 매뉴얼용 창작 예제입니다. 화면을 누르면 원본 크기로 열립니다.
+**2026-10-25 v1.0.2 개발 중의 EPUB 탐색**, **v0.4.0 EPUB·설정 화면**, **v0.3.0 기존 독서 흐름**을 각각 전용 에뮬레이터에서 실행해 촬영했습니다. 산문·PDF·그림은 매뉴얼용 창작 예제입니다. 화면을 누르면 원본 크기로 열립니다.
+
+## v1.0.2 개발 중 촬영한 EPUB 탐색
+
+2026-10-25 KST, 고정 여백을 수정한 개발판을 전용 AVD에서 실행해 촬영했습니다. 본문·장 끝은 최적화 release, 메뉴를 숨긴 중간 본문은 debug 회귀 검사 화면입니다. Android 16(API 36), x86_64, 1080×2400, density 420, fontScale 1.0입니다. 공개 v1.0.1의 화면과 구분하며 PNG 내용을 편집하지 않았습니다. [검증 기록](../releases/v1.0.1/AGENTS.md), [캡처 출처·해시](epub-navigation/manifest.json).
+
+<table>
+<tr><th>본문과 장 이동</th><th>메뉴를 숨긴 장 끝</th></tr>
+<tr><td><a href="epub-navigation/reader.png"><img src="epub-navigation/reader.png" alt="장 순서·진행률과 이동 화살표" width="260"></a></td><td><a href="epub-navigation/end-hidden.png"><img src="epub-navigation/end-hidden.png" alt="상시 화살표와 다음 장으로 버튼" width="260"></a></td></tr>
+</table>
+
+메뉴를 숨긴 중간 본문은 위아래 고정 영역 없이 이어지고, 장 이동 화살표는 남습니다.
+
+<a href="epub-navigation/reading-hidden.png"><img src="epub-navigation/reading-hidden.png" alt="메뉴를 숨긴 중간 본문과 하단 장 이동 화살표" width="260"></a>
+
+장 이동 화살표는 **EPUB 읽기 설정 → 장 이동 버튼**에서 항상 표시·메뉴와 함께 표시·숨김을 고릅니다. 아래는 2026-10-25 v1.0.2의 debug 검사 화면입니다. 720×1600, density 320, fontScale 1.0에서 세 선택지를 같은 폭으로 정렬합니다. [캡처 조건·해시](epub-navigation/button-settings.json).
+
+<a href="epub-navigation/button-settings.png"><img src="epub-navigation/button-settings.png" alt="장 이동 버튼의 세 가지 표시 옵션" width="260"></a>
 
 ## v0.4.0 EPUB과 설정
 

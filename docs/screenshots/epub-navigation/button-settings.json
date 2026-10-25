@@ -1,0 +1,14 @@
+{
+  "capture": "Unmodified PNG from passing v1.0.2 EpubReaderTest#chapterButtonSettingsKeepLocationAndEndActionAvailable on 2026-10-25 KST",
+  "avd": "yeobaek-release-040",
+  "api": 36,
+  "abi": "x86_64",
+  "display": "720x1600",
+  "density": 320,
+  "font_scale": 1.0,
+  "variant": "debug",
+  "apk_sha256": "71517e5699805c2fb00e28a66a2b9812957583a673c4d4e85b6086e4e22994de",
+  "file": "button-settings.png",
+  "sha256": "5605c043636bdeac47ae290f701305d74f98f86cb4e975fcc8535bb74b750d77",
+  "source": ".tools/verification/release-102/instrumentation-api36-summary.json"
+}

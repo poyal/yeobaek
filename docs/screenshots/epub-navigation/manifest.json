@@ -1,0 +1,39 @@
+{
+  "apk_sha256": "ed96d99b97a30a7ee547263bc6094c1ca6ce9f4883c05de3ad08462ea328368b",
+  "version": "1.0.1 development candidate (unpublished, 2026-10-25)",
+  "avd": "yeobaek-epub-insets-20261025",
+  "api": 36,
+  "abi": "x86_64",
+  "display": "1080x2400",
+  "density": 420,
+  "capture": "Unmodified PNGs after full-viewport fix on 2026-10-25 KST. Reader/end captures are from passing release E2E; reading-hidden is from the debug viewport and anchor regression test.",
+  "images": [
+    {
+      "file": "reader.png",
+      "sha256": "33c6640ba0208e839467352284a8d2db201def15b1b10b7016e94dfe8455784f",
+      "source": ".tools/verification/20261025-175740-emulator-5588-epub-LIGHT/device/captures/EPUB-LIGHT/01-reflow.png",
+      "variant": "release",
+      "apk_sha256": "ed96d99b97a30a7ee547263bc6094c1ca6ce9f4883c05de3ad08462ea328368b",
+      "theme": "LIGHT",
+      "font_scale": 1.0
+    },
+    {
+      "file": "end-hidden.png",
+      "sha256": "7383bb76d59aa1dc78fb285d6fbd0e035db7af87518ce8b71a3508cfa40b0584",
+      "source": ".tools/verification/20261025-175740-emulator-5588-epub-LIGHT/device/captures/EPUB-LIGHT/01-hidden-chrome-end.png",
+      "variant": "release",
+      "apk_sha256": "ed96d99b97a30a7ee547263bc6094c1ca6ce9f4883c05de3ad08462ea328368b",
+      "theme": "LIGHT",
+      "font_scale": 1.0
+    },
+    {
+      "file": "reading-hidden.png",
+      "sha256": "f763abfacab87aeef836c77f775e908065cc5a204678d9360cf2e3fceb49215e",
+      "source": ".tools/verification/epub-insets-20261025/epub-hidden.png",
+      "variant": "debug",
+      "apk_sha256": "15b19e2a9ce88f50bed646f34ffbfaadba37cf91d117e3237fc1cf551d7dbf3c",
+      "theme": "LIGHT",
+      "font_scale": 1.0
+    }
+  ]
+}
