@@ -182,7 +182,8 @@ class EpubJourneyTest {
         openExternal("external-fixed.epub"); ready(); Assert.assertEquals("1 / 3 페이지", fixedPage())
         click("epub_next"); SystemClock.sleep(800); Assert.assertEquals("2 / 3 페이지", fixedPage())
         body().pinchOpen(.65f); shot("12-fixed-zoom")
-        click("epub_settings"); Assert.assertFalse(device.hasObject(By.res("epub_size"))); click("epub_canvas_DARK"); shot("13-fixed-settings")
+        click("epub_settings"); Assert.assertFalse(device.hasObject(By.res("epub_size")))
+        find("epub_canvas_DARK", "epub_options"); click("epub_canvas_DARK"); shot("13-fixed-settings")
         click("page_back"); ready(); Assert.assertEquals("2 / 3 페이지", fixedPage())
         click("epub_next"); node("reading_end_dialog"); shot("13-fixed-complete")
         // A fixed-layout page is fully visible on arrival, so the last page announces completion.
