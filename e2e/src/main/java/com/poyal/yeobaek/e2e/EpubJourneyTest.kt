@@ -266,7 +266,7 @@ class EpubJourneyTest {
         Assert.assertEquals(progress.toDouble(), percent().toDouble(), 1.0)
         click("epub_bookmarks"); node("epub_mark_0"); shot("18-restored-bookmark"); click("sheet_close")
         click("epub_settings"); click("scope_BOOK"); node("epub_mode_paged")
-        Assert.assertTrue(device.wait(Until.hasObject(By.res("epub_mode_paged").selected(true)), 5000)); click("page_back"); click("epub_back")
+        Assert.assertTrue(device.wait(Until.hasObject(By.res("epub_mode_paged").checked(true)), 5000)); click("page_back"); click("epub_back")
         val source = "/sdcard/Download/YeobaekEPUB/Yeobaek-Reflow.epub"
         val original = "$source.qa-original"
         device.executeShellCommand("cp $source $original")
