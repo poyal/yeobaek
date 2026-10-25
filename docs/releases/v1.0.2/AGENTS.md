@@ -76,9 +76,9 @@
 
 고정 지면 EPUB에는 핀치 옵션만 표시합니다. 전용 AVD의 합성 책에서 기본 상태의 가로 넘김이 재현되지 않아 고정 지면의 스와이프 옵션은 포함하지 않았습니다. 고정 지면 핀치 비활성화·재활성화, 이동 버튼, 확대된 지면 안의 이동은 별도로 검사합니다.
 
-개발 후보는 versionName 1.0.2 / versionCode 8, `com.poyal.yeobaek`이며 공개 파일과 구분해 `.tools/releases/gesture-options-candidate/yeobaek-gesture-options.apk`에 보관합니다. 73,998,668바이트, SHA-256 `085cc30714f5586361061a06dfa4e0f105852155f5c338bf9e0ca17b0e3d07a0`, 서명 인증서는 기존과 같습니다. 최종 앱 빌드·관련 JVM 8개·Lint는 통과했습니다.
+개발 후보는 versionName 1.0.2 / versionCode 8, `com.poyal.yeobaek`이며 공개 파일과 구분해 `.tools/releases/gesture-options-candidate/yeobaek-gesture-options.apk`에 두었습니다. 73,998,668바이트, SHA-256 `085cc30714f5586361061a06dfa4e0f105852155f5c338bf9e0ca17b0e3d07a0`, 서명 인증서는 기존과 같습니다. 최종 앱 빌드·관련 JVM 8개·Lint는 통과했습니다.
 
-검사는 합성 자료와 전용 AVD `yeobaek-release-040`의 Android 16/API 36 x86_64, 720×1600, density 320, 글씨 100%에서 실행합니다. 이번 개발판에서 Android 11·ARM·실물 기기·큰 글씨 추가 행렬·장시간 검사는 실행하지 않습니다. 실행 로그·APK 해시·화면은 `.tools/verification/gesture-options-20261025/`에 보관합니다.
+검사는 합성 자료와 전용 AVD `yeobaek-release-040`의 Android 16/API 36 x86_64, 720×1600, density 320, 글씨 100%에서 실행합니다. 이번 개발판에서 Android 11·ARM·실물 기기·큰 글씨 추가 행렬·장시간 검사는 실행하지 않습니다. 당시 실행 로그·APK 해시·화면은 `.tools/verification/gesture-options-20261025/`에 모았습니다.
 
 최종 결과는 관련 JVM 8개, debug 통합 13개 항목, release EPUB 여정 1개 통과입니다. debug 첫 묶음은 12개 통과·1개 실패였으며, Readium 페이지 모드의 최소 넘김 속도보다 느려지던 테스트 입력 시간을 일정하게 보정한 뒤 해당 검사와 고정 지면 핀치·이동 검사를 다시 실행해 2개 모두 통과했습니다. 중복 성공을 더하지 않고 검사 이름으로 13개를 대조했습니다. 초기 실험의 가장자리 입력 제외 영역과 이미지 이동 끝에서의 검사 조건도 보정했습니다. 최종 앱 소스는 재검사 중 변경하지 않았습니다. Lint는 오류 0개·경고 62개입니다.
 
@@ -91,3 +91,5 @@ release 여정은 123.841초, 누락·예상 외 검사 없이 통과했습니�
 | release 외부 검사 | `05cbbd08ff8de555e1edc1d76566c9aea0be244c3c0d60a1244582cb0441905e` |
 
 최초 통합 묶음의 검사 APK 해시는 별도로 고정하지 못했으며 최종 재검사 APK 해시와 구분합니다. 수동 테스트 AVD `yeobaek-ridi-epub-20261025`에 개발 후보를 `install -r`로 설치하고 설치된 APK의 전체 해시 일치를 확인했습니다. 앱 데이터·독서 기록은 초기화하지 않았으며 앱을 열어 두었습니다.
+
+정식 v1.0.3을 별도로 빌드·검사·공개한 뒤 이 개발 APK와 중간 검사 자료를 정리했습니다. 위 개발 당시 사실과 해시는 문서에 보존하며, 최종 산출물과 새 버전의 실행 결과는 [v1.0.3 검증 기록](../v1.0.3/AGENTS.md)을 따릅니다.
