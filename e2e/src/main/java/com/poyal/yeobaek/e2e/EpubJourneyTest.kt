@@ -244,7 +244,7 @@ class EpubJourneyTest {
     }
     @Test fun backupFreshRestoreAndChangedOriginalKeepRecords() {
         connect(); openReflow(); click("epub_next"); SystemClock.sleep(700)
-        click("epub_bookmark"); click("epub_settings"); click("scope_BOOK"); click("epub_mode_paged"); click("page_back"); ready()
+        click("epub_bookmark"); click("epub_settings"); click("scope_BOOK"); find("epub_mode_paged", "epub_options"); click("epub_mode_paged"); click("page_back"); ready()
         val progress = percent(); click("epub_back")
         click("nav_settings"); click("settings_general"); find("backup_export", "general_settings_options"); click("backup_export")
         documentsFolder()
@@ -265,7 +265,7 @@ class EpubJourneyTest {
         click("page_back"); click("nav_folder"); connect(); openReflow()
         Assert.assertEquals(progress.toDouble(), percent().toDouble(), 1.0)
         click("epub_bookmarks"); node("epub_mark_0"); shot("18-restored-bookmark"); click("sheet_close")
-        click("epub_settings"); click("scope_BOOK"); node("epub_mode_paged")
+        click("epub_settings"); click("scope_BOOK"); find("epub_mode_paged", "epub_options")
         Assert.assertTrue(device.wait(Until.hasObject(By.res("epub_mode_paged").checked(true)), 5000)); click("page_back"); click("epub_back")
         val source = "/sdcard/Download/YeobaekEPUB/Yeobaek-Reflow.epub"
         val original = "$source.qa-original"
