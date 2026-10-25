@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.ViewModelStore
@@ -98,6 +99,31 @@ class ReaderScrollTest {
                 0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0)
             try { readerView.dispatchTouchEvent(touch) } finally { touch.recycle() }
         }
+    }
+
+    @Test fun hiddenMenusLeaveTextAcrossTheWholeViewport() = withReader(
+        (0 until 3000).joinToString("\n") { "문장 $it · 위아래 메뉴를 숨겨도 본문은 화면 끝까지 이어집니다." }
+    ) { length ->
+        ui.runOnIdle { vm.seek(length / 2) }
+        ui.waitUntil(30_000) {
+            ui.onAllNodesWithTag("layout_loading").fetchSemanticsNodes().isEmpty() &&
+                list.layoutInfo.visibleItemsInfo.any { (it.key as String).substringAfterLast(':').toLong() > length / 3 }
+        }
+        val before = offset()
+        val bounds = ui.onNodeWithTag("reader_body").fetchSemanticsNode().boundsInRoot
+        ui.onNodeWithTag("reader_body").performTouchInput { click() }
+        ui.onNodeWithTag("reader_footer").assertDoesNotExist()
+        assertEquals(before, offset())
+        assertEquals(bounds, ui.onNodeWithTag("reader_body").fetchSemanticsNode().boundsInRoot)
+        val text = ui.onAllNodes(SemanticsMatcher("Text block") {
+            it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.TestTag)?.startsWith("text_") == true
+        }).fetchSemanticsNodes().map { it.boundsInRoot }
+        assertTrue("Text must reach the top of the viewport", text.minOf { it.top } <= bounds.top + 1)
+        assertTrue("Text must reach the bottom of the viewport", text.maxOf { it.bottom } >= bounds.bottom - 1)
+        val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+        val out = File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir, "reader-viewport").apply { mkdirs() }
+        File(out, "txt-hidden.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        bitmap.recycle()
     }
 
     @Test fun reportedSwipeHeldStillBeforeReleaseDoesNotFlingBackwards() = withReader(

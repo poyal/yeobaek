@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.sp
     SettingsCard(modifier) {
         Row(Modifier.semantics { heading() }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(icon, null, Modifier.size(20.dp), tint = LocalPaper.current.accent)
-            Text(title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Text(title, Modifier.weight(1f), fontSize = 16.sp, fontWeight = FontWeight.Medium)
         }
         content()
     }

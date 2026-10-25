@@ -30,6 +30,12 @@ class EpubJourneyTest {
     private fun node(tag: String, timeout: Long = 20_000): UiObject2 = device.wait(Until.findObject(By.res(tag)), timeout) ?: throw AssertionError("Missing $tag")
     private fun click(tag: String) { node(tag).click(); device.waitForIdle() }
     private fun body() = node("$pkg:id/epub_host_container")
+    private fun readingArea() = body().visibleBounds.apply {
+        device.findObject(By.res("epub_header"))?.visibleBounds?.let { top = maxOf(top, it.bottom) }
+        for (tag in listOf("epub_footer", "epub_previous")) {
+            device.findObject(By.res(tag))?.visibleBounds?.let { bottom = minOf(bottom, it.top) }
+        }
+    }
     private fun clickOptional(selector: BySelector): Boolean {
         repeat(8) {
             try {
@@ -45,20 +51,31 @@ class EpubJourneyTest {
         device.waitForIdle(); check(device.takeScreenshot(File(out, "$name.png")))
         device.dumpWindowHierarchy(File(out, "$name.xml"))
     }
-    private fun find(tag: String, list: String) {
-        repeat(20) { if (device.hasObject(By.res(tag))) return; node(list).scroll(Direction.DOWN, .65f) }
+    private fun find(tag: String, list: String, direction: Direction = Direction.DOWN) {
+        repeat(20) { if (device.hasObject(By.res(tag))) return; node(list).scroll(direction, .65f) }
         throw AssertionError("Missing $tag after scrolling")
     }
     private fun percent() = node("epub_progress").text.substringAfterLast('·').trim().removeSuffix("%").toFloat().toInt()
     private fun fixedPage() = node("epub_progress").text.substringBefore(" · ")
+    private fun scrollToChapterEnd() {
+        for (attempt in 0 until 25) {
+            val action = device.findObject(By.res("epub_next_chapter"))
+            if (action != null && action.visibleBounds.height() >= 48 * context.resources.displayMetrics.density) return
+            val bounds = readingArea()
+            device.swipe(bounds.centerX(), bounds.bottom - 30, bounds.centerX(), bounds.top + 30, 10)
+            SystemClock.sleep(300)
+        }
+        shot("FAIL-chapter-scroll")
+        throw AssertionError("The end action must be reachable with vertical scrolling")
+    }
     private fun openReflow() { find("file_Yeobaek-Reflow.epub", "library_list"); click("file_Yeobaek-Reflow.epub"); ready() }
     private fun connect() {
         click("connect_folder")
         device.wait(Until.hasObject(By.pkg(Pattern.compile("com\\.(google\\.android|android)\\.documentsui"))), 15_000)
         pickerFolder()
-        val select = device.wait(Until.findObject(By.res(Pattern.compile("com\\.(google\\.android|android)\\.documentsui:id/action_menu_select"))), 5000)
-            ?: device.findObject(By.text("USE THIS FOLDER")) ?: error("No folder select button")
-        select.click(); device.wait(Until.findObject(By.res("android:id/button1")), 5000)?.click(); node("folder_refresh")
+        check(clickOptional(By.res(Pattern.compile("com\\.(google\\.android|android)\\.documentsui:id/action_menu_select")))
+            || clickOptional(By.text("USE THIS FOLDER")))
+        clickOptional(By.res("android:id/button1")); node("folder_refresh")
     }
     @Before fun setup() {
         require(pkg in setOf("com.poyal.yeobaek", "com.poyal.yeobaek.debug"))
@@ -74,10 +91,20 @@ class EpubJourneyTest {
     }
     @Test fun localReadingSearchBookmarksSettingsAndProcessDeath() {
         connect(); openReflow(); shot("01-reflow")
+        body().visibleBounds.let { device.click(it.centerX(), it.centerY()) }
+        Assert.assertTrue(device.wait(Until.gone(By.res("epub_footer")), 5000))
+        Assert.assertFalse(node("epub_previous").isEnabled)
+        Assert.assertTrue(node("epub_next").isEnabled)
+        scrollToChapterEnd()
+        shot("01-hidden-chrome-end"); click("epub_next_chapter")
+        SystemClock.sleep(700)
+        body().visibleBounds.let { device.click(it.centerX(), it.centerY()) }
+        ready(); Assert.assertTrue(node("epub_current_chapter").text.startsWith("2장"))
+        click("epub_previous"); ready()
         check(clickOptional(By.text("다음 장의 각주로 이동")))
-        SystemClock.sleep(700); Assert.assertTrue(node("epub_progress").text.startsWith("2장"))
+        SystemClock.sleep(700); Assert.assertTrue(node("epub_current_chapter").text.startsWith("2장"))
         shot("01-internal-link"); click("epub_link_return")
-        ready(); Assert.assertTrue(node("epub_progress").text.startsWith("1장"))
+        ready(); Assert.assertTrue(node("epub_current_chapter").text.startsWith("1장"))
         val selection = device.wait(Until.findObject(By.textStartsWith("1. 창문")), 10_000)!!.visibleBounds
         // Press an actual character in the first line, not a gap in a paragraph's line box.
         val sx = selection.left + 60
@@ -87,17 +114,17 @@ class EpubJourneyTest {
             ?: throw AssertionError("EPUB text selection did not offer Copy")
         shot("01-selection-copy"); copy.click(); device.waitForIdle()
         click("epub_next"); SystemClock.sleep(600)
-        Assert.assertTrue(node("epub_progress").text.startsWith("2장"))
-        val body = body().visibleBounds
+        Assert.assertTrue(node("epub_current_chapter").text.startsWith("2장"))
+        val body = readingArea()
         device.swipe(body.centerX(), body.bottom - 100, body.centerX(), body.centerY(), 55); SystemClock.sleep(1500)
         click("epub_bookmark"); click("epub_bookmarks"); node("epub_mark_0"); shot("02-bookmark"); click("sheet_close")
         click("epub_contents"); node("epub_chapter_2"); shot("03-contents"); click("epub_chapter_2")
-        SystemClock.sleep(700); Assert.assertTrue(node("epub_progress").text.startsWith("3장"))
-        click("epub_link_return"); SystemClock.sleep(700); Assert.assertTrue(node("epub_progress").text.startsWith("2장"))
+        SystemClock.sleep(700); Assert.assertTrue(node("epub_current_chapter").text.startsWith("3장"))
+        click("epub_link_return"); SystemClock.sleep(700); Assert.assertTrue(node("epub_current_chapter").text.startsWith("2장"))
         click("epub_search"); node("epub_search_input").text = "아침"; click("epub_search_submit")
         node("epub_search_next", 30_000); shot("04-search"); click("epub_search_next"); node("epub_search_previous")
         click("epub_result_0"); ready(); click("epub_search"); click("epub_search_return"); ready()
-        Assert.assertTrue(node("epub_progress").text.startsWith("2장"))
+        Assert.assertTrue(node("epub_current_chapter").text.startsWith("2장"))
         click("epub_settings"); click("scope_BOOK"); click("epub_mode_paged"); shot("05-settings")
         find("epub_font_SERIF", "epub_options"); click("epub_font_SERIF"); click("page_back"); ready()
         val before = percent(); Assert.assertTrue(before in 33..66); shot("06-paged")
@@ -117,12 +144,30 @@ class EpubJourneyTest {
         Assert.assertTrue(device.wait(Until.gone(By.res("epub_loading")), 30_000))
         Assert.assertFalse(device.hasObject(By.res("epub_footer"))); shot("09-landscape-focus")
         body().visibleBounds.let { device.click(it.centerX(), it.centerY()) }
-        ready(); Assert.assertTrue(node("epub_progress").text.startsWith("2장")); shot("09-landscape")
+        ready(); Assert.assertTrue(node("epub_current_chapter").text.startsWith("2장")); shot("09-landscape")
         device.setOrientationNatural(); device.unfreezeRotation(); ready()
         val fontScale = device.executeShellCommand("settings get system font_scale").trim()
         try {
             device.executeShellCommand("settings put system font_scale 2.0"); SystemClock.sleep(1000); ready()
-            click("epub_settings"); node("epub_settings_screen"); shot("10-large-settings"); click("page_back"); ready()
+            click("epub_settings"); node("epub_settings_screen")
+            find("scope_BOOK", "epub_options", Direction.UP); click("scope_BOOK")
+            find("epub_mode_scroll", "epub_options"); click("epub_mode_scroll")
+            find("epub_chapter_buttons_HIDDEN", "epub_options"); click("epub_chapter_buttons_HIDDEN")
+            shot("10-large-settings"); click("page_back"); ready()
+            Assert.assertFalse(device.hasObject(By.res("epub_next")))
+            scrollToChapterEnd(); shot("10-large-chapter-end")
+            val scrollPercent = percent()
+            SystemClock.sleep(1500)
+            val scrollPid = device.executeShellCommand("pidof $pkg").trim()
+            device.pressHome(); SystemClock.sleep(1000); device.executeShellCommand("am force-stop $pkg")
+            Assert.assertTrue(device.executeShellCommand("pidof $pkg").trim().isEmpty())
+            launch(); click("resume_accept"); ready()
+            val restoredPid = device.executeShellCommand("pidof $pkg").trim()
+            Assert.assertNotEquals(scrollPid, restoredPid)
+            Assert.assertEquals(scrollPercent.toDouble(), percent().toDouble(), 1.0)
+            Assert.assertFalse(device.hasObject(By.res("epub_next")))
+            node("epub_next_chapter"); shot("10-restored-chapter-end")
+            File(out, "scroll-process-death.txt").writeText("before_pid=$scrollPid\nafter_pid=$restoredPid\nbefore_percent=$scrollPercent\nafter_percent=${percent()}\n")
         } finally { device.executeShellCommand("settings put system font_scale $fontScale") }
         click("epub_back"); click("nav_settings"); find("settings_epub", "app_settings"); click("settings_epub")
         node("epub_settings_screen"); Assert.assertFalse(device.hasObject(By.res("scope_BOOK"))); shot("11-main-settings-entry")
@@ -221,7 +266,7 @@ class EpubJourneyTest {
         Assert.assertEquals(progress.toDouble(), percent().toDouble(), 1.0)
         click("epub_bookmarks"); node("epub_mark_0"); shot("18-restored-bookmark"); click("sheet_close")
         click("epub_settings"); click("scope_BOOK"); node("epub_mode_paged")
-        Assert.assertTrue(device.hasObject(By.text("페이지 넘김 ✓"))); click("page_back"); click("epub_back")
+        Assert.assertTrue(device.wait(Until.hasObject(By.res("epub_mode_paged").selected(true)), 5000)); click("page_back"); click("epub_back")
         val source = "/sdcard/Download/YeobaekEPUB/Yeobaek-Reflow.epub"
         val original = "$source.qa-original"
         device.executeShellCommand("cp $source $original")

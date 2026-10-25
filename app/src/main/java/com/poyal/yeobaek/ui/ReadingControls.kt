@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -25,6 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -72,32 +75,46 @@ import kotlin.math.min
     }
 }
 
-@Composable fun SettingsScopePicker(vm: AppViewModel, format: String, showTitle: Boolean = true) {
+@Composable fun SettingsScopePicker(vm: AppViewModel, format: String, showTitle: Boolean = true, showReset: Boolean = true) {
     val state by vm.ui.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
     val scope by vm.settingsScope.collectAsStateWithLifecycle()
     val book = state.reader?.book ?: state.pdfReader?.book ?: state.imageReader?.book ?: state.epubReader?.book
     if (showTitle) Text("설정 적용 범위")
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        SettingsScope.entries.filter { it == SettingsScope.COMMON || book != null && (it == SettingsScope.BOOK || settings.folders.containsKey(book.id)) }.forEach {
-            Choice(when (it) { SettingsScope.COMMON -> "공통"; SettingsScope.FOLDER -> "이 폴더"; SettingsScope.BOOK -> "이 책" }, scope == it, "scope_$it", Modifier.weight(1f)) { vm.settingsScope.value = it }
-        }
-    }
+    ChoiceGroup(SettingsScope.entries.filter { it == SettingsScope.COMMON || book != null && (it == SettingsScope.BOOK || settings.folders.containsKey(book.id)) }, scope,
+        label = { when (it) { SettingsScope.COMMON -> "공통"; SettingsScope.FOLDER -> "이 폴더"; SettingsScope.BOOK -> "이 책" } },
+        tag = { "scope_$it" }) { vm.settingsScope.value = it }
     Small(if (scope == SettingsScope.COMMON) "개별 설정이 없는 책에 적용됩니다." else "바꾼 항목만 따로 저장합니다. 폴더 설정은 하위 폴더에 적용되지 않습니다.")
     if (scope != SettingsScope.COMMON && book != null) {
         val values = settings.overrides[settings.scopeKey(scope, format, book.id)].orEmpty()
-        val labels = mapOf("menuVisibility" to "독서 메뉴 표시", "doubleTapZoom" to "두 번 탭 확대", "pinchZoom" to "두 손가락 확대", "tapToTurn" to "가장자리 탭 넘김", "publisherStyles" to "원본 서식", "font" to "글꼴", "size" to "글자 크기", "line" to "줄 간격", "margin" to "좌우 여백", "paper" to "본문 색상",
+        val labels = mapOf("menuVisibility" to "독서 메뉴 표시", "chapterButtons" to "장 이동 버튼", "doubleTapZoom" to "두 번 탭 확대", "pinchZoom" to "두 손가락 확대", "tapToTurn" to "가장자리 탭 넘김", "publisherStyles" to "원본 서식", "font" to "글꼴", "size" to "글자 크기", "line" to "줄 간격", "margin" to "좌우 여백", "paper" to "본문 색상",
             "fit" to "화면 맞춤", "inverted" to "색상 반전", "spacing" to "페이지 간격", "canvas" to "배경", "mode" to "읽기 방식",
             "direction" to "읽기 방향", "spread" to "두 쪽 보기", "coverAlone" to "표지 단독", "verticalFit" to "세로 맞춤", "pagedFit" to "페이지 맞춤",
             "splitWide" to "펼침면 분할", "cropMode" to "여백 자르기", "cropLeft" to "왼쪽 여백", "cropTop" to "위 여백", "cropRight" to "오른쪽 여백", "cropBottom" to "아래 여백")
         values.forEach { (field, _) ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("${labels[field] ?: field} · 개별 설정", Modifier.weight(1f))
-                TextButton(onClick = { vm.inheritSetting(format, field) }, modifier = Modifier.testTag("inherit_$field")) { Text("상속") }
+                PaperButton("해제", "inherit_$field", outlined = true, onClick = { vm.inheritSetting(format, field) })
             }
         }
-        if (values.isNotEmpty()) TextButton(onClick = { vm.resetSettings(format) }, modifier = Modifier.testTag("scope_reset")) { Text("이 범위의 개별 설정 모두 해제") }
+        if (showReset && values.isNotEmpty()) PaperButton("개별 설정 모두 해제", "scope_reset", Modifier.fillMaxWidth(), outlined = true, onClick = { vm.resetSettings(format) })
     }
+}
+
+@Composable fun ReaderSettingsReset(vm: AppViewModel, format: String) {
+    val scope by vm.settingsScope.collectAsStateWithLifecycle()
+    val name = if (format == "IMAGE") "이미지" else format
+    val label = when (scope) {
+        SettingsScope.COMMON -> "$name 설정 기본값 복원"
+        SettingsScope.FOLDER -> "이 폴더의 개별 설정 해제"
+        SettingsScope.BOOK -> "이 책의 개별 설정 해제"
+    }
+    PaperButton(label, "${format.lowercase()}_reset", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { vm.resetSettings(format) })
+    Small(when (scope) {
+        SettingsScope.COMMON -> "공통 설정을 처음 값으로 되돌립니다. 폴더·책별 설정과 독서 기록은 유지됩니다."
+        SettingsScope.FOLDER -> "이 폴더의 개별 설정을 해제하고 공통 설정을 따릅니다. 책별 설정과 독서 기록은 유지됩니다."
+        SettingsScope.BOOK -> "이 책의 개별 설정을 해제하고 공통·폴더 설정을 따릅니다. 독서 기록은 유지됩니다."
+    })
 }
 
 @Composable fun QuickReaderSettings(vm: AppViewModel) {
@@ -118,23 +135,24 @@ import kotlin.math.min
                 }
                 var fontMenu by remember { mutableStateOf(false) }
                 Box {
-                    OutlinedButton(onClick = { fontMenu = true }, modifier = Modifier.fillMaxWidth().testTag("quick_font")) { Text("글꼴 · ${txt.font.label}") }
+                    PaperButton("글꼴 · ${txt.font.label}", "quick_font", Modifier.fillMaxWidth(), outlined = true, onClick = { fontMenu = true })
                     DropdownMenu(fontMenu, onDismissRequest = { fontMenu = false }) {
                         TxtFont.entries.forEach { font -> DropdownMenuItem(text = { Text(font.label) }, onClick = { vm.changeSetting("TXT", "font", font.name); fontMenu = false }) }
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { TxtPaper.entries.forEach { paper ->
-                    Choice(when (paper) { TxtPaper.FOLLOW_APP -> "앱 테마"; TxtPaper.LIGHT -> "라이트"; TxtPaper.SEPIA -> "세피아"; TxtPaper.DARK -> "다크" }, txt.paper == paper, "paper_$paper", Modifier.weight(1f)) { vm.changeSetting("TXT", "paper", paper.name) }
-                } }
+                ChoiceGroup(TxtPaper.entries, txt.paper, label = { when (it) { TxtPaper.FOLLOW_APP -> "앱 테마"; TxtPaper.LIGHT -> "라이트"; TxtPaper.SEPIA -> "세피아"; TxtPaper.DARK -> "다크" } },
+                    tag = { "paper_$it" }) { vm.changeSetting("TXT", "paper", it) }
             }
             "PDF" -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { PdfFit.entries.forEach { fit -> Choice(if (fit == PdfFit.WIDTH) "너비에 맞춤" else "페이지에 맞춤", pdf.fit == fit, "pdf_fit_$fit", Modifier.weight(1f)) { vm.changeSetting("PDF", "fit", fit.name) } } }
+                ChoiceGroup(PdfFit.entries, pdf.fit, label = { if (it == PdfFit.WIDTH) "너비에 맞춤" else "페이지에 맞춤" }, tag = { "pdf_fit_$it" }) { vm.changeSetting("PDF", "fit", it) }
                 LabeledSwitch("색상 반전", pdf.inverted, "pdf_inversion_switch") { vm.changeSetting("PDF", "inverted", it) }
             }
             else -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { ImageMode.entries.forEach { mode -> Choice(if (mode == ImageMode.VERTICAL) "세로 연속" else "좌우 넘김", image.mode == mode, "image_mode_$mode", Modifier.weight(1f)) { vm.setImage(image.copy(mode = mode)) } } }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { ImageFit.entries.forEach { fit -> Choice(if (fit == ImageFit.WIDTH) "너비 맞춤" else "전체 이미지", image.fit == fit, "image_fit_$fit", Modifier.weight(1f)) { vm.setImage(if (image.mode == ImageMode.VERTICAL) image.copy(verticalFit = fit) else image.copy(pagedFit = fit)) } } }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { ImageDirection.entries.forEach { direction -> Choice(if (direction == ImageDirection.LTR) "왼쪽부터" else "오른쪽부터", image.direction == direction, "image_direction_$direction", Modifier.weight(1f)) { vm.setImage(image.copy(direction = direction)) } } }
+                ChoiceGroup(ImageMode.entries, image.mode, label = { if (it == ImageMode.VERTICAL) "세로 연속" else "좌우 넘김" }, tag = { "image_mode_$it" }) { vm.setImage(image.copy(mode = it)) }
+                ChoiceGroup(ImageFit.entries, image.fit, label = { if (it == ImageFit.WIDTH) "너비에 맞춤" else "전체 이미지" }, tag = { "image_fit_$it" }) {
+                    vm.setImage(if (image.mode == ImageMode.VERTICAL) image.copy(verticalFit = it) else image.copy(pagedFit = it))
+                }
+                if (image.mode == ImageMode.PAGED) ChoiceGroup(ImageDirection.entries, image.direction, label = { if (it == ImageDirection.LTR) "왼쪽부터" else "오른쪽부터" }, tag = { "image_direction_$it" }) { vm.setImage(image.copy(direction = it)) }
                 ImageCropOptions(vm, image)
             }
         }
@@ -154,20 +172,23 @@ import kotlin.math.min
         val screen = settings.screen
         LabeledSwitch("시스템 밝기 사용", screen.brightness < 0, "brightness_system") { vm.setScreen(screen.copy(brightness = if (it) -1f else .5f)) }
         if (screen.brightness >= 0) SettingSlider("밝기", screen.brightness, .02f..1f, "reader_brightness") { vm.setScreen(screen.copy(brightness = it)) }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("SYSTEM" to "자동 회전", "PORTRAIT" to "세로", "LANDSCAPE" to "가로").forEach { (value, label) ->
-            Choice(label, screen.rotation == value, "rotation_$value", Modifier.weight(1f)) { vm.setScreen(screen.copy(rotation = value)) }
-        } }
+        ChoiceGroup(listOf("SYSTEM", "PORTRAIT", "LANDSCAPE"), screen.rotation,
+            label = { when (it) { "PORTRAIT" -> "세로"; "LANDSCAPE" -> "가로"; else -> "자동 회전" } }, tag = { "rotation_$it" }) { vm.setScreen(screen.copy(rotation = it)) }
         LabeledSwitch("읽는 동안 화면 켜두기", screen.awake, "reader_awake") { vm.setScreen(screen.copy(awake = it)) }
     }
 }
 
-@Composable fun LabeledSwitch(label: String, value: Boolean, tag: String, change: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) { Text(label, Modifier.weight(1f)); Switch(value, change, Modifier.testTag(tag)) }
+@Composable fun LabeledSwitch(label: String, value: Boolean, tag: String, detail: String? = null, change: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value, role = Role.Switch, onValueChange = change).testTag(tag).padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.weight(1f)) { Text(label); detail?.let { Small(it) } }
+        Switch(value, onCheckedChange = null)
+    }
 }
 @Composable fun SettingSlider(label: String, value: Float, range: ClosedFloatingPointRange<Float>, tag: String, commit: (Float) -> Unit) {
     var current by remember(value) { mutableFloatStateOf(value.coerceIn(range)) }
     Text("$label · ${(current * 100).toInt()}%")
-    Slider(current, { current = it }, Modifier.testTag(tag), valueRange = range, onValueChangeFinished = { commit(current) })
+    Slider(current, { current = it }, Modifier.testTag(tag).semantics { contentDescription = label }, valueRange = range, onValueChangeFinished = { commit(current) })
 }
 @Composable fun ImageCropOptions(vm: AppViewModel, prefs: ImagePreferences) {
     LabeledSwitch("펼침면 반쪽씩 읽기", prefs.splitWide, "image_split") { vm.setImage(prefs.copy(splitWide = it)) }

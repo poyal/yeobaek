@@ -40,6 +40,9 @@ class EpubReaderController(private val scope: CoroutineScope, private val dao: L
     val search = MutableStateFlow(EpubSearchState())
     val chrome = MutableStateFlow(true)
     val ready = MutableStateFlow(false)
+    val navigation = MutableStateFlow(EpubNavigationState())
+    val endActionHeight = MutableStateFlow(0)
+    val startInsetHeight = MutableStateFlow(0)
     val returnLocation = MutableStateFlow<Locator?>(null)
     val pending = MutableStateFlow<Locator?>(null)
     val completed = MutableStateFlow(false)
@@ -61,6 +64,7 @@ class EpubReaderController(private val scope: CoroutineScope, private val dao: L
         opened = value; locator.value = value.initial; revision = 0; sequence = 0; dirty = false
         ready.value = false; chrome.value = true; completed.value = value.initialCompleted; userNavigated = false; returnLocation.value = null; pending.value = null
         marks.value = emptyList(); search.value = EpubSearchState(); searchOrigin = null
+        navigation.value = EpubNavigationState(); endActionHeight.value = 0; startInsetHeight.value = 0
         marksJob = scope.launch { dao.epubBookmarks(value.book.id).collect { marks.value = it } }
     }
     fun rendered() {
@@ -106,6 +110,7 @@ class EpubReaderController(private val scope: CoroutineScope, private val dao: L
     suspend fun close() = withContext(NonCancellable) {
         capture(); flush()
         ready.value = false
+        navigation.value = EpubNavigationState()
         activateJob?.cancelAndJoin(); saveJob?.cancelAndJoin(); searchJob?.cancelAndJoin(); marksJob?.cancel()
         renderer?.release(); renderer = null
         val old = opened; opened = null; revision = 0; pending.value = null

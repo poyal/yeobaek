@@ -30,7 +30,7 @@ class RestoreJourneyTest {
             node("txt_options").scroll(Direction.DOWN, .5f)
         }
         assertEquals("18", node("font_size").text); click("page_back"); click("reader_back")
-        click("nav_settings"); click("settings_general"); assertTrue(device.hasObject(By.text("다크 ✓")))
+        click("nav_settings"); click("settings_general"); assertTrue(node("theme_DARK").isSelected)
         val out = File(InstrumentationRegistry.getInstrumentation().context.getExternalFilesDir(null), "restore").apply { mkdirs() }
         device.takeScreenshot(File(out, "preserved.png")); device.dumpWindowHierarchy(File(out, "preserved.xml"))
     }

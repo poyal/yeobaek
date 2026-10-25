@@ -6,7 +6,7 @@ import java.util.zip.ZipOutputStream
 
 /** Small original books, generated locally; no third-party book content. */
 internal object EpubFixtures {
-    fun write(file: File, fixed: Boolean = false, epub2: Boolean = false, chapters: Int = 3, paragraphs: Int = 60, encryption: String? = null): File {
+    fun write(file: File, fixed: Boolean = false, epub2: Boolean = false, chapters: Int = 3, paragraphs: Int = 60, encryption: String? = null, nestedOutline: Boolean = false): File {
         ZipOutputStream(file.outputStream()).use { zip ->
             fun entry(name: String, text: String) { zip.putNextEntry(ZipEntry(name)); zip.write(text.toByteArray(Charsets.UTF_8)); zip.closeEntry() }
             entry("mimetype", "application/epub+zip")
@@ -15,7 +15,10 @@ internal object EpubFixtures {
             val items = (1..chapters).joinToString("") { """<item id="c$it" href="chapter$it.xhtml" media-type="application/xhtml+xml"/>""" }
             val spine = (1..chapters).joinToString("") { """<itemref idref="c$it"/>""" }
             entry("EPUB/package.opf", """<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="id" version="${if (epub2) "2.0" else "3.0"}"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:8fb0aa70-7447-4e58-a6a4-d5a2292c3c4e</dc:identifier><dc:title>여백 EPUB 검증</dc:title><dc:language>ko</dc:language><meta property="dcterms:modified">2026-10-17T00:00:00Z</meta>${if (fixed) "<meta property=\"rendition:layout\">pre-paginated</meta>" else ""}</metadata><manifest>$items<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/></manifest><spine toc="ncx">$spine</spine></package>""")
-            entry("EPUB/nav.xhtml", """<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>목차</title></head><body><nav epub:type="toc"><ol>${(1..chapters).joinToString("") { "<li><a href=\"chapter$it.xhtml\">${it}장 · 여백</a></li>" }}</ol></nav></body></html>""")
+            entry("EPUB/nav.xhtml", """<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>목차</title></head><body><nav epub:type="toc"><ol>${(1..chapters).joinToString("") { chapter ->
+                "<li><a href=\"chapter$chapter.xhtml\">${chapter}장 · 여백</a>" +
+                    (if (nestedOutline) "<ol><li><a href=\"chapter$chapter.xhtml#p1\">첫 절</a></li><li><a href=\"chapter$chapter.xhtml#p${(paragraphs / 2).coerceAtLeast(2)}\">둘째 절</a></li></ol>" else "") + "</li>"
+            }}</ol></nav></body></html>""")
             entry("EPUB/toc.ncx", """<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="urn:uuid:8fb0aa70-7447-4e58-a6a4-d5a2292c3c4e"/></head><docTitle><text>여백 EPUB 검증</text></docTitle><navMap>${(1..chapters).joinToString("") { "<navPoint id=\"nav$it\" playOrder=\"$it\"><navLabel><text>${it}장 · 여백</text></navLabel><content src=\"chapter$it.xhtml\"/></navPoint>" }}</navMap></ncx>""")
             for (chapter in 1..chapters) {
                 val body = if (fixed) """<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="600" height="800" fill="#eee8dc"/><circle cx="300" cy="300" r="150" fill="#617255"/><text x="40" y="550" font-size="28">${chapter}쪽 · 여백의 그림책</text></svg><p id="p1">고정 지면 검색구절 $chapter</p>"""

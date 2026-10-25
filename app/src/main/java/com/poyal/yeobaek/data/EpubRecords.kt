@@ -20,6 +20,7 @@ data class EpubBookmark(
 )
 
 enum class EpubMode { SCROLL, PAGED }
+enum class EpubChapterButtons(val label: String) { ALWAYS("항상 표시"), WITH_MENU("메뉴와 함께 표시"), HIDDEN("숨김") }
 enum class EpubFont(val label: String) { ORIGINAL("원본 글꼴"), SERIF("기존 명조"), SANS("시스템 고딕"), MONOSPACE("고정폭") }
 @Serializable
 data class EpubReaderPreferences(
@@ -28,4 +29,5 @@ data class EpubReaderPreferences(
     val line: Float = 1.5f, val margin: Float = 1f,
     val paper: TxtPaper = TxtPaper.FOLLOW_APP, val canvas: PdfCanvas = PdfCanvas.AUTO,
     val menuVisibility: MenuVisibility = MenuVisibility.TAP,
+    val chapterButtons: EpubChapterButtons = EpubChapterButtons.ALWAYS,
 )

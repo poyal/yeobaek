@@ -341,9 +341,8 @@ import java.util.Locale
 @Composable private fun GeneralSettingsScreen(vm: AppViewModel, app: AppPreferences, chooseFolder: () -> Unit) {
     SettingsPage("일반 설정", "general_settings_screen", { vm.screen("settings") }, contentTag = "general_settings_options") {
         SettingsSection("앱 테마", Icons.Outlined.Palette, Modifier.testTag("theme_settings")) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { AppTheme.entries.forEach { theme ->
-                Choice(when (theme) { AppTheme.SYSTEM -> "기기 설정"; AppTheme.LIGHT -> "라이트"; AppTheme.DARK -> "다크" }, app.theme == theme, "theme_${theme.name}", Modifier.weight(1f)) { vm.action { vm.prefs.setTheme(theme) } }
-            } }
+            ChoiceGroup(AppTheme.entries, app.theme, label = { when (it) { AppTheme.SYSTEM -> "기기 설정"; AppTheme.LIGHT -> "라이트"; AppTheme.DARK -> "다크" } },
+                tag = { "theme_$it" }) { vm.action { vm.prefs.setTheme(it) } }
         }
         BackupSettings(vm)
         StorageSettings(vm, app, chooseFolder)
@@ -386,7 +385,7 @@ import java.util.Locale
 
 @Composable private fun TxtSettings(vm: AppViewModel, prefs: TxtPreferences) {
     val colors = readerColors(prefs.paper, LocalPaper.current)
-    SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "TXT", showTitle = false) }
+    SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "TXT", showTitle = false, showReset = false) }
     Surface(color = colors.surface, border = BorderStroke(1.dp, LocalPaper.current.line), shape = RoundedCornerShape(12.dp)) {
         Text("어떤 이야기는\n잠시 머물러도 좋았다.", Modifier.fillMaxWidth().padding(20.dp), style = prefs.textStyle(), color = colors.ink)
     }
@@ -400,13 +399,11 @@ import java.util.Locale
         OptionSlider("좌우 여백", prefs.margin, 16f..40f, "text_margin") { vm.changeSetting("TXT", "margin", it) }
     }
     SettingsSection("본문 색상", Icons.Outlined.Palette) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) { TxtPaper.entries.forEach { paper ->
-            Choice(when (paper) { TxtPaper.FOLLOW_APP -> "앱 테마"; TxtPaper.LIGHT -> "라이트"; TxtPaper.SEPIA -> "세피아"; TxtPaper.DARK -> "다크" }, prefs.paper == paper, "paper_${paper.name}", Modifier.weight(1f)) { vm.changeSetting("TXT", "paper", paper) }
-        } }
+        ChoiceGroup(TxtPaper.entries, prefs.paper, label = { when (it) { TxtPaper.FOLLOW_APP -> "앱 테마"; TxtPaper.LIGHT -> "라이트"; TxtPaper.SEPIA -> "세피아"; TxtPaper.DARK -> "다크" } },
+            tag = { "paper_$it" }) { vm.changeSetting("TXT", "paper", it) }
     }
     SettingsSection("설정 초기화", Icons.Outlined.RestartAlt) {
-        PaperButton("TXT 설정 기본값 복원", "txt_reset", Modifier.fillMaxWidth(), outlined = true, destructive = true, onClick = { vm.resetSettings("TXT") })
-        Small("시작 폴더와 독서 기록은 유지됩니다.")
+        ReaderSettingsReset(vm, "TXT")
     }
 }
 @Composable private fun OptionSlider(label: String, value: Float, range: ClosedFloatingPointRange<Float>, tag: String, commit: (Float) -> Unit) {

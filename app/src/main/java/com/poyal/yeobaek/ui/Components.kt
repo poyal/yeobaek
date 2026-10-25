@@ -2,6 +2,7 @@ package com.poyal.yeobaek.ui
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -9,10 +10,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
@@ -49,7 +54,7 @@ import com.poyal.yeobaek.R
 @Composable fun PageHeader(title: String, onBack: () -> Unit) {
     Column { Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Tool(Icons.Outlined.ArrowBack, "뒤로", "page_back", onClick = onBack)
-        Text(title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        Text(title, Modifier.weight(1f).padding(vertical = 12.dp, horizontal = 8.dp), fontSize = 16.sp, fontWeight = FontWeight.Medium)
     }; Rule() }
 }
 @Composable fun SettingsRow(icon: ImageVector, title: String, detail: String, tag: String, onClick: () -> Unit) {
@@ -61,10 +66,36 @@ import com.poyal.yeobaek.R
 }
 @Composable fun Choice(text: String, selected: Boolean, tag: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val p = LocalPaper.current
-    Surface(onClick, modifier.heightIn(min = 48.dp).testTag(tag), shape = RoundedCornerShape(3.dp), color = if (selected) p.soft else p.surface,
+    Surface(onClick, modifier.heightIn(min = 48.dp).testTag(tag).semantics { this.selected = selected; role = Role.RadioButton }, shape = RoundedCornerShape(8.dp), color = if (selected) p.soft else p.surface,
         border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) p.accent else p.control)) {
-        Box(Modifier.padding(horizontal = 8.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
-            Text(if (selected) "$text ✓" else text, fontSize = 12.sp, fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal)
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Outlined.Check, null, Modifier.size(18.dp).alpha(if (selected) 1f else 0f), tint = p.accent)
+            Text(text, Modifier.weight(1f), fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium)
+        }
+    }
+}
+
+/** Balanced rows sized from every label, independent of the selected option. */
+@Composable fun <T> ChoiceGroup(values: List<T>, selected: T, label: (T) -> String, tag: (T) -> String,
+    modifier: Modifier = Modifier, onSelect: (T) -> Unit) {
+    if (values.isEmpty()) return
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val style = LocalTextStyle.current.copy(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium)
+    val preferred = values.maxOf { measurer.measure(label(it), style, softWrap = false).size.width } + with(density) { 50.dp.toPx() }
+    BoxWithConstraints(modifier.fillMaxWidth().selectableGroup()) {
+        val width = with(density) { maxWidth.toPx() }
+        val gap = with(density) { 8.dp.toPx() }
+        val columns = (minOf(3, values.size) downTo 1).first { count ->
+            values.size % count == 0 && (count == 1 || preferred * count + gap * (count - 1) <= width)
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            values.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { value -> Choice(label(value), value == selected, tag(value), Modifier.weight(1f).fillMaxHeight()) { onSelect(value) } }
+                }
+            }
         }
     }
 }

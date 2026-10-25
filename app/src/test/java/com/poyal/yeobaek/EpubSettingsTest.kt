@@ -8,6 +8,25 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class EpubSettingsTest {
+    @Test fun chapterButtonsInheritByScopeAndSurviveBackupWithoutChangingOlderDefaults() {
+        var settings = ReaderSettings(folders = mapOf("book" to "folder"), overrides = mapOf(
+            "common:EPUB" to mapOf("chapterButtons" to "WITH_MENU"),
+            "folder:folder:EPUB" to mapOf("chapterButtons" to "HIDDEN"),
+            "book:book:EPUB" to mapOf("chapterButtons" to "ALWAYS")))
+        val backup = ReadingBackup(library = LibrarySnapshot(), settings = settings, theme = AppTheme.SYSTEM)
+        val restored = Json.decodeFromString<ReadingBackup>(Json.encodeToString(backup))
+        validateBackup(restored); assertEquals(settings, restored.settings)
+        for ((scope, expected) in listOf("book:book:EPUB" to EpubChapterButtons.ALWAYS,
+            "folder:folder:EPUB" to EpubChapterButtons.HIDDEN, "common:EPUB" to EpubChapterButtons.WITH_MENU)) {
+            val prefs = ReaderSettingValues.epub(EpubReaderPreferences(), settings.fields("EPUB", "book"))
+            assertEquals(expected, prefs.chapterButtons)
+            assertEquals(prefs, ReaderSettingValues.epub(EpubReaderPreferences(), ReaderSettingValues.epub(prefs)))
+            settings = settings.copy(overrides = settings.overrides - scope)
+        }
+        assertEquals(EpubChapterButtons.ALWAYS, ReaderSettingValues.epub(EpubReaderPreferences(), settings.fields("EPUB", "book")).chapterButtons)
+        assertEquals(EpubChapterButtons.ALWAYS, ReaderSettingValues.epub(EpubReaderPreferences(), mapOf("chapterButtons" to "unknown")).chapterButtons)
+        assertEquals(EpubChapterButtons.ALWAYS, Json.decodeFromString<EpubReaderPreferences>("{}").chapterButtons)
+    }
     @Test fun epubWinsOverGenericZipAndAppearsAsNextBook() {
         val epub = DocumentEntry("b", "content://test/b", "책.EPUB", false, 10, 1, "application/zip")
         assertTrue(epub.supported); assertTrue(epub.epub); assertEquals("EPUB", epub.formatLabel)
