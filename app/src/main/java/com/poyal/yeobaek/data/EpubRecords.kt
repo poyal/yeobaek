@@ -30,4 +30,5 @@ data class EpubReaderPreferences(
     val paper: TxtPaper = TxtPaper.FOLLOW_APP, val canvas: PdfCanvas = PdfCanvas.AUTO,
     val menuVisibility: MenuVisibility = MenuVisibility.TAP,
     val chapterButtons: EpubChapterButtons = EpubChapterButtons.ALWAYS,
+    val swipeToTurn: Boolean = true, val pinchZoom: Boolean = true,
 )

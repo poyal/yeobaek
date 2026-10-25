@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.*
 import android.webkit.JavascriptInterface
-import android.widget.FrameLayout
 import androidx.annotation.Keep
 import androidx.fragment.app.Fragment
 import androidx.core.view.doOnLayout
@@ -58,17 +57,10 @@ class EpubHostFragment : Fragment(), EpubRenderer {
         super.onCreate(savedInstanceState)
     }
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        object : FrameLayout(requireContext()) {
-            private var downX = 0f
-            private var downY = 0f
-            private val slop = ViewConfiguration.get(context).scaledTouchSlop
-            override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-                if (event.actionMasked == MotionEvent.ACTION_DOWN) { downX = event.x; downY = event.y }
-                if (event.actionMasked == MotionEvent.ACTION_MOVE && event.pointerCount == 1 &&
-                    (kotlin.math.abs(event.x - downX) > slop || kotlin.math.abs(event.y - downY) > slop)) vm.epubReader.userNavigation()
-                return super.dispatchTouchEvent(event)
-            }
-        }.apply { id = R.id.epub_navigator_container }
+        EpubGestureFrameLayout(requireContext()).apply {
+            id = R.id.epub_navigator_container
+            onUserMovement = { vm.epubReader.userNavigation() }
+        }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         childFragmentManager.fragments.toList().forEach { childFragmentManager.beginTransaction().remove(it).commitNow() }
@@ -114,6 +106,10 @@ class EpubHostFragment : Fragment(), EpubRenderer {
         navigator?.let { childFragmentManager.beginTransaction().remove(it).commitNow() }
         layoutPreferences = "${prefs.mode}:${prefs.publisherStyles}:${prefs.font}:${prefs.size}:${prefs.line}:${prefs.margin}"
         chapterFooter = !opened.document.fixed && prefs.mode == EpubMode.SCROLL
+        (view as? EpubGestureFrameLayout)?.apply {
+            fixedLayout = opened.document.fixed; scrollMode = prefs.mode == EpubMode.SCROLL
+            swipeToTurn = prefs.swipeToTurn; pinchZoom = prefs.pinchZoom
+        }
         val dark = when (appTheme) {
             AppTheme.DARK -> true; AppTheme.LIGHT -> false
             AppTheme.SYSTEM -> resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
@@ -121,7 +117,8 @@ class EpubHostFragment : Fragment(), EpubRenderer {
         val app = if (dark) DarkPaper else LightPaper
         val colors = if (opened.document.fixed) when (prefs.canvas) { PdfCanvas.AUTO -> app; PdfCanvas.LIGHT -> LightPaper; PdfCanvas.DARK -> DarkPaper }
             else readerColors(prefs.paper, app)
-        val config = EpubNavigatorFragment.Configuration(shouldApplyInsetsPadding = false).apply {
+        val config = EpubNavigatorFragment.Configuration(shouldApplyInsetsPadding = false,
+            disablePageTurnsWhileScrolling = !prefs.swipeToTurn).apply {
             servedAssets += "noto_serif_kr.otf"
             addFontFamilyDeclaration(FontFamily("Yeobaek Serif")) { addFontFace { addSource("noto_serif_kr.otf") } }
             registerJavascriptInterface("YeobaekNavigation") { link ->

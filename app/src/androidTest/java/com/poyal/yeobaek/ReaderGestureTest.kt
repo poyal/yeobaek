@@ -44,6 +44,20 @@ class ReaderGestureTest {
             ui.runOnIdle { assertEquals(0, view.locator().page); view.configure(ImagePreferences(mode = ImageMode.PAGED), android.graphics.Color.WHITE) }
             ui.onNodeWithTag("canvas").performTouchInput { advanceEventTime(600); click(centerRight - androidx.compose.ui.geometry.Offset(10f, 0f)) }
             ui.waitUntil(3000) { view.locator().page == 1 }
+            val tapCount = taps
+            ui.runOnIdle { view.configure(ImagePreferences(mode = ImageMode.PAGED, swipeToTurn = false), android.graphics.Color.WHITE) }
+            ui.onNodeWithTag("canvas").performTouchInput { advanceEventTime(1000); swipeLeft() }
+            ui.runOnIdle { assertEquals(1, view.locator().page); assertEquals(tapCount, taps) }
+            ui.runOnIdle { view.configure(ImagePreferences(mode = ImageMode.PAGED), android.graphics.Color.WHITE) }
+            ui.onNodeWithTag("canvas").performTouchInput { advanceEventTime(1000); swipeRight() }
+            ui.waitUntil(3000) { view.locator().page == 0 }
+            ui.runOnIdle {
+                view.configure(ImagePreferences(mode = ImageMode.PAGED, swipeToTurn = false), android.graphics.Color.WHITE)
+                view.move(ImageLocator(page = 0, zoom = 2f, x = .1f, y = .1f))
+            }
+            val pan = view.locator().x
+            ui.onNodeWithTag("canvas").performTouchInput { advanceEventTime(1000); swipeLeft() }
+            ui.runOnIdle { assertEquals(0, view.locator().page); assertTrue("Disabling page swipes must preserve zoomed pan", view.locator().x > pan) }
         } finally { ui.runOnIdle { view.dispose() }; source.close(); directory.deleteRecursively() }
     }
 

@@ -145,7 +145,7 @@ class ImageDocumentView(context: Context) : View(context) {
     fun configure(value: ImagePreferences, background: Int) {
         if (preferences == value && background == backgroundColor) return
         val position = locator()
-        val relayout = preferences.copy(inverted = value.inverted, canvas = value.canvas, doubleTapZoom = value.doubleTapZoom, pinchZoom = value.pinchZoom, tapToTurn = value.tapToTurn, menuVisibility = value.menuVisibility) != value
+        val relayout = preferences.copy(inverted = value.inverted, canvas = value.canvas, doubleTapZoom = value.doubleTapZoom, pinchZoom = value.pinchZoom, tapToTurn = value.tapToTurn, swipeToTurn = value.swipeToTurn, menuVisibility = value.menuVisibility) != value
         preferences = value; backgroundColor = background
         if (relayout) { pending = position; layoutPages(); restore() }
         invalidate()
@@ -422,7 +422,7 @@ class ImageDocumentView(context: Context) : View(context) {
         if (preferences.pinchZoom) scales.onTouchEvent(event); gestures.onTouchEvent(event)
         if (event.actionMasked == MotionEvent.ACTION_UP) {
             val dx = event.x - downX; val dy = event.y - downY
-            if (!pinched && zoom <= 1.01f && preferences.mode == ImageMode.PAGED && abs(dx) > 48 * density && abs(dx) > abs(dy) * 1.2f) {
+            if (preferences.swipeToTurn && !pinched && zoom <= 1.01f && preferences.mode == ImageMode.PAGED && abs(dx) > 48 * density && abs(dx) > abs(dy) * 1.2f) {
                 turn((if (dx < 0) 1 else -1) * if (preferences.direction == ImageDirection.LTR) 1 else -1)
             }
             changed()

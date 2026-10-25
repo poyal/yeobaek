@@ -57,15 +57,17 @@ class ReaderSettingsStore(private val context: Context) {
 object ReaderSettingValues {
     fun epub(p: EpubReaderPreferences) = mapOf("mode" to p.mode.name, "publisherStyles" to "${p.publisherStyles}", "font" to p.font.name,
         "size" to "${p.size}", "line" to "${p.line}", "margin" to "${p.margin}", "paper" to p.paper.name, "canvas" to p.canvas.name,
-        "menuVisibility" to p.menuVisibility.name, "chapterButtons" to p.chapterButtons.name)
+        "menuVisibility" to p.menuVisibility.name, "chapterButtons" to p.chapterButtons.name,
+        "swipeToTurn" to "${p.swipeToTurn}", "pinchZoom" to "${p.pinchZoom}")
     fun epub(p: EpubReaderPreferences, f: Map<String, String>) = p.copy(mode = f.enum("mode", p.mode), publisherStyles = f.bool("publisherStyles", p.publisherStyles),
         font = f.enum("font", p.font), size = f.number("size", p.size, .75f, 2.5f), line = f.number("line", p.line, 1.2f, 2.2f),
         margin = f.number("margin", p.margin, .5f, 2f), paper = f.enum("paper", p.paper), canvas = f.enum("canvas", p.canvas),
-        menuVisibility = f.enum("menuVisibility", p.menuVisibility), chapterButtons = f.enum("chapterButtons", p.chapterButtons))
+        menuVisibility = f.enum("menuVisibility", p.menuVisibility), chapterButtons = f.enum("chapterButtons", p.chapterButtons),
+        swipeToTurn = f.bool("swipeToTurn", p.swipeToTurn), pinchZoom = f.bool("pinchZoom", p.pinchZoom))
     fun txt(p: TxtPreferences) = mapOf("font" to p.font.name, "size" to "${p.size}", "line" to "${p.line}", "margin" to "${p.margin}", "paper" to p.paper.name, "menuVisibility" to p.menuVisibility.name)
     fun pdf(p: PdfPreferences) = mapOf("doubleTapZoom" to "${p.doubleTapZoom}", "pinchZoom" to "${p.pinchZoom}", "fit" to p.fit.name, "spacing" to "${p.spacing}", "inverted" to "${p.inverted}", "canvas" to p.canvas.name, "menuVisibility" to p.menuVisibility.name)
     fun image(p: ImagePreferences) = mapOf("doubleTapZoom" to "${p.doubleTapZoom}", "pinchZoom" to "${p.pinchZoom}",
-        "tapToTurn" to "${p.tapToTurn}", "menuVisibility" to p.menuVisibility.name, "mode" to p.mode.name, "direction" to p.direction.name, "spread" to p.spread.name,
+        "tapToTurn" to "${p.tapToTurn}", "swipeToTurn" to "${p.swipeToTurn}", "menuVisibility" to p.menuVisibility.name, "mode" to p.mode.name, "direction" to p.direction.name, "spread" to p.spread.name,
         "coverAlone" to "${p.coverAlone}", "verticalFit" to p.verticalFit.name, "pagedFit" to p.pagedFit.name,
         "spacing" to "${p.spacing}", "inverted" to "${p.inverted}", "canvas" to p.canvas.name, "splitWide" to "${p.splitWide}",
         "cropMode" to p.cropMode.name, "cropLeft" to "${p.crop.left}", "cropTop" to "${p.crop.top}", "cropRight" to "${p.crop.right}", "cropBottom" to "${p.crop.bottom}")
@@ -79,7 +81,7 @@ object ReaderSettingValues {
     fun pdf(p: PdfPreferences, f: Map<String, String>) = p.copy(doubleTapZoom = f.bool("doubleTapZoom", p.doubleTapZoom), pinchZoom = f.bool("pinchZoom", p.pinchZoom), fit = f.enum("fit", p.fit), spacing = f.number("spacing", p.spacing, 0f, 24f),
         inverted = f.bool("inverted", p.inverted), canvas = f.enum("canvas", p.canvas), menuVisibility = f.enum("menuVisibility", p.menuVisibility))
     fun image(p: ImagePreferences, f: Map<String, String>) = p.copy(doubleTapZoom = f.bool("doubleTapZoom", p.doubleTapZoom),
-        pinchZoom = f.bool("pinchZoom", p.pinchZoom), tapToTurn = f.bool("tapToTurn", p.tapToTurn), menuVisibility = f.enum("menuVisibility", p.menuVisibility), mode = f.enum("mode", p.mode), direction = f.enum("direction", p.direction),
+        pinchZoom = f.bool("pinchZoom", p.pinchZoom), tapToTurn = f.bool("tapToTurn", p.tapToTurn), swipeToTurn = f.bool("swipeToTurn", p.swipeToTurn), menuVisibility = f.enum("menuVisibility", p.menuVisibility), mode = f.enum("mode", p.mode), direction = f.enum("direction", p.direction),
         spread = f.enum("spread", p.spread), coverAlone = f.bool("coverAlone", p.coverAlone), verticalFit = f.enum("verticalFit", p.verticalFit),
         pagedFit = f.enum("pagedFit", p.pagedFit), spacing = f.number("spacing", p.spacing, 0f, 24f), inverted = f.bool("inverted", p.inverted),
         canvas = f.enum("canvas", p.canvas), splitWide = f.bool("splitWide", p.splitWide), cropMode = f.enum("cropMode", p.cropMode),

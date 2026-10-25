@@ -125,7 +125,7 @@ class EpubJourneyTest {
         node("epub_search_next", 30_000); shot("04-search"); click("epub_search_next"); node("epub_search_previous")
         click("epub_result_0"); ready(); click("epub_search"); click("epub_search_return"); ready()
         Assert.assertTrue(node("epub_current_chapter").text.startsWith("2장"))
-        click("epub_settings"); click("scope_BOOK"); click("epub_mode_paged"); shot("05-settings")
+        click("epub_settings"); click("scope_BOOK"); find("epub_mode_paged", "epub_options"); click("epub_mode_paged"); shot("05-settings")
         find("epub_font_SERIF", "epub_options"); click("epub_font_SERIF"); click("page_back"); ready()
         val before = percent(); Assert.assertTrue(before in 33..66); shot("06-paged")
         SystemClock.sleep(1500)

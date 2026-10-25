@@ -19,6 +19,7 @@ data class ImagePreferences(
     val splitWide: Boolean = false, val cropMode: CropMode = CropMode.OFF, val crop: CropRect = CropRect(),
     val pageCrops: Map<String, CropRect> = emptyMap(),
     val doubleTapZoom: Boolean = false, val pinchZoom: Boolean = true, val tapToTurn: Boolean = true,
+    val swipeToTurn: Boolean = true,
     val menuVisibility: MenuVisibility = MenuVisibility.TAP,
     val spacing: Float = 0f, val inverted: Boolean = false, val canvas: ImageCanvas = ImageCanvas.AUTO,
 ) { val fit get() = if (mode == ImageMode.VERTICAL) verticalFit else pagedFit }

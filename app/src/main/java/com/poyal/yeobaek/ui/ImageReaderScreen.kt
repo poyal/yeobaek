@@ -140,7 +140,8 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                 Small("가로로 긴 이미지는 한 쪽으로 표시합니다.")
             }
         }
-        ReaderGestureSettings(vm, "IMAGE", prefs.menuVisibility, prefs.doubleTapZoom, prefs.pinchZoom, prefs.tapToTurn.takeIf { prefs.mode == ImageMode.PAGED })
+        ReaderGestureSettings(vm, "IMAGE", prefs.menuVisibility, prefs.doubleTapZoom, prefs.pinchZoom, prefs.tapToTurn.takeIf { prefs.mode == ImageMode.PAGED },
+            swipeToTurn = prefs.swipeToTurn.takeIf { prefs.mode == ImageMode.PAGED })
         SettingsSection("화면 맞춤과 간격", Icons.Outlined.FitScreen) {
             ChoiceGroup(ImageFit.entries, prefs.fit, label = { if (it == ImageFit.WIDTH) "너비에 맞춤" else "전체 이미지" }, tag = { "image_fit_$it" }) {
                 set(if (prefs.mode == ImageMode.VERTICAL) prefs.copy(verticalFit = it) else prefs.copy(pagedFit = it))

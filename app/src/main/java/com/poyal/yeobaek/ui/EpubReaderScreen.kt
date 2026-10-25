@@ -207,7 +207,10 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
     val fixed = state.epubReader?.document?.fixed == true
     SettingsPage("EPUB 읽기 설정", "epub_settings_screen", vm::closeEpubSettings, contentTag = "epub_options") {
         SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "EPUB", showTitle = false, showReset = false) }
-        ReaderGestureSettings(vm, "EPUB", prefs.menuVisibility)
+        ReaderGestureSettings(vm, "EPUB", prefs.menuVisibility,
+            pinch = prefs.pinchZoom.takeIf { fixed || state.epubReader == null }, swipeToTurn = prefs.swipeToTurn.takeUnless { fixed },
+            swipeLabel = if (prefs.mode == EpubMode.SCROLL) "좌우 스와이프로 장 이동" else "좌우 스와이프로 페이지 넘김",
+            pinchDetail = "고정 지면 EPUB에 적용됩니다.")
         if (!fixed) {
             SettingsSection("읽기 방식", Icons.Outlined.MenuBook) {
                 ChoiceGroup(EpubMode.entries, prefs.mode, label = { if (it == EpubMode.SCROLL) "장별 스크롤" else "페이지 넘김" },

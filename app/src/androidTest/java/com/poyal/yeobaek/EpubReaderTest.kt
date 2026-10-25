@@ -3,7 +3,12 @@ package com.poyal.yeobaek
 
 import android.content.ContentValues
 import android.net.Uri
+import android.os.SystemClock
 import android.provider.MediaStore
+import android.view.InputDevice
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
@@ -55,6 +60,24 @@ class EpubReaderTest {
         val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
         File(directory, "$name.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
+    }
+    private fun horizontalSwipe(forward: Boolean, vertical: Boolean = false) {
+        // Avoid Readium's edge gutter and use real input timing for its native pager.
+        val bounds = compose.onNodeWithTag("epub_body").fetchSemanticsNode().boundsInWindow
+        val from = bounds.left + bounds.width * if (forward) .8f else .2f
+        val to = bounds.left + bounds.width * if (forward) .2f else .8f
+        val start = SystemClock.uptimeMillis()
+        for (step in 0..12) {
+            if (step > 0) SystemClock.sleep(8)
+            val action = when (step) { 0 -> MotionEvent.ACTION_DOWN; 12 -> MotionEvent.ACTION_UP; else -> MotionEvent.ACTION_MOVE }
+            val x = if (vertical) bounds.center.x else from + (to - from) * step / 12
+            val y = if (vertical) bounds.top + bounds.height * (.8f - .6f * step / 12) else bounds.center.y
+            // A horizontal page turn needs a fling; keep its velocity independent of emulator load.
+            val event = MotionEvent.obtain(start, start + step * 8L, action, x, y, 0)
+            event.source = InputDevice.SOURCE_TOUCHSCREEN
+            try { assertTrue(InstrumentationRegistry.getInstrumentation().uiAutomation.injectInputEvent(event, true)) }
+            finally { event.recycle() }
+        }
     }
 
     @Test fun chapterButtonSettingsKeepLocationAndEndActionAvailable() = runBlocking<Unit> {
@@ -377,6 +400,100 @@ class EpubReaderTest {
         } finally {
             close(vm)
             bookId?.let { context.database.library().forget(it) }
+            context.readerSettings.update { original }; context.contentResolver.delete(uri, null, null)
+        }
+    }
+
+    @Test fun disabledSwipesKeepTextPositionButAllowVerticalScrollAndButtons() = runBlocking<Unit> {
+        val vm = ViewModelProvider(compose.activity)[AppViewModel::class.java]
+        val original = context.readerSettings.data.first()
+        val (entry, uri) = book(false)
+        var bookId: String? = null
+        suspend fun settings(mode: EpubMode, enabled: Boolean) {
+            if (!vm.epubReader.chrome.value) {
+                compose.onNodeWithTag("epub_body").performTouchInput { click(center) }
+                compose.waitUntil(3000) { vm.epubReader.chrome.value }
+            }
+            compose.onNodeWithTag("epub_settings").performClick()
+            compose.onNodeWithTag("scope_BOOK").performClick()
+            withContext(Dispatchers.Main) { vm.changeSetting("EPUB", "mode", mode) }
+            compose.waitUntil(5000) { vm.epub.value.mode == mode }
+            compose.onNodeWithTag("epub_pinch_zoom").assertDoesNotExist()
+            if (vm.epub.value.swipeToTurn != enabled) compose.onNodeWithTag("epub_swipe_to_turn").performScrollTo().performClick()
+            compose.waitUntil(5000) { vm.epub.value.swipeToTurn == enabled }
+            withContext(Dispatchers.Main) { vm.closeEpubSettings() }
+            waitReady(vm); delay(400)
+        }
+        fun position() = vm.epubReader.locator.value!!.let { it.href to it.locations.progression }
+        try {
+            withContext(Dispatchers.Main) { vm.chooseResume(false); vm.screen("folder"); vm.open(entry) }
+            waitReady(vm); bookId = vm.currentBook!!.id
+            for (mode in EpubMode.entries) {
+                settings(mode, false)
+                val before = position()
+                horizontalSwipe(true)
+                delay(700)
+                assertEquals("Disabled swipe must preserve $mode location", before, position())
+                if (mode == EpubMode.SCROLL) {
+                    val y = script("scrollY")!!.toDouble()
+                    horizontalSwipe(true, vertical = true)
+                    delay(700)
+                    assertTrue("Vertical scroll must move from $y; now ${script("scrollY")}", script("scrollY")!!.toDouble() > y + 10)
+                }
+                val beforeButton = position()
+                compose.onNodeWithTag("epub_next").performClick()
+                compose.waitUntil(10_000) { position() != beforeButton }
+                settings(mode, true)
+                val enabledBefore = position()
+                horizontalSwipe(true)
+                try { compose.waitUntil(10_000) { position() != enabledBefore } }
+                catch (error: AssertionError) { throw AssertionError("Enabled $mode swipe did not move from $enabledBefore", error) }
+            }
+        } finally {
+            close(vm); bookId?.let { context.database.library().forget(it) }
+            context.readerSettings.update { original }; context.contentResolver.delete(uri, null, null)
+        }
+    }
+
+    @Test fun fixedLayoutPinchOptionKeepsButtonsAndZoomedPanWorking() = runBlocking<Unit> {
+        val vm = ViewModelProvider(compose.activity)[AppViewModel::class.java]
+        val original = context.readerSettings.data.first()
+        val (entry, uri) = book(true)
+        var bookId: String? = null
+        fun fixedValue(method: String): Float {
+            fun collect(view: View): List<Float> {
+                if (view.javaClass.name.endsWith(".R2FXLLayout")) return listOf(view.javaClass.getMethod(method).invoke(view) as Float)
+                return if (view is ViewGroup) (0 until view.childCount).flatMap { collect(view.getChildAt(it)) } else emptyList()
+            }
+            return compose.runOnIdle { collect(compose.activity.window.decorView).maxOrNull() ?: error("Missing fixed layout") }
+        }
+        suspend fun settings(pinch: Boolean) {
+            compose.onNodeWithTag("epub_settings").performClick()
+            compose.onNodeWithTag("scope_BOOK").performClick()
+            compose.onNodeWithTag("epub_swipe_to_turn").assertDoesNotExist()
+            if (vm.epub.value.pinchZoom != pinch) compose.onNodeWithTag("epub_pinch_zoom").performScrollTo().performClick()
+            compose.waitUntil(5000) { vm.epub.value.pinchZoom == pinch }
+            withContext(Dispatchers.Main) { vm.closeEpubSettings() }
+            waitReady(vm); delay(400)
+        }
+        try {
+            withContext(Dispatchers.Main) { vm.chooseResume(false); vm.screen("folder"); vm.open(entry) }
+            waitReady(vm); bookId = vm.currentBook!!.id
+            settings(false)
+            val before = vm.epubReader.locator.value!!.href
+            compose.onNodeWithTag("epub_body").performTouchInput { pinch(center * .8f, center * .4f, center * 1.2f, center * 1.6f) }
+            delay(400); assertEquals(1f, fixedValue("getScale"), .02f)
+            assertEquals(before, vm.epubReader.locator.value!!.href)
+            compose.onNodeWithTag("epub_next").performClick(); waitChapter(vm, 2)
+            settings(true)
+            compose.onNodeWithTag("epub_body").performTouchInput { pinch(center * .8f, center * .4f, center * 1.2f, center * 1.6f) }
+            delay(500); assertTrue("Pinch must actually enlarge fixed content", fixedValue("getScale") > 1.2f)
+            val pan = fixedValue("getPosX")
+            horizontalSwipe(true)
+            assertTrue("Zoomed content must still pan", kotlin.math.abs(fixedValue("getPosX") - pan) > 1f)
+            delay(600); assertTrue(vm.epubReader.locator.value!!.href.toString().contains("chapter2"))
+        } finally {
+            close(vm); bookId?.let { context.database.library().forget(it) }
             context.readerSettings.update { original }; context.contentResolver.delete(uri, null, null)
         }
     }
