@@ -79,7 +79,8 @@ class ReaderBenchmark {
             check(device.wait(Until.gone(By.res("folder_up")), 15000))
         }
         find("folder_성능").click()
-        check(device.wait(Until.hasObject(By.res("folder_up")), 15000))
+        // Older baseline apps also retain an offset when entering a child folder.
+        JourneyDevice(pkg).find("folder_up", direction = Direction.UP)
         clickFile(file); awaitReader(file)
     }
     private fun MacrobenchmarkScope.find(tag: String): UiObject2 {
