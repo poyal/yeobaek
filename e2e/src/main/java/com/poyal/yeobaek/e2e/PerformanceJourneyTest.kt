@@ -4,6 +4,7 @@ import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.*
+import com.poyal.yeobaek.testing.JourneyDevice
 import org.junit.*
 import org.junit.runner.RunWith
 import java.io.File
@@ -21,25 +22,7 @@ class PerformanceJourneyTest {
         node(id).click(); device.waitForIdle()
     }
     @Before fun prepare() {
-        require(pkg.startsWith("com.poyal.yeobaek"))
-        device.executeShellCommand("am force-stop $pkg")
-        device.executeShellCommand("am start -W -n $pkg/com.poyal.yeobaek.MainActivity")
-        device.waitForIdle()
-        device.findObject(By.res("resume_decline"))?.click()
-        device.findObject(By.res("reader_back"))?.click()
-        device.findObject(By.res("nav_folder"))?.click()
-        if (device.hasObject(By.res("connect_folder"))) {
-            click("connect_folder")
-            device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui"))), 10000)
-            device.findObject(By.desc("Show roots"))?.click()
-            device.findObject(By.text("Downloads"))?.click()
-            device.findObject(By.text("Download"))?.click()
-            device.wait(Until.findObject(By.text("Yeobaek")), 10000)!!.click()
-            (device.wait(Until.findObject(By.res(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui:id/action_menu_select"))), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
-            device.wait(Until.findObject(By.res("android:id/button1")), 5000)?.click()
-        }
-        node("folder_refresh")
-        while (device.hasObject(By.res("folder_up"))) click("folder_up")
+        JourneyDevice(pkg).apply { reset(); connect("Yeobaek") }
     }
     private fun scrollFind(tag: String) {
         repeat(25) {

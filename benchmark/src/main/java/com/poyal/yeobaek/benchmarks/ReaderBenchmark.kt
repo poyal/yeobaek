@@ -7,6 +7,8 @@ import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.*
+import com.poyal.yeobaek.testing.JourneyDevice
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,6 +21,10 @@ class ReaderBenchmark {
     private val iterations get() = args.getString("iterations")?.toInt() ?: 10
     private val duration get() = args.getString("durationSeconds")?.toLong() ?: 30L
     private val pkg = "com.poyal.yeobaek.benchmark"
+
+    @Before fun prepareSourceFolder() {
+        JourneyDevice(pkg).apply { reset(); connect("Yeobaek") }
+    }
 
     @Test fun scroll10MiB() = scroll("010MiB.txt")
     @Test fun scroll50MiB() = scroll("050MiB.txt")
@@ -57,7 +63,7 @@ class ReaderBenchmark {
         clickFile("010MiB.txt")
         awaitReader("010MiB.txt")
     }
-    private fun MacrobenchmarkScope.openFixture(file: String) {
+    private fun MacrobenchmarkScope.openFixture(file: String) = JourneyDevice(pkg).step("prepare-$file") {
         pressHome(); startActivityAndWait()
         device.waitForIdle()
         device.findObject(By.res("resume_decline"))?.click()
@@ -65,7 +71,9 @@ class ReaderBenchmark {
         check(device.wait(Until.hasObject(By.res("nav_folder")), 15000))
         device.findObject(By.res("nav_folder")).click()
         if (device.hasObject(By.res("connect_folder"))) connect()
-        check(device.wait(Until.hasObject(By.res("folder_refresh")), 15000))
+        // Returning from a book preserves this folder's scroll position. Its header
+        // can be offscreen after opening a fixture below the fold.
+        JourneyDevice(pkg).find("folder_refresh", direction = Direction.UP)
         device.findObject(By.res("folder_up"))?.let {
             it.click()
             check(device.wait(Until.gone(By.res("folder_up")), 15000))

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -194,7 +195,10 @@ import java.util.Locale
             })
     }
     state.sheet?.let { kind ->
-        ModalBottomSheet(onDismissRequest = { vm.sheet(null) }, containerColor = appColors.surface, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), modifier = Modifier.testTag("sheet_$kind").semantics { testTagsAsResourceId = true }) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        // A nested-scroll fling during show() can settle a still-Hidden sheet and dismiss it.
+        // The content remains scrollable while the sheet finishes opening.
+        ModalBottomSheet(onDismissRequest = { vm.sheet(null) }, containerColor = appColors.surface, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), sheetState = sheetState, sheetGesturesEnabled = sheetState.isVisible, modifier = Modifier.testTag("sheet_$kind").semantics { testTagsAsResourceId = true }) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp).imePadding()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) { Small(if (kind in listOf("move", "encoding")) "TXT 전용" else "여백"); Text(when (kind) { "epub_contents" -> "목차"; "quick_settings" -> "빠른 읽기 설정"; "image_crop" -> "여백 자르기"; "move", "pdf_move" -> "읽기 위치 이동"; "search", "pdf_search", "epub_search" -> "본문 검색"; "bookmarks", "pdf_bookmarks", "image_bookmarks", "epub_bookmarks" -> "책갈피"; "encoding" -> "인코딩 선택"; "info" -> "책 정보"; else -> "독서 기록 관리" }, fontFamily = Serif, fontSize = 24.sp) }
@@ -230,7 +234,8 @@ import java.util.Locale
     var query by rememberSaveable(state.path.lastOrNull()?.uri) { mutableStateOf("") }
     val entries = remember(state.entries, query, settings.sort) { sortEntries(state.entries.filter { it.name.contains(query, ignoreCase = true) }, settings.sort) }
     val booksBySource = remember(knownBooks) { knownBooks.associateBy { it.sourceKey } }
-    LazyColumn(modifier.fillMaxWidth().testTag("library_list"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+    val libraryList = key(state.path.lastOrNull()?.uri) { rememberLazyListState() }
+    LazyColumn(modifier.fillMaxWidth().testTag("library_list"), state = libraryList, contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
         item {
             Small("나의 읽는 자리")
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -436,12 +441,13 @@ import java.util.Locale
             PaperButton("다음", "search_next", Modifier.weight(1f), outlined = true, enabled = state.searchIndex + 1 < result.count, onClick = { vm.searchResult(state.searchIndex + 1) })
         }
     }
-    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 330.dp).testTag("search_results")) {
+    val resultsList = key(state.searchQuery, state.searchPageStart) { rememberLazyListState() }
+    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 330.dp).testTag("search_results"), state = resultsList) {
         itemsIndexed(state.searchHits, key = { _, hit -> hit.first }) { index, (offset, excerpt) ->
             Column(Modifier.fillMaxWidth().clickable {
                 if (state.searchResult != null) vm.searchResult(state.searchHitIndex(index))
                 else { vm.seek(offset); vm.sheet(null) }
-            }.padding(vertical = 16.dp)) { Text(excerpt, fontSize = 14.sp); Rule() }
+            }.testTag("search_result_${state.searchHitIndex(index)}").padding(vertical = 16.dp)) { Text(excerpt, fontSize = 14.sp); Rule() }
         }
         if (state.searchResult != null && state.searchPageStart + 100 < state.searchResult.count) item { PaperButton("다음 100개 결과", "search_more", Modifier.fillMaxWidth(), outlined = true, onClick = vm::moreSearch) }
     }

@@ -72,6 +72,20 @@ class ReaderViewportTest {
         }
         bitmap.recycle()
     }
+    private fun assertDoesNotPaintOutside(view: View) {
+        val location = IntArray(2)
+        compose.runOnIdle { view.getLocationOnScreen(location) }
+        val screenshot = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+        try {
+            for (y in listOf(location[1] - 2, location[1] + view.height + 2).filter { it in 0 until screenshot.height }) {
+                val color = screenshot.getPixel(location[0] + view.width / 2, y)
+                assertFalse("PDF must not paint outside its viewport into a system inset at y=$y",
+                    kotlin.math.abs(Color.red(color) - Color.red(pageColor)) < 4 &&
+                        kotlin.math.abs(Color.green(color) - Color.green(pageColor)) < 4 &&
+                        kotlin.math.abs(Color.blue(color) - Color.blue(pageColor)) < 4)
+            }
+        } finally { screenshot.recycle() }
+    }
     @Test fun pdfHiddenMenuDoesNotClipTheScrolledPage() = runBlocking {
         val bytes = ByteArrayOutputStream().also { out ->
             val pdf = PdfDocument()
@@ -90,7 +104,7 @@ class ReaderViewportTest {
             compose.waitUntil(5_000) { compose.onAllNodesWithTag("pdf_footer").fetchSemanticsNodes().isEmpty() }
             compose.onNodeWithTag("pdf_footer").assertDoesNotExist()
             assertEquals(before, compose.runOnIdle { view.locator() })
-            assertPaintsEdges(view); capture("pdf-hidden")
+            assertPaintsEdges(view); capture("pdf-hidden"); assertDoesNotPaintOutside(view)
         }
     }
     @Test fun imageAndComicHiddenMenusDoNotClipTheScrolledPage() = runBlocking {

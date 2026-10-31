@@ -7,6 +7,8 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.poyal.yeobaek.rendering.TextLayoutEngine
+import com.poyal.yeobaek.rendering.TextBlock
+import com.poyal.yeobaek.txt.TextDocument
 import com.poyal.yeobaek.txt.TextStore
 import com.poyal.yeobaek.ui.Serif
 import kotlinx.coroutines.*
@@ -25,6 +27,90 @@ class ReaderEngineTest {
         platformStyle = PlatformTextStyle(includeFontPadding = false),
         lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None),
         lineBreak = LineBreak.Simple, hyphens = Hyphens.None, textDirection = TextDirection.ContentOrLtr)
+
+    private fun withDocument(text: String, test: suspend (TextDocument) -> Unit) = runBlocking {
+        setup()
+        val root = File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir, "engine-navigation-${UUID.randomUUID()}")
+        try {
+            val doc = withContext(Dispatchers.IO) { TextStore(root).prepare({ text.byteInputStream() }) }
+            withContext(Dispatchers.Main) { test(doc) }
+        } finally { withContext(Dispatchers.IO) { root.deleteRecursively() } }
+    }
+
+    private fun assertContent(text: String, block: TextBlock) {
+        Assert.assertTrue("A nonempty block must advance: ${block.start}..${block.end}", block.end > block.start)
+        val source = text.substring(block.start.toInt(), block.end.toInt())
+        Assert.assertEquals(if (block.end < text.length) source.removeSuffix("\n") else source, block.text)
+    }
+
+    @Test fun coldSeekWalksBackThroughEveryShortAndEmptyLine() {
+        val text = (0 until 160).joinToString("\n\n\n") { "문장 $it" }
+        withDocument(text) { doc ->
+            val engine = TextLayoutEngine(doc, "cold-reverse", style(18), 624, measurer)
+            val rows = engine.around(doc.length * 4 / 5)
+            rows.zipWithNext().forEach { (a, b) -> Assert.assertEquals(a.end, b.start) }
+            var end = rows.first().start
+            var count = 0
+            while (end > 0) {
+                val previous = engine.previous(end)
+                Assert.assertEquals("Reverse navigation must not skip text", end, previous.end)
+                assertContent(text, previous)
+                end = previous.start
+                Assert.assertTrue("Reverse navigation must terminate", ++count <= text.length)
+            }
+            Assert.assertEquals(0L, end)
+            Assert.assertTrue("Must cover more than one retained window", count > 24)
+        }
+    }
+
+    @Test fun rapidDistantSeeksKeepContiguousRangesAfterCacheEvictionAndReopen() {
+        val text = (0 until 5000).joinToString("\n") { "문장 $it · 한글과 English é 👩‍👩‍👧‍👦" }
+        withDocument(text) { doc ->
+            repeat(2) {
+                val engine = TextLayoutEngine(doc, "reopened-navigation", style(18), 624, measurer)
+                for (percent in listOf(80, 10, 100, 50, 0, 95, 25, 75, 5, 90)) {
+                    val target = (doc.length * percent / 100).coerceAtMost(doc.length - 1)
+                    val rows = engine.around(target)
+                    Assert.assertTrue(rows.any { target >= it.start && target < it.end })
+                    rows.forEach { assertContent(text, it) }
+                    rows.zipWithNext().forEach { (a, b) -> Assert.assertEquals("seek=$percent reopen=$it", a.end, b.start) }
+                    var end = rows.first().start
+                    repeat(6) {
+                        if (end > 0) {
+                            val previous = engine.previous(end)
+                            Assert.assertEquals(end, previous.end)
+                            assertContent(text, previous)
+                            end = previous.start
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test fun previousReachesItsRequestedEndWhenACheckpointHasAShorterCachedBlock() {
+        val text = (0 until 200).joinToString("\n") { "문장 $it" }
+        withDocument(text) { doc ->
+            val engine = TextLayoutEngine(doc, "shortened-checkpoint", style(18), 624, measurer)
+            val original = engine.block(0)
+            val short = engine.block(0, text.indexOf('\n').toLong() + 1)
+            Assert.assertTrue(short.end < original.end)
+            val previous = engine.previous(original.end)
+            Assert.assertEquals("An older checkpoint must not return a truncated predecessor", original.end, previous.end)
+            assertContent(text, previous)
+        }
+    }
+
+    @Test fun outOfRangeAndTinyDocumentSeeksKeepValidBoundaries() = withDocument("첫 줄\n끝") { doc ->
+        val engine = TextLayoutEngine(doc, "tiny-boundaries", style(18), 624, measurer)
+        for (target in listOf(Long.MIN_VALUE, -1L, 0L, doc.length - 1, doc.length, Long.MAX_VALUE)) {
+            val rows = engine.around(target)
+            Assert.assertEquals(0L, rows.first().start)
+            Assert.assertEquals(doc.length, rows.last().end)
+            rows.zipWithNext().forEach { (a, b) -> Assert.assertEquals(a.end, b.start) }
+            rows.forEach { assertContent("첫 줄\n끝", it) }
+        }
+    }
 
     @Test fun segmentedLinesMatchWholeParagraphAndSeekUsesSameBoundary() = runBlocking {
         setup()

@@ -7,10 +7,10 @@ import json
 import os
 from pathlib import Path
 import re
-import shlex
 import statistics
 import subprocess
 import time
+from verification import expected_tests, instrumentation_result, require_test_device, stage_private_fixture
 
 ROOT = Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
@@ -18,12 +18,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--serial', required=True)
 parser.add_argument('--fixtures', type=Path, default=ROOT / '.tools/image-load-fixtures')
 parser.add_argument('--only', nargs='*')
+parser.add_argument('--test-apk', type=Path, default=ROOT / 'app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk')
 args = parser.parse_args()
-adb = str(ROOT / '.tools/android-sdk/platform-tools/adb')
+adb = os.environ.get('ADB', str(ROOT / '.tools/android-sdk/platform-tools' / ('adb.exe' if os.name == 'nt' else 'adb')))
 package = 'com.poyal.yeobaek.debug'
 
 
 def command(*parts, **kwargs):
+    if kwargs.get('text'): kwargs.setdefault('encoding', 'utf-8')
     return subprocess.run([adb, '-s', args.serial, *parts], check=True, **kwargs)
 
 
@@ -38,9 +40,8 @@ def sha(path):
     return digest.hexdigest()
 
 
-assert args.serial.startswith('emulator-'), 'Only a dedicated test emulator is allowed'
 avd = output('emu', 'avd', 'name').splitlines()[0]
-assert avd.startswith('yeobaek-'), avd
+require_test_device(args.serial, avd)
 fixtures = json.loads((args.fixtures / 'manifest.json').read_text())
 catalog = {f['file']: f for f in fixtures['fixtures']}
 cases = args.only or [*catalog, 'folder-1000', 'folder-10000']
@@ -49,7 +50,7 @@ stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 evidence = ROOT / '.tools/verification' / f'{stamp}-{args.serial}-image-load'
 evidence.mkdir(parents=True)
 apk = ROOT / 'app/build/outputs/apk/debug/app-debug.apk'
-test_apk = ROOT / 'app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk'
+test_apk = args.test_apk
 metadata = dict(serial=args.serial, avd=avd, api=output('shell', 'getprop', 'ro.build.version.sdk'),
                 fingerprint=output('shell', 'getprop', 'ro.build.fingerprint'),
                 apk_sha256=sha(apk), test_apk_sha256=sha(test_apk), fixtures=fixtures, cases=cases,
@@ -66,22 +67,21 @@ for name in cases:
     if fixture:
         local = args.fixtures / name
         assert local.stat().st_size == fixture['bytes'] and sha(local) == fixture['sha256']
-        with local.open('rb') as stream:
-            command('shell', '-T', 'run-as', package, 'sh', '-c', shlex.quote(f'cat > files/image-load/{name}'), stdin=stream)
+        stage_private_fixture(adb, args.serial, package, local, f'files/image-load/{name}')
         assert output('shell', 'run-as', package, 'sha256sum', f'files/image-load/{name}').split()[0] == fixture['sha256']
     log_path = evidence / f'{name}.log'
     samples = []
     start = time.monotonic()
     print(f'Running {name}', flush=True)
-    with log_path.open('w') as log:
-        process = subprocess.Popen([adb, '-s', args.serial, 'shell', 'am', 'instrument', '-w', '-e', 'class',
+    with log_path.open('w', encoding='utf-8') as log:
+        process = subprocess.Popen([adb, '-s', args.serial, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class',
             'com.poyal.yeobaek.ImageLoadTest', '-e', 'imageFixture', name,
             package + '.test/androidx.test.runner.AndroidJUnitRunner'], stdout=log, stderr=subprocess.STDOUT)
         while process.poll() is None:
             if time.monotonic() - start > 1200:
                 command('shell', 'am', 'force-stop', package); process.terminate(); raise RuntimeError(f'{name} timed out')
             row = dict(elapsed_s=round(time.monotonic() - start, 3), app_pss_kib=0, worker_pss_kib=0)
-            listing_result = subprocess.run([adb, '-s', args.serial, 'shell', 'ps', '-A', '-o', 'PID,NAME'], capture_output=True, text=True)
+            listing_result = subprocess.run([adb, '-s', args.serial, 'shell', 'ps', '-A', '-o', 'PID,NAME'], capture_output=True, text=True, encoding='utf-8')
             if listing_result.returncode:
                 print(f'Telemetry retry: {listing_result.stderr.strip()}', flush=True)
                 time.sleep(2)
@@ -93,17 +93,19 @@ for name in cases:
                 pid, proc_name = fields[:2]
                 kind = 'app' if proc_name == package else 'worker' if proc_name.startswith(package + ':image') else None
                 if not kind: continue
-                result = subprocess.run([adb, '-s', args.serial, 'shell', 'dumpsys', 'meminfo', pid], capture_output=True, text=True)
+                result = subprocess.run([adb, '-s', args.serial, 'shell', 'dumpsys', 'meminfo', pid], capture_output=True, text=True, encoding='utf-8')
                 match = re.search(r'TOTAL PSS:\s*(\d+)', result.stdout) or re.search(r'\n\s*TOTAL\s+(\d+)', result.stdout)
                 if match: row[kind + '_pss_kib'] += int(match.group(1))
             samples.append(row)
             time.sleep(2)
-    text = log_path.read_text()
+    text = log_path.read_text(encoding='utf-8')
     (evidence / f'{name}.memory.json').write_text(json.dumps(samples, indent=2) + '\n')
     if fixture:
         assert output('shell', 'run-as', package, 'sha256sum', f'files/image-load/{name}').split()[0] == fixture['sha256'], 'Source was modified'
         output('shell', 'run-as', package, 'rm', '-f', f'files/image-load/{name}')
-    assert 'OK (1 test)' in text, text[-8000:]
+    result = instrumentation_result(text, expected_tests(ROOT, 'app/src/imageLoadTest', ['com.poyal.yeobaek.ImageLoadTest']), process.returncode)
+    (evidence / f'{name}.instrumentation.json').write_text(json.dumps(result, indent=2))
+    assert result['status'] == 'PASS', result
     report = json.loads(output('shell', 'run-as', package, 'cat', f'files/image-load-results/{name}.json'))
     assert report.get('passed'), report
     report['app_peak_mib'] = round(max(s['app_pss_kib'] for s in samples) / 1024, 2)

@@ -7,6 +7,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -16,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -72,7 +74,7 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
                     native.configure(prefs, p.alt.toArgb())
                     native.open(opened.document, locator)
                     view = native
-                } }, modifier = Modifier.fillMaxSize().testTag("pdf_body"), onRelease = { it.dispose() }, update = { native ->
+                } }, modifier = Modifier.fillMaxSize().clipToBounds().testTag("pdf_body"), onRelease = { it.dispose() }, update = { native ->
                     if (zoomReset != consumedZoomReset) { native.resetZoom(); consumedZoomReset = zoomReset }
                     native.setContentInsets(headerHeight, footerHeight)
                     native.configure(prefs, p.alt.toArgb()); native.highlight = highlight; native.selection = selection
@@ -181,7 +183,8 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
                 PaperButton("이전", "pdf_search_previous", Modifier.weight(1f), outlined = true, enabled = state.index > 0, onClick = { reader.result(state.index - 1); vm.sheet(null) })
                 PaperButton("다음", "pdf_search_next", Modifier.weight(1f), outlined = true, enabled = state.index + 1 < state.count, onClick = { reader.result(state.index + 1); vm.sheet(null) })
             }
-            LazyColumn(Modifier.heightIn(max = 280.dp).testTag("pdf_search_results")) {
+            val resultsList = key(state.query, state.rowStart) { rememberLazyListState() }
+            LazyColumn(Modifier.heightIn(max = 280.dp).testTag("pdf_search_results"), state = resultsList) {
                 itemsIndexed(state.rows) { i, hit ->
                     Column(Modifier.fillMaxWidth().clickable { reader.result(state.rowStart + i); vm.sheet(null) }.padding(vertical = 12.dp)) {
                         Text("${hit.page + 1} 페이지", fontSize = 14.sp)

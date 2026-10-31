@@ -26,8 +26,13 @@ class SettingsLayoutTest {
         File(directory, "$name.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
     }
-    private fun checkText() {
-        ui.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true).fetchSemanticsNodes().forEach { node ->
+    private fun checkText(containerTag: String) {
+        // Dialog semantics can coexist with the underlying library. Audit only the
+        // selected settings region, not text fields hidden behind the modal scrim.
+        val inSettings = hasAnyAncestor(hasTestTag(containerTag))
+        val texts = ui.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult) and inSettings, useUnmergedTree = true).fetchSemanticsNodes()
+        assertTrue("No text layouts in settings region: $containerTag", texts.isNotEmpty())
+        texts.forEach { node ->
             if (node.boundsInRoot.width < 1f || node.boundsInRoot.height < 1f) return@forEach
             val results = mutableListOf<TextLayoutResult>()
             node.config[SemanticsActions.GetTextLayoutResult].action!!.invoke(results)
@@ -46,7 +51,7 @@ class SettingsLayoutTest {
         val content = ui.onNodeWithTag(tag)
         content.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, -100_000f) }
         repeat(35) { index ->
-            ui.waitForIdle(); capture("$name-${index.toString().padStart(2, '0')}"); checkText()
+            ui.waitForIdle(); capture("$name-${index.toString().padStart(2, '0')}"); checkText(tag)
             val range = content.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange]
             if (range.value() >= range.maxValue() - 1) return
             val step = content.fetchSemanticsNode().boundsInRoot.height * .75f

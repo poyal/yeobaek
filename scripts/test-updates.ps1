@@ -7,7 +7,7 @@ if (-not $env:ANDROID_USER_HOME) { $env:ANDROID_USER_HOME = Join-Path $PWD '.too
 $adb = Join-Path $env:ANDROID_HOME 'platform-tools/adb.exe'
 if ($Serial -notlike 'emulator-*') { throw '전용 여백 에뮬레이터가 필요합니다.' }
 $avd = & $adb -s $Serial emu avd name
-if ($LASTEXITCODE -ne 0 -or $avd[0] -notlike 'yeobaek-*') { throw "검사할 수 없는 기기: $Serial" }
+if ($LASTEXITCODE -ne 0 -or $avd[0] -notin @('yeobaek-release-040', 'yeobaek-release-api30-040', 'yeobaek-soak-040')) { throw "검사할 수 없는 기기: $Serial" }
 $bt = Join-Path $env:ANDROID_HOME 'build-tools/35.0.0'
 $fixture = Join-Path $PWD '.tools/update-fixture'
 $assets = Join-Path $fixture 'assets'
@@ -34,14 +34,19 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'debug 설치 실패' }
     & $adb -s $Serial install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
     if ($LASTEXITCODE -ne 0) { throw '테스트 APK 설치 실패' }
+    @{serial=$Serial; avd=$avd[0]; api=(& $adb -s $Serial shell getprop ro.build.version.sdk); variant='debug'; apk_sha256=(Get-FileHash app/build/outputs/apk/debug/app-debug.apk).Hash.ToLower(); test_apk_sha256=(Get-FileHash app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk).Hash.ToLower()} | ConvertTo-Json | Set-Content -Encoding utf8 "$evidence/manifest.json"
+    # Permission changes can kill the target on API 30. Set up before the runner starts.
+    & $adb -s $Serial shell appops set com.poyal.yeobaek.debug REQUEST_INSTALL_PACKAGES allow
+    if ($LASTEXITCODE -ne 0) { throw '테스트 설치 권한 준비 실패' }
     & $adb -s $Serial shell input keyevent KEYCODE_WAKEUP
     & $adb -s $Serial shell wm dismiss-keyguard
     $log = & $adb -s $Serial shell am instrument -w -r -e class com.poyal.yeobaek.UpdatesFlowTest,com.poyal.yeobaek.AndroidUpdateDownloadTest com.poyal.yeobaek.debug.test/androidx.test.runner.AndroidJUnitRunner
     $result = $LASTEXITCODE
     $log | Set-Content -Encoding utf8 "$evidence/instrumentation.txt"
     $log | Write-Output
-    if ($result -ne 0 -or ($log -join "`n") -notmatch 'OK \(4 tests\)') { throw "업데이트 검사 실패: $evidence" }
-    @{status='PASS'; tests=4; serial=$Serial; avd=$avd[0]; apk_sha256=(Get-FileHash app/build/outputs/apk/debug/app-debug.apk).Hash.ToLower(); test_apk_sha256=(Get-FileHash app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk).Hash.ToLower()} | ConvertTo-Json | Set-Content -Encoding utf8 "$evidence/summary.json"
+    $python = if (Test-Path '.tools/python/Scripts/python.exe') { '.tools/python/Scripts/python.exe' } else { 'python' }
+    & $python scripts/verification.py --log "$evidence/instrumentation.txt" --output "$evidence/summary.json" --exit-code $result --selection app/src/androidTest:com.poyal.yeobaek.UpdatesFlowTest --selection app/src/updateTest:com.poyal.yeobaek.AndroidUpdateDownloadTest
+    if ($LASTEXITCODE -ne 0) { throw "업데이트 검사 실패: $evidence" }
     Write-Output "Evidence: $evidence"
 } finally {
     # Revoking install permission may kill the debug app: do it after instrumentation.

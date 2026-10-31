@@ -4,6 +4,7 @@ import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.*
+import com.poyal.yeobaek.testing.JourneyDevice
 import org.junit.*
 import org.junit.runner.RunWith
 import java.io.File
@@ -13,6 +14,7 @@ import java.io.File
 class RecoveryJourneyTest {
     private val args = InstrumentationRegistry.getArguments()
     private val pkg = args.getString("targetPackage") ?: "com.poyal.yeobaek.debug"
+    private val journey = JourneyDevice(pkg)
     private val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private val out = File(InstrumentationRegistry.getInstrumentation().context.getExternalFilesDir(null), "captures/RECOVERY").apply { mkdirs() }
     @get:Rule val failures = object : org.junit.rules.TestWatcher() {
@@ -33,14 +35,8 @@ class RecoveryJourneyTest {
     private fun ready() { node("reader_footer", 90000); check(device.wait(Until.gone(By.res("layout_loading")), 90000)); SystemClock.sleep(700) }
     private fun percent() = node("reader_percent").text.removeSuffix("%").toFloat()
     @Before fun setup() {
-        require(pkg in setOf("com.poyal.yeobaek", "com.poyal.yeobaek.debug", "com.poyal.yeobaek.benchmark"))
-        device.executeShellCommand("pm clear $pkg"); start(); click("connect_folder")
-        device.wait(Until.hasObject(By.pkg(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui"))), 10000)
-        device.findObject(By.desc("Show roots"))?.click()
-        device.findObject(By.text("Downloads"))?.click(); device.findObject(By.text("Download"))?.click()
-        device.wait(Until.findObject(By.text("Yeobaek")), 10000)!!.click()
-        (device.wait(Until.findObject(By.res(java.util.regex.Pattern.compile("com\\.(google\\.android|android)\\.documentsui:id/action_menu_select"))), 1000) ?: device.findObject(By.res("android:id/button1")))!!.click()
-        device.wait(Until.findObject(By.res("android:id/button1")), 5000)?.click(); node("folder_refresh")
+        journey.reset()
+        journey.connect("Yeobaek")
     }
     @Test fun cacheSourceChangesAndRecordDeletion() {
         val source = "/sdcard/Download/Yeobaek/Recovery/Original.txt"

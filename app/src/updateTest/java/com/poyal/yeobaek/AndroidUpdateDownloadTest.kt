@@ -78,16 +78,20 @@ class AndroidUpdateDownloadTest {
             downloads.cancel(record)
             assertEquals(TransferStatus.READY, downloads.progress(record).status)
             fun shell(command: String) { android.os.ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command)).use { it.readBytes() } }
-            shell("appops set ${app.packageName} REQUEST_INSTALL_PACKAGES allow")
-            SystemClock.sleep(300)
+            // The host grants this before instrumentation. Android 11 kills the app when
+            // REQUEST_INSTALL_PACKAGES changes, including when permission is granted.
             run {
                 assertTrue(app.packageManager.canRequestPackageInstalls())
                 app.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION))
-                SystemClock.sleep(1800)
-                val active = instrumentation.uiAutomation.rootInActiveWindow
-                assertNotNull("Android installer should open", active)
-                assertTrue("Unexpected installation window: ${active?.packageName}", active?.packageName.toString().contains("packageinstaller") || active?.packageName.toString().contains("permissioncontroller"))
+                val deadline = SystemClock.elapsedRealtime() + 15_000
+                var installerVisible = false
+                while (SystemClock.elapsedRealtime() < deadline && !installerVisible) {
+                    val activePackage = instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString().orEmpty()
+                    installerVisible = activePackage.contains("packageinstaller") || activePackage.contains("permissioncontroller")
+                    if (!installerVisible) SystemClock.sleep(100)
+                }
+                assertTrue("Android installer should open", installerVisible)
                 val folder = java.io.File(app.filesDir, "e2e-artifacts").apply { mkdirs() }
                 instrumentation.uiAutomation.takeScreenshot().let { bitmap ->
                     java.io.File(folder, "android-installer.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }

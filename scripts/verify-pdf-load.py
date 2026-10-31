@@ -11,18 +11,21 @@ import shlex
 import subprocess
 import sys
 import time
+from verification import expected_tests, instrumentation_result, require_test_device, stage_private_fixture
 
 ROOT = Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
 p = argparse.ArgumentParser()
 p.add_argument('--serial', required=True)
 p.add_argument('--fixtures', type=Path, default=ROOT / '.tools/pdf-load-fixtures')
+p.add_argument('--test-apk', type=Path, default=ROOT / 'app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk')
 args = p.parse_args()
 adb = os.environ.get('ADB', str(ROOT / '.tools/android-sdk/platform-tools' / ('adb.exe' if os.name == 'nt' else 'adb')))
 pkg = 'com.poyal.yeobaek.debug'
 
 
 def command(*parts, **kw):
+    if kw.get('text'): kw.setdefault('encoding', 'utf-8')
     return subprocess.run([adb, '-s', args.serial, *parts], check=True, **kw)
 
 
@@ -38,11 +41,8 @@ def sha256(path):
     return digest.hexdigest()
 
 
-if not args.serial.startswith('emulator-'):
-    sys.exit('A dedicated yeobaek-* emulator is required.')
 avd = output('emu', 'avd', 'name').splitlines()[0]
-if not avd.startswith('yeobaek-'):
-    sys.exit(f'Not a dedicated test AVD: {avd}')
+require_test_device(args.serial, avd)
 fixtures = json.loads((args.fixtures / 'manifest.json').read_text())
 expected = {'100MiB-mixed.pdf', '300MiB-scan.pdf'}
 assert {f['file'] for f in fixtures['fixtures']} == expected
@@ -55,7 +55,7 @@ stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 out = ROOT / '.tools/verification' / f'{stamp}-{args.serial}-pdf-load'
 out.mkdir(parents=True)
 apk = ROOT / 'app/build/outputs/apk/debug/app-debug.apk'
-test = ROOT / 'app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk'
+test = args.test_apk
 manifest = dict(serial=args.serial, avd=avd, api=output('shell', 'getprop', 'ro.build.version.sdk'),
                 fingerprint=output('shell', 'getprop', 'ro.build.fingerprint'),
                 display=output('shell', 'wm', 'size'), density=output('shell', 'wm', 'density'),
@@ -69,18 +69,17 @@ output('shell', 'run-as', pkg, 'mkdir', '-p', 'files/pdf-load', 'files/pdf-load-
 for name in sorted(expected | {'manifest.json'}):
     local = args.fixtures / name
     remote = subprocess.run([adb, '-s', args.serial, 'shell', 'run-as', pkg, 'sha256sum', f'files/pdf-load/{name}'],
-                            capture_output=True, text=True)
+                            capture_output=True, text=True, encoding='utf-8')
     if remote.returncode != 0 or remote.stdout.split()[0] != sha256(local):
-        with local.open('rb') as source:
-            command('shell', '-T', 'run-as', pkg, 'sh', '-c', shlex.quote(f'cat > files/pdf-load/{name}'), stdin=source)
+        stage_private_fixture(adb, args.serial, pkg, local, f'files/pdf-load/{name}')
     actual = int(output('shell', 'run-as', pkg, 'stat', '-c', '%s', f'files/pdf-load/{name}'))
     assert actual == (args.fixtures / name).stat().st_size, f'Transfer failed: {name}'
 # Remove only artifacts of this explicit suite; keep library databases/preferences and release app untouched.
 output('shell', 'run-as', pkg, 'sh', '-c', shlex.quote('rm -f files/pdf-load-results/*.json'))
 print(f'Evidence: {out}', flush=True)
 runner = pkg + '.test/androidx.test.runner.AndroidJUnitRunner'
-with (out / 'instrumentation.txt').open('w') as log, (out / 'memory.ndjson').open('w') as memory_log:
-    process = subprocess.Popen([adb, '-s', args.serial, 'shell', 'am', 'instrument', '-w', '-e', 'class',
+with (out / 'instrumentation.txt').open('w', encoding='utf-8') as log, (out / 'memory.ndjson').open('w', encoding='utf-8') as memory_log:
+    process = subprocess.Popen([adb, '-s', args.serial, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class',
                                 'com.poyal.yeobaek.PdfLoadTest', runner], stdout=log, stderr=subprocess.STDOUT)
     samples = []
     start = time.monotonic()
@@ -89,7 +88,7 @@ with (out / 'instrumentation.txt').open('w') as log, (out / 'memory.ndjson').ope
             row = dict(elapsed_s=round(time.monotonic() - start, 3))
             for kind, name in [('app', pkg), ('renderer', pkg + ':pdf')]:
                 lookup = [name, name + ':com.poyal.yeobaek.pdf.PdfRenderService'] if kind == 'renderer' else [name]
-                pid_result = subprocess.run([adb, '-s', args.serial, 'shell', 'pidof', *lookup], capture_output=True, text=True)
+                pid_result = subprocess.run([adb, '-s', args.serial, 'shell', 'pidof', *lookup], capture_output=True, text=True, encoding='utf-8')
                 if not pid_result.stdout.strip():
                     continue
                 pid = pid_result.stdout.split()[0]
@@ -111,7 +110,7 @@ with (out / 'instrumentation.txt').open('w') as log, (out / 'memory.ndjson').ope
             time.sleep(1)
     finally:
         process.wait(timeout=30)
-raw = (out / 'instrumentation.txt').read_text()
+raw = (out / 'instrumentation.txt').read_text(encoding='utf-8')
 result_files_pass = True
 for name in sorted(expected):
     try:
@@ -121,12 +120,13 @@ for name in sorted(expected):
         result_files_pass = result_files_pass and records[-1]['phase'] == 'pass'
     except (subprocess.CalledProcessError, ValueError, KeyError, IndexError):
         result_files_pass = False
-success = process.returncode == 0 and 'OK (2 tests)' in raw and 'FAILURES!!!' not in raw and 'Process crashed' not in raw
+instrumentation = instrumentation_result(raw, expected_tests(ROOT, 'app/src/pdfLoadTest', ['com.poyal.yeobaek.PdfLoadTest']), process.returncode)
+success = instrumentation['status'] == 'PASS'
 peaks = {kind: max((r.get(kind + '_pss_kib', 0) for r in samples), default=0) for kind in ['app', 'renderer']}
 combined = max((r.get('app_pss_kib', 0) + r.get('renderer_pss_kib', 0) for r in samples), default=0)
 memory_pass = 0 < peaks['app'] <= 384 * 1024 and 0 < peaks['renderer'] <= 512 * 1024 and combined <= 768 * 1024
 success = success and memory_pass and result_files_pass
-summary = dict(status='PASS' if success else 'FAIL', elapsed_s=round(time.monotonic() - start, 2),
+summary = dict(status='PASS' if success else 'FAIL', instrumentation=instrumentation, elapsed_s=round(time.monotonic() - start, 2),
                sample_count=len(samples), peak_pss_kib=peaks, peak_combined_pss_kib=combined,
                sampled_memory_limits_pass=memory_pass)
 (out / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')

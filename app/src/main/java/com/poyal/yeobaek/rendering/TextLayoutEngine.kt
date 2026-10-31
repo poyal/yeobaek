@@ -102,8 +102,10 @@ class TextLayoutEngine(val doc: TextDocument, val key: String, private val style
         return rows
     }
     override suspend fun previous(end: Long): TextBlock {
-        checkpoint(end, true)?.let { return block(it, end) }
-        var current = block(paragraphStart((end - 1).coerceAtLeast(0)), end)
+        // A later bounded read may have cached a shorter block at this checkpoint.
+        // Treat the checkpoint as a starting point, then reach the exact boundary.
+        val start = checkpoint(end, true) ?: paragraphStart((end - 1).coerceAtLeast(0))
+        var current = block(start, end)
         while (current.end < end) current = block(current.end, end)
         return current
     }

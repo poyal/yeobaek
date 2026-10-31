@@ -54,7 +54,7 @@ for run in args.runs:
         shutil.copy2(note, target / note.name)
     entry = dict(run=run.name, suite=meta['suite'], variant=meta['variant'], api=meta['api'],
                  apk_sha256=meta['apk_sha256'], result=result)
-    if meta['suite'] == 'macro':
+    if meta['suite'] in ('macro', 'formats-macro'):
         raw_file = next((run / 'benchmark').rglob('*benchmarkData.json'))
         shutil.copy2(raw_file, target / 'benchmarkData.json')
         data = json.loads(raw_file.read_text(encoding='utf-8'))

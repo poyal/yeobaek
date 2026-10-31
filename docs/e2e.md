@@ -55,9 +55,41 @@ T06뿐 아니라 T08·T09를 같은 성능 작업에서 검사합니다. 파일 
 
 ## 4. 실제 사용 시나리오
 
+### 전체 기능 여정
+
+`scripts/generate-journey-fixtures.py`는 `Download/YeobaekQA`에 올릴 합성 자료와 해시 목록을 생성합니다. TXT에는 줄 번호와 1,000개 검색 일치, PDF에는 120개 검색 가능한 페이지, 이미지에는 페이지 번호·좌우 표식을 둡니다. ZIP 항목 저장 순서와 자연 정렬 순서를 다르게 만들어 단순 파일 개수 검사가 순서 오류를 놓치지 않게 합니다. 빈 `Empty` 폴더는 ADB 파일 복사만으로 생성되지 않을 수 있어 실행기가 별도로 만듭니다.
+
+| ID | 사용자 시나리오·판정 | 자동화 진입점 |
+| --- | --- | --- |
+| S01 | 연결 취소 → 실제 SAF 연결 → 빈 폴더·상위 탐색 → 재시작; 파일명 검색·정렬; 스크롤한 폴더에서 다른 폴더로 진입하면 첫 항목부터 표시 | `FullJourneyTest` |
+| S02 | TXT 80% 이동 취소·확정 → 연속 역방향 스와이프 → 실제 첫 줄 → 중간 책갈피 → PID 교체 복원; 백분율과 본문 픽셀 대조 | `FullJourneyTest`, TXT 엔진·창·스크롤 계측 |
+| S03 | TXT 100개 이후 결과 → 행 선택·이전/다음 → 원위치 → 글꼴·회전; 기준 문장 유지 | `FullJourneyTest` |
+| S04 | PDF 잘못된 페이지 입력 → 중간 이동·책갈피 → 100개 이후 검색 → 복귀·반전 → PID 교체; 실제 길게 누르기·복사·핀치·회전; 스캔·손상·암호 파일 오류 후 다른 책 열기 | `FullJourneyTest`, `PdfEngineTest`, `PdfViewTest` |
+| S05 | CBZ·CBR·CB7·이미지 폴더 → 번호·썸네일 → 넓은 페이지 좌우 분할·책갈피 → PID 교체·자르기; 첫 절반을 완독으로 오인하지 않음 | `FullJourneyTest`, 이미지 엔진·제스처 계측 |
+| S06 | EPUB 장 끝·목차·내부 링크·복귀·검색·복사·책갈피·모드 변경·고정 지면 확대; 검색 결과의 다음·이전 묶음에서 첫 항목 표시와 원위치 복귀 | `FullJourneyTest`, `EpubJourneyTest`, `EpubReaderTest` |
+| S07 | 실제 PID 종료 후 수락·거절, 명시적 닫기, 회전과 재부팅을 구분 | 형식별 journey, `RecoveryFormatsJourneyTest`, `UpgradeJourneyTest` |
+| S08 | TXT → PDF → CBZ → EPUB 순서로 마지막 페이지·다음 책; 마지막 책에서 처음으로 순환하지 않음. 느린 외부 TXT 준비 취소 → 이미지 열기; 늦은 완료 무효화·원본 파이프 닫힘 | `FullJourneyTest`, `ExternalOpenTest` |
+| S09 | 공통 → 폴더 → 책 설정 덮어쓰기 → 형제 책 상속 → 개별 해제 → 다른 형식 초기화; 값 독립성. TXT·PDF·이미지 빠른 설정을 연 직후 스크롤해도 시트 유지 | `FullJourneyTest`, `BackupSettingsJourneyTest`, 설정 계측 |
+| S10 | 캐시 정리·원본 변경/이동·목록 갱신·재연결·기록 삭제; PDF 변경 취소·이전 책갈피 보존, 이미지 앞 페이지 삽입/삭제 후 같은 이미지 복원 | `RecoveryJourneyTest`, `RecoveryFormatsJourneyTest`, `EpubJourneyTest`, 저장소 계측 |
+| S11 | 네 형식 위치·책갈피 생성 → 실제 SAF 백업 → 새 앱 복원 취소·확정 → 폴더 재연결 → 중복 가져오기; 현재 위치 우선·중복 없음 | `BackupSettingsJourneyTest`, `ReadingBackupTest` |
+| S12 | 외부 앱 URI·일반 MIME·임시 권한 상실/재부여, 업데이트 실패·재시도·다운로드·변조·설치 화면 취소 | `ExternalOpenTest`, `EpubJourneyTest`, `scripts/test-updates.ps1` |
+| S13 | 형식별 30분 앞뒤 읽기 → 100회 열고 닫기; PID·메모리·프레임 기록. 공개판에서 네 형식 기록 생성 → 후보 덮어 설치 → 실제 재부팅; 외부 원본 해시·권한·기록 보존 | `StabilityJourneyTest`, `UpgradeJourneyTest`, `scripts/verify-upgrade.py` |
+
+표는 요구와 검사 연결이며 실행 완료를 뜻하지 않습니다. 예를 들어 `ReadingBackupTest`의 저널 검사는 Room 커밋 후 DataStore 반영 전의 영속 상태를 재현하는 통합 검사이며, 실제 OS 프로세스 종료 E2E와 구분합니다. PDF/이미지 확대·복사·원본 변경 등 계측으로 연결된 항목도 외부 UI 전체 흐름 통과로 확대 해석하지 않습니다.
+
+외부 E2E는 `testing/.../JourneyDevice.kt`의 공통 UI 조작을 사용합니다. ViewModel·DB를 직접 호출하지 않고 실제 Activity·SAF·터치·PID 교체를 사용합니다. APK와 테스트 APK의 해시, 예상 메서드 목록, 정상 instrumentation 종료, 실패·생략·중복·미실행·도중 중단을 따로 기록합니다. `verify-device.py --suite journeys`, `--suite backup-settings`, `--suite external`, `--suite stability`로 분리 실행하고 `--method`로 재현 범위를 좁힙니다. `--variant release --theme LIGHT/DARK`를 구분합니다. 전용 AVD는 이름 전체를 확인하며 수동 확인용 AVD는 허용하지 않습니다.
+
+네 형식 복구는 `--suite recovery --test-class RecoveryFormatsJourneyTest`로 실행합니다. 안정성 검사의 짧은 동작 확인에는 `--argument soakMinutes=1 --argument repetitions=2`를 사용할 수 있으나, 30분·100회 통과로 집계하지 않습니다. 정규 안정성 실행 후 `scripts/stability-report.py <실행폴더> --output <JSON>`으로 독립 호스트 PSS·FD 표본과 실제 지속 시간·횟수를 대조합니다. 앱 소유 서비스까지 확인해 공급자 이름으로 실행되는 EPUB WebView 렌더러도 포함합니다. 프로세스 본체 384MiB, 렌더러 합계 512MiB, 전체 768MiB, 후반 본체 증가 96MiB, FD 증가 24개를 진단 상한으로 사용하며 스레드·캐시 증가는 별도 관찰값으로 남깁니다.
+
+`scripts/verify-upgrade.py`는 전용 AVD에서 공개 APK로 실제 UI 기록을 만든 뒤 덮어 설치합니다. 저장을 기다리고 앱을 종료한 상태에서 합성 앱의 Room 행·스키마, DataStore 해시, 영속 SAF 권한을 복사해 후보의 첫 실행 전과 비교합니다. 이어 읽기·네 형식 위치·책갈피·설정을 실제 UI로 확인하고, 실제 재부팅 후 다시 확인합니다. 재열기로 바뀌는 열람 시각·세션과 보존해야 하는 책 ID·인코딩·본문 버전·책갈피를 구분합니다. 원본 파일 해시도 전후 대조하며 검사 DB는 Git에 넣지 않습니다.
+
+기본 재부팅 방법은 `adb reboot`입니다. `--reboot-mode external`은 저장된 앱을 종료하고 게스트 파일시스템을 동기화한 뒤 `reboot-request.json`을 기록합니다. 이후 호스트가 같은 전용 AVD를 데이터 초기화 없이 완전히 다시 시작하기를 기다립니다. 스냅샷 복원을 사용하지 않으며 새 boot ID·부팅 완료·기록 보존을 확인합니다. 일반 재부팅과 외부 콜드 부팅의 실제 실행 방법·중단·재시도는 버전 기록에 구분하고, 이 검사를 갑작스러운 전원 차단 내구성 검사로 해석하지 않습니다. 권한 스냅샷은 XML과 Android Binary XML을 지원하며, 바이너리 형식은 시스템 변환 도구의 표준 출력만 읽어 원본을 변경하지 않습니다.
+
 EPUB 장별 탐색은 `EpubNavigationTest`와 `EpubReaderTest`에서 메뉴 숨김 후 아이콘 유지, 첫·마지막 장의 비활성화, 연속 탭 방지, 원문 뒤 장 끝 버튼, 짧은 장, 중첩 목차 강조, 긴 장의 위치·책갈피·글꼴 변경·재생성, 페이지 모드에서 돌아온 뒤 터치 스크롤을 검사합니다. `EpubJourneyTest`는 release에서 실제 스와이프로 장 끝 버튼에 도달하고, 큰 글씨의 장별 스크롤과 페이지 모드 각각의 실제 PID 교체 후 복원을 검사합니다. 재시작 후에는 설정 범위를 다시 **이 책**으로 선택해 기존 책별 값을 바꿉니다. 실행 여부와 결과는 버전별 기록에 구분해 남깁니다.
 
-메뉴를 숨긴 본문의 고정 여백은 별도로 검사합니다. EPUB은 본문과 전체 읽기 영역의 크기 일치·메뉴 반복 전환 후 문장 좌표 보존을 확인합니다. `ReaderScrollTest`는 TXT 중간 위치의 위아래 텍스트 영역과 앵커를, `ReaderViewportTest`는 단색으로 채운 긴 PDF·PNG·CBZ에서 실제 뷰의 위·중간·아래 픽셀과 메뉴 전환 전후 위치를 확인합니다. 페이지 맞춤의 비율 여백을 스크롤 본문을 자르는 고정 영역으로 잘못 분류하지 않습니다.
+메뉴를 숨긴 본문의 고정 여백은 별도로 검사합니다. EPUB은 본문과 전체 읽기 영역의 크기 일치·메뉴 반복 전환 후 문장 좌표 보존을 확인합니다. `ReaderScrollTest`는 TXT 중간 위치의 위아래 텍스트 영역과 앵커를, `ReaderViewportTest`는 단색으로 채운 긴 PDF·PNG·CBZ에서 실제 뷰의 위·중간·아래 픽셀과 메뉴 전환 전후 위치를 확인합니다. PDF는 실제 화면 캡처에서 뷰 밖의 시스템 여백에 본문 색상이 그려지지 않는지도 확인합니다. 페이지 맞춤의 비율 여백을 스크롤 본문을 자르는 고정 영역으로 잘못 분류하지 않습니다.
+
+TXT 이동 회귀 검사는 `ReaderScrollTest`, `TextWindowTest`, `ReaderEngineTest`를 함께 실행합니다. 읽지 않은 짧은 줄·빈 줄·긴 문단으로 이동한 뒤 실제 문서 처음까지 역방향 스크롤하고, 끝 이동·반복 왕복·연속 요청·글꼴/여백 변경·저장 위치에서 시작·터치 스와이프를 확인합니다. 본문 창 검사는 24개 이상의 블록이 보이는 화면에서 양쪽 선행 로드와 문자/픽셀 위치 보존, 지연·취소된 로드의 무효화를 다룹니다. 엔진 검사는 캐시 퇴출·엔진 재생성·짧아진 체크포인트 캐시·문서 경계에서 블록의 누락과 중복을 검사합니다. 저장 위치에서 시작하는 Compose 검사는 실제 PID 교체 후 복원을 대신하지 않습니다.
 
 설정 화면은 `SettingsLayoutTest`로 일반·TXT·PDF·EPUB·이미지·앱 정보·업데이트·빠른 설정의 스크롤 끝까지 확인하고 원본 화면을 남깁니다. EPUB 원본 서식 해제·페이지 모드, 이미지 좌우 넘김의 조건부 항목도 포함합니다. `SettingsChoicesTest`는 좁은 폭·글씨 200%에서 선택 항목의 균등 배치, 텍스트 잘림, 선택 전후 위치와 크기를 대조합니다. 기기 화면 폭과 시스템 글씨 배율을 바꿨으면 실행 결과를 따로 기록하고 검사 후 복구합니다.
 
@@ -118,6 +150,16 @@ EPUB 장별 탐색은 `EpubNavigationTest`와 `EpubReaderTest`에서 메뉴 숨�
 
 ## 5. 성능 측정 조건
 
+`FormatsBenchmark`는 동일 합성 자료의 네 형식 캐시 재열기, 프로세스 cold 시작, 형식별 스크롤을 `.benchmark` APK에서 측정합니다. TXT는 짧은 줄의 중간으로 이동한 직후 역방향으로 시작해 본문 창 확장 경계를 확인합니다. 기본값은 지연 30회, 스크롤 10회 × 30초입니다. UI 관측 지연에는 자동화·본문 화면 안정 확인 비용이 포함되며, 글꼴 변경은 설정 시트를 닫고 본문이 표시될 때까지 측정합니다. 앱 내부 `OpenText` 트레이스와 같은 값으로 취급하지 않습니다. 기존 `ReaderBenchmark`의 대형 TXT·긴 문단·빈 줄과 프로파일 유무 비교를 함께 유지합니다.
+
+합성 `Yeobaek`·`YeobaekQA` 자료를 준비한 전용 AVD에서 아래 명령의 앱 APK만 기준·후보로 바꿔 각각 실행합니다. 대형 TXT는 같은 인자에서 `--suite macro`를 사용합니다. 예비 실행에 `--argument iterations=1 --argument scrollIterations=1 --argument durationSeconds=3`을 추가할 수 있지만 정식 표본에는 합산하지 않습니다.
+
+```text
+python scripts/verify-device.py --serial emulator-5582 --expected-avd yeobaek-release-040 --suite formats-macro --variant benchmark --apk <고정한-앱-APK> --test-apk <동일한-벤치마크-검사-APK>
+```
+
+작업 시작 시의 APK를 기준으로 보관하고 동일 OS·ABI·해상도·글자 배율·컴파일 모드·fixture로 후보를 비교합니다. 측정 중에는 AVD 하나만 실행하고 빌드·다른 검사와 겹치지 않습니다. `scripts/compare-performance.py --baseline <실행폴더> --candidate <실행폴더> --output <JSON>`은 완료된 실행끼리 비교합니다. 지연 P95가 20% 이상이면서 50ms 이상 증가하거나, 프레임 P95가 2ms 이상 또는 기한 초과율이 2%p 이상 증가하면 `RECHECK`로 표시하고 동일 조건의 비교 쌍을 한 번 더 측정합니다. 30개 미만 지연 표본은 개별 값만 남기고 P95를 산출하지 않습니다. 에뮬레이터 진단과 실물 기기 합격 판정은 분리합니다.
+
 M0에서 기준 기기의 모델·RAM·SoC·OS·해상도·density·fontScale·주사율을 고정합니다. 최소 지원 OS, API 31 이상 프레임 분석 기기, 최신 안정 OS를 구분하고 에뮬레이터를 실기기 FPS의 근거로 사용하지 않습니다.
 
 - release와 동일한 최적화 조건의 `non-debuggable/profileable` 빌드를 사용합니다.
@@ -127,6 +169,8 @@ M0에서 기준 기기의 모델·RAM·SoC·OS·해상도·density·fontScale·�
 - 열기·설정 반영 등 지연 시간은 최소 30회 개별 표본에서 P50/P95를 계산합니다. 작은 표본의 P95가 불안정할 수 있음을 함께 기록합니다.
 - 최초 본문 준비, 앱만 재시작한 열기, 정규 본문 캐시가 있는 열기, 캐시 재생성 열기를 분리합니다.
 - 디스크 파일 페이지 캐시는 앱 종료만으로 비워지지 않습니다. 이를 완전한 cold I/O 측정이라고 부르지 않습니다.
+
+버전 번호가 다른 기준·후보도 같은 조건에서 비교하도록 각 Macrobenchmark 실행은 전용 검사 앱을 새로 설치하고 시작합니다. 외부 합성 원본은 보존하고, 캐시 재열기 검사는 측정 전에 해당 캐시를 준비합니다. `FormatsBenchmark`의 이동·검색·설정·목록 UI 지연 검사는 ART 전체 사전 컴파일(`speed`) 후 새 프로세스에서 시작합니다. 시작·재열기·스크롤 Macrobenchmark는 명시한 Baseline Profile 컴파일 모드를 사용합니다.
 
 ### 측정값과 목표
 

@@ -28,7 +28,10 @@ class EpubJourneyTest {
         override fun failed(e: Throwable?, description: Description) { shot("FAIL-${description.methodName}") }
     }
     private fun node(tag: String, timeout: Long = 20_000): UiObject2 = device.wait(Until.findObject(By.res(tag)), timeout) ?: throw AssertionError("Missing $tag")
-    private fun click(tag: String) { node(tag).click(); device.waitForIdle() }
+    private fun click(tag: String) {
+        // Restoring system font scale can recreate the activity between lookup and click.
+        Assert.assertTrue("Missing $tag", clickOptional(By.res(tag), 20_000))
+    }
     private fun body() = node("$pkg:id/epub_host_container")
     private fun readingArea() = body().visibleBounds.apply {
         device.findObject(By.res("epub_header"))?.visibleBounds?.let { top = maxOf(top, it.bottom) }
@@ -36,14 +39,14 @@ class EpubJourneyTest {
             device.findObject(By.res(tag))?.visibleBounds?.let { bottom = minOf(bottom, it.top) }
         }
     }
-    private fun clickOptional(selector: BySelector): Boolean {
+    private fun clickOptional(selector: BySelector, timeout: Long = 10_000): Boolean {
         repeat(8) {
             try {
-                val target = device.wait(Until.findObject(selector), 10_000) ?: return false
+                val target = device.wait(Until.findObject(selector), timeout) ?: return false
                 target.click(); device.waitForIdle(); return true
             } catch (_: StaleObjectException) { SystemClock.sleep(250) }
         }
-        throw AssertionError("Unstable system picker: $selector")
+        throw AssertionError("Unstable UI target: $selector")
     }
     private fun launch() { device.executeShellCommand("am start -W -n $pkg/com.poyal.yeobaek.MainActivity"); device.waitForIdle() }
     private fun ready() { node("epub_footer", 45_000); Assert.assertTrue(device.wait(Until.gone(By.res("epub_loading")), 45_000)); SystemClock.sleep(500) }

@@ -306,7 +306,8 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
             if (state.running) LinearProgressIndicator(Modifier.fillMaxWidth())
             Small("${state.count}개${if (state.running) " · 검색 중" else ""}")
             state.error?.let { Text(it, color = LocalPaper.current.danger) }
-            LazyColumn(Modifier.heightIn(max = 320.dp)) {
+            val resultsList = key(state.query, state.start) { rememberLazyListState() }
+            LazyColumn(Modifier.heightIn(max = 320.dp).testTag("epub_search_results"), state = resultsList) {
                 itemsIndexed(state.rows) { index, match ->
                     Column(Modifier.fillMaxWidth().clickable { reader.move(match); vm.sheet(null) }.testTag("epub_result_$index").padding(vertical = 12.dp)) {
                         Small(match.title ?: "본문")

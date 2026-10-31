@@ -37,14 +37,15 @@ class ReaderScrollTest {
     private var prefs by mutableStateOf(TxtPreferences(size = 14f, line = 1.3f))
     private val frames = mutableListOf<Pair<Long, Int>>()
 
-    private fun withReader(text: String, test: (Long) -> Unit) = runBlocking {
+    private fun withReader(text: String, initialProgress: Float = 0f, test: (Long) -> Unit) = runBlocking {
         val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as YeobaekApplication
         val root = File(app.cacheDir, "reader-scroll-${UUID.randomUUID()}")
         val store = ViewModelStore()
         try {
             val doc = withContext(Dispatchers.IO) { TextStore(root).prepare({ text.byteInputStream() }) }
             ui.runOnUiThread { vm = AppViewModel(app); store.put("test", vm) }
-            val book = OpenBook(Book("test", "test", "content://test/book", "테스트.txt", "", version = doc.version, length = doc.length), doc, null)
+            val initial = ReadingPosition("test", doc.version, (doc.length * initialProgress).toLong())
+            val book = OpenBook(Book("test", "test", "content://test/book", "테스트.txt", "", version = doc.version, length = doc.length), doc, initial)
             session = book.token
             ui.setContent {
                 readerView = LocalView.current
@@ -83,11 +84,69 @@ class ReaderScrollTest {
         ui.waitUntil(60000) { job.isCompleted }
         ui.waitForIdle()
         val observed = ui.runOnIdle { frames.toList() }
-        assertTrue("Scrolling must produce measured positions", observed.size > 20)
+        assertTrue("Scrolling must produce measured positions: count=${observed.size}, offset=${offset()}", observed.size > 20)
         observed.zipWithNext().forEach { (a, b) ->
             val direction = if (a.first == b.first) b.second.compareTo(a.second) else b.first.compareTo(a.first)
             assertTrue("Unexpected sentence reversal: $a -> $b, scroll=$pixels", if (pixels > 0) direction >= 0 else direction <= 0)
         }
+    }
+
+    private fun generation() = list.layoutInfo.visibleItemsInfo.firstOrNull()?.key?.toString()?.substringBeforeLast(':')
+
+    private fun seekTo(target: Long) {
+        val before = ui.runOnIdle { generation() }
+        ui.runOnIdle { vm.seek(target) }
+        ui.waitUntil(30000) {
+            generation() != before && ui.onAllNodesWithTag("layout_loading").fetchSemanticsNodes().isEmpty()
+        }
+        ui.waitForIdle()
+        ui.onNodeWithTag("layout_retry").assertDoesNotExist()
+    }
+
+    private fun scrollToBeginning() {
+        lateinit var job: Job
+        ui.runOnIdle {
+            frames.clear()
+            job = scope.launch {
+                repeat(800) {
+                    list.scrollBy(-1400f)
+                    val first = list.layoutInfo.visibleItemsInfo.firstOrNull()
+                    if (first?.key.toString().substringAfterLast(':') == "0" && !list.canScrollBackward) return@launch
+                    delay(20)
+                }
+            }
+        }
+        ui.waitUntil(30000) { job.isCompleted }
+        assertEquals("Reverse scrolling must reach the real document beginning", 0L, offset())
+        ui.runOnIdle {
+            assertFalse(list.canScrollBackward)
+            frames.zipWithNext().forEach { (a, b) ->
+                assertTrue("Unexpected reversal while scrolling to the beginning: $a -> $b",
+                    b.first < a.first || b.first == a.first && b.second <= a.second)
+            }
+        }
+        ui.onNodeWithTag("layout_retry").assertDoesNotExist()
+    }
+
+    private fun scrollToEnd(length: Long) {
+        lateinit var job: Job
+        ui.runOnIdle {
+            job = scope.launch {
+                repeat(800) {
+                    list.scrollBy(1400f)
+                    delay(20)
+                }
+            }
+        }
+        ui.waitUntil(30000) {
+            job.isCompleted || !list.canScrollForward &&
+                ui.onAllNodesWithText("마지막 문장 END", substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        ui.runOnIdle { job.cancel() }
+        ui.onNodeWithText("마지막 문장 END", substring = true).assertExists()
+        assertTrue("The final viewport must be near the document end", offset() > length / 2)
+        ui.runOnIdle { assertFalse(list.canScrollForward) }
+        ui.onNodeWithTag("layout_retry").assertDoesNotExist()
     }
 
     private fun event(action: Int, down: Long, time: Long, atX: Float, atY: Float) {
@@ -169,6 +228,98 @@ class ReaderScrollTest {
         assertTrue("Must cross the 24-block retention limit", offset() > 50000)
         scroll(-1400f, 120)
         ui.onNodeWithTag("layout_retry").assertDoesNotExist()
+    }
+
+    @Test fun seekingIntoUnreadShortLinesCanScrollBackToTheBeginning() = withReader(
+        (0 until 600).joinToString("\n") { "문장 $it" }
+    ) { length ->
+        seekTo(length * 4 / 5)
+        assertTrue(offset() > length / 2)
+        scrollToBeginning()
+    }
+
+    @Test fun seekingPastEmptyLinesCanScrollBackToTheBeginning() = withReader(
+        (0 until 180).joinToString("\n\n\n") { "줄 $it" }
+    ) { length ->
+        seekTo(length * 3 / 4)
+        scrollToBeginning()
+    }
+
+    @Test fun restoredUnreadPositionCanScrollBackToTheBeginning() = withReader(
+        (0 until 600).joinToString("\n") { "복원 $it" }, initialProgress = .8f
+    ) { length ->
+        assertTrue(offset() > length / 2)
+        scrollToBeginning()
+    }
+
+    @Test fun endSeekCanScrollBackThroughUnreadTextAndReturnToTheEnd() = withReader(
+        (0 until 400).joinToString("\n") { "문장 $it" } + "\n마지막 문장 END"
+    ) { length ->
+        seekTo(length)
+        ui.runOnIdle { assertFalse(list.canScrollForward) }
+        scrollToBeginning()
+        scrollToEnd(length)
+    }
+
+    @Test fun repeatedSeeksAndDirectionChangesDoNotLeaveWindowBoundaries() = withReader(
+        (0 until 300).joinToString("\n") { "문장 $it" } + "\n마지막 문장 END"
+    ) { length ->
+        for (percent in listOf(80, 25, 95, 50)) {
+            seekTo(length * percent / 100)
+            scrollToBeginning()
+            scrollToEnd(length)
+        }
+    }
+
+    @Test fun latestRapidSeekWinsAndBothDirectionsRemainAvailable() = withReader(
+        (0 until 600).joinToString("\n") { "문장 $it" } + "\n마지막 문장 END"
+    ) { length ->
+        val before = ui.runOnIdle { generation() }
+        val target = length * 3 / 4
+        ui.runOnIdle {
+            for (at in listOf(length, 0, length / 2, length / 4, target)) vm.seek(at)
+        }
+        ui.waitUntil(30000) {
+            generation() != before && ui.onAllNodesWithTag("layout_loading").fetchSemanticsNodes().isEmpty()
+        }
+        assertTrue("Only the last seek may be displayed: target=$target actual=${offset()}", offset() in (target - 20)..target)
+        scrollToBeginning()
+        scrollToEnd(length)
+    }
+
+    @Test fun fontAndMarginChangesAfterSeekKeepReverseScrollingAvailable() = withReader(
+        (0 until 500).joinToString("\n") { "문장 $it" }
+    ) { length ->
+        seekTo(length * 4 / 5)
+        val before = offset()
+        val oldGeneration = ui.runOnIdle { generation() }
+        ui.runOnIdle { prefs = prefs.copy(font = TxtFont.SYSTEM_MONOSPACE, size = 12f, line = 1.2f, margin = 24f) }
+        ui.waitUntil(30000) {
+            generation() != oldGeneration && ui.onAllNodesWithTag("layout_loading").fetchSemanticsNodes().isEmpty()
+        }
+        assertTrue("Relayout must retain the sentence", offset() in (before - 20)..before)
+        scrollToBeginning()
+    }
+
+    @Test fun seekingInsideALongParagraphAllowsReverseScrollingAcrossBlocks() = withReader(
+        "한글 English é 👩‍👩‍👧‍👦 123 · 긴 문단의 줄 경계를 확인합니다. ".repeat(300)
+    ) { length ->
+        seekTo(length * 4 / 5)
+        scrollToBeginning()
+    }
+
+    @Test fun touchSwipesAfterSeekingCrossTheShortBlockRetentionLimit() = withReader(
+        (0 until 300).joinToString("\n") { "문장 $it" }
+    ) { length ->
+        seekTo(length * 4 / 5)
+        repeat(35) {
+            ui.onNodeWithTag("reader_body").performTouchInput {
+                swipe(start = center.copy(y = height * .25f), end = center.copy(y = height * .75f), durationMillis = 250)
+            }
+            ui.waitForIdle()
+        }
+        assertTrue("Touch swipes must continue well beyond the initial 24 blocks: ${offset()}", offset() < length / 3)
+        scrollToBeginning()
     }
 
     @Test fun stoppingAFlingWithTheReportedNearStationaryTouchDoesNotRestartIt() = withReader(

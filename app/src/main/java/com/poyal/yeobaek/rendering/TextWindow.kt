@@ -46,8 +46,12 @@ internal class TextWindow(val generation: String, val blocks: List<TextBlock>) {
     /** Caller owns a single prefetch coroutine and cancels it on seek/layout/book changes. */
     suspend fun prefetch(source: TextBlockSource, current: () -> TextViewport?, isCurrent: () -> Boolean): TextWindow? {
         val initial = current() ?: return null
-        val forward = initial.last >= blocks.lastIndex - 2 && blocks.last().end < source.length
-        if (!forward && !(initial.first <= 2 && blocks.first().start > 0)) return null
+        val backward = initial.first <= 2 && blocks.first().start > 0
+        // A short window can approach both edges at once. Fill the nearer edge
+        // first so a forward prefetch cannot strand the reader at the top.
+        val forward = initial.last >= blocks.lastIndex - 2 && blocks.last().end < source.length &&
+            (!backward || blocks.lastIndex - initial.last < initial.first)
+        if (!forward && !backward) return null
         val more = mutableListOf<TextBlock>()
         if (forward) {
             var end = blocks.last().end
@@ -65,7 +69,11 @@ internal class TextWindow(val generation: String, val blocks: List<TextBlock>) {
         val first = combined.indexOfFirst { it.start == latest.visibleStarts.first() }
         val last = combined.indexOfFirst { it.start == latest.visibleStarts.last() }
         if (first < 0 || last < first) return null
-        val capacity = maxOf(24, last - first + 1)
+        // After a seek, uncached predecessors can be single-line blocks. If the
+        // viewport fills the retention limit, keeping only the visible blocks
+        // discards every prefetch and creates a false document boundary. Reserve
+        // four blocks on each side even when more than 24 blocks fit on screen.
+        val capacity = maxOf(24, last - first + 1 + 8)
         val maxStart = (combined.size - capacity).coerceAtLeast(0)
         val preferred = if (forward) minOf(maxStart, (first - 4).coerceAtLeast(0))
             else (last + 5 - capacity).coerceAtLeast(0)

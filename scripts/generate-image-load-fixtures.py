@@ -24,6 +24,7 @@ def main():
     parser.add_argument('--out', type=Path, default=Path('.tools/image-load-fixtures'))
     parser.add_argument('--seven', type=Path, default=Path('.tools/image-deps/7zip/7zz'))
     parser.add_argument('--rar', type=Path, default=Path('.tools/image-deps/rar/rar/rar'))
+    parser.add_argument('--zip-only', action='store_true', help='Generate ZIP/dimension fixtures without external 7z/RAR encoders; report other formats as not generated')
     args = parser.parse_args()
     out = args.out.resolve(); out.mkdir(parents=True, exist_ok=True)
     pool = out / 'pages'; pool.mkdir(exist_ok=True)
@@ -53,13 +54,13 @@ def main():
                 with zipfile.ZipFile(path) as archive:
                     for entry in archive.infolist(): (pool / Path(entry.filename).name).write_bytes(archive.read(entry))
         record(path, count, target_mib=target)
-    for solid in [False, True]:
+    for solid in ([] if args.zip_only else [False, True]):
         label = 'solid' if solid else 'normal'
         for extension in ['7z', 'rar']:
             path = out / f'300MiB-{label}.{extension}'
             if not path.exists():
-                command = ([str(args.seven.resolve()), 'a', '-t7z', '-mx=1', '-ms=' + ('on' if solid else 'off'), str(path), '.'] if extension == '7z'
-                    else [str(args.rar.resolve()), 'a', '-ma5', '-m1', '-s' if solid else '-s-', '-ep1', str(path), '.'])
+                command = ([str(args.seven.resolve()), 'a', '-t7z', '-mx=1', '-mmt=2', '-ms=' + ('on' if solid else 'off'), str(path), '.'] if extension == '7z'
+                    else [str(args.rar.resolve()), 'a', '-ma5', '-m1', '-mt2', '-s' if solid else '-s-', '-ep1', str(path), '.'])
                 subprocess.run(command, cwd=pool, check=True, stdout=subprocess.DEVNULL)
             record(path, pool_size, solid=solid, target_mib=300)
     edge = out / 'dimensions.zip'
@@ -72,7 +73,8 @@ def main():
                 data = io.BytesIO(); image.save(data, format='PNG' if name.endswith('png') else 'JPEG')
                 archive.writestr(name, data.getvalue())
     record(edge, 2)
-    (out / 'manifest.json').write_text(json.dumps(dict(generator='yeobaek-image-load-v1', fixtures=records), indent=2) + '\n')
+    (out / 'manifest.json').write_text(json.dumps(dict(generator='yeobaek-image-load-v1', fixtures=records,
+        not_generated=['300MiB-normal.7z', '300MiB-solid.7z', '300MiB-normal.rar', '300MiB-solid.rar'] if args.zip_only else []), indent=2) + '\n')
 
 
 if __name__ == '__main__': main()

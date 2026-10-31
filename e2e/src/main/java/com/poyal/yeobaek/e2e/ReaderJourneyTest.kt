@@ -74,9 +74,18 @@ class ReaderJourneyTest {
             ?: device.findObject(By.text("USE THIS FOLDER")) ?: device.findObject(By.text("이 폴더 사용"))
             ?: throw AssertionError("폴더 선택 버튼 없음")
         select.click()
-        val allow = device.wait(Until.findObject(By.res("android:id/button1")), 5000)
-        allow?.click()
+        confirmFolderPermission()
         node("folder_refresh", 30000)
+    }
+    private fun confirmFolderPermission() {
+        // DocumentsUI can replace the opening permission dialog's accessibility node.
+        repeat(8) {
+            try {
+                device.wait(Until.findObject(By.res("android:id/button1")), 5000)?.click()
+                return
+            } catch (_: StaleObjectException) { SystemClock.sleep(200) }
+        }
+        throw AssertionError("폴더 권한 확인창이 안정되지 않았습니다")
     }
     private fun openStory() {
         scrollTo("file_비가 그친 오후.txt")

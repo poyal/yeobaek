@@ -34,7 +34,7 @@ class ReaderProfile {
         click("file_비가 그친 오후.txt"); node("reader_footer")
         check(device.wait(Until.gone(By.res("layout_loading")), 30000))
         repeat(5) { node("reader_body").scroll(Direction.DOWN, .8f) }
-        click("reader_txt"); click("font_larger"); click("page_back")
+        click("reader_txt"); click("quick_details"); click("font_larger"); click("page_back")
         click("reader_search"); node("search_input").text = "골목"; click("search_submit"); node("search_next")
         click("search_next"); click("reader_back")
     }
