@@ -6,13 +6,14 @@
 - [공통 개발·검사 규칙](development.md)
 - [공통 릴리즈 절차](release.md)
 - [TXT·EPUB·PDF·이미지 구현 구조와 실행](architecture.md)
-- [TXT 뷰어 검증 기준](e2e.md)
+- [네 형식의 시나리오·성능 검증 기준](e2e.md)
 - [여백 UI와 상태 복원 기준](ui-guidelines.md)
 
 ## 공개 버전별 결과
 
 | 버전 | 사용자 매뉴얼 | AI용 최종 검증 | 패치노트 |
 | --- | --- | --- | --- |
+| v1.0.4 | [README](releases/v1.0.4/README.md) | [AGENTS](releases/v1.0.4/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.4) |
 | v1.0.3 | [README](releases/v1.0.3/README.md) | [AGENTS](releases/v1.0.3/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.3) |
 | v1.0.2 | [README](releases/v1.0.2/README.md) | [AGENTS](releases/v1.0.2/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.2) |
 | v1.0.1 | [README](releases/v1.0.1/README.md) | [AGENTS](releases/v1.0.1/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.1) |
