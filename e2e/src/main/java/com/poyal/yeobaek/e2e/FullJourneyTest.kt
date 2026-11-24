@@ -25,6 +25,7 @@ class FullJourneyTest {
         j.device.pressBack(); j.node("connect_folder")
         j.connect()
         j.find("folder_Empty").click()
+        j.text("아직 책이 없어요.")
         assertFalse(j.exists("file_01-short.txt"))
         j.click("folder_up"); j.find("file_01-short.txt")
         j.find("folder_Images", direction = Direction.UP).click(); j.find("file_1.png")
