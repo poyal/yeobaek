@@ -252,7 +252,7 @@ import kotlinx.coroutines.flow.*
                 Surface(color = colors.surface) {
                     Column { Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp).testTag("reader_header"), verticalAlignment = Alignment.CenterVertically) {
                         Tool(Icons.Outlined.ArrowBack, "폴더로 돌아가기", "reader_back", onClick = vm::closeReader)
-                        Column(Modifier.weight(1f).padding(horizontal = 8.dp)) { Small("지금 읽는 책 · TXT"); Text(opened.book.name.removeSuffix(".txt"), fontSize = 12.sp, color = colors.ink, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                        Filename(opened.book.name.withoutReaderSuffix(".txt"), Modifier.weight(1f).padding(horizontal = 8.dp))
                         ReaderProgress(vm)
                         HeaderBookmark(vm, opened)
                     }; Rule() }

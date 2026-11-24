@@ -223,7 +223,7 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
 @Composable fun ImageBookmarksSheet(vm: AppViewModel) {
     val opened = vm.imageReader.opened ?: return
     val marks by vm.imageReader.marks.collectAsStateWithLifecycle()
-    if (marks.isEmpty()) EmptyState("접어 둔 이미지가 없어요.", "독서 화면 위쪽의 책갈피로 남겨 보세요.")
+    if (marks.isEmpty()) EmptyState("저장한 책갈피가 없어요.", "독서 화면 위쪽의 책갈피로 남겨 보세요.")
     else LazyColumn(Modifier.heightIn(max = 420.dp).testTag("image_bookmark_list")) {
         items(marks, key = { it.id }) { mark ->
             Row(verticalAlignment = Alignment.CenterVertically) {

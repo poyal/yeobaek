@@ -60,8 +60,8 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
         EpubChapterButtons.HIDDEN -> false
     }
     val resourceIndex = navigation.resourceIndex.takeIf { it >= 0 } ?: opened.document.resourceIndex(at)
-    val chapterTitle = opened.document.outline.getOrNull(navigation.outlineIndex)?.link?.title
-        ?.takeIf { it.isNotBlank() } ?: opened.document.chapterTitle(resourceIndex)
+    val chapterTitle = opened.document.outline.getOrNull(navigation.outlineIndex)?.title
+        ?: opened.document.chapterTitle(resourceIndex)
     val measuring = top == 0.dp || bottom == 0.dp
     SideEffect { reader.startInsetHeight.value = with(density) { top.roundToPx() } }
     CompositionLocalProvider(LocalPaper provides colors) {
@@ -113,20 +113,19 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
                     Column {
                         Row(Modifier.fillMaxWidth().heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
                             Tool(Icons.Outlined.ArrowBack, "닫기", "epub_back", onClick = { vm.closeReader() })
-                            Column(Modifier.weight(1f)) {
-                                Filename(opened.book.name)
-                                val progress = ReadingProgress.at(opened.document.progress(at), completed).label
+                            val progress = ReadingProgress.at(opened.document.progress(at), completed).label
+                            Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                                Filename(opened.book.name.withoutReaderSuffix(".epub"))
                                 if (opened.document.fixed) {
                                     Text("${resourceIndex + 1} / ${opened.document.publication.readingOrder.size} 페이지 · $progress",
                                         Modifier.testTag("epub_progress"), fontSize = 11.sp, color = colors.muted, maxLines = 1)
                                 } else {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Text("${resourceIndex + 1} / ${opened.document.publication.readingOrder.size} · $progress",
-                                            Modifier.testTag("epub_progress"), fontSize = 11.sp, color = colors.muted)
-                                        Text(chapterTitle, Modifier.weight(1f).testTag("epub_current_chapter"), fontSize = 11.sp,
-                                            color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    }
+                                    Text(chapterTitle, Modifier.testTag("epub_current_chapter"), fontSize = 11.sp,
+                                        color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
+                            }
+                            if (!opened.document.fixed) {
+                                Text(progress, Modifier.testTag("epub_progress"), fontSize = 12.sp, color = colors.accent, maxLines = 1)
                             }
                             val marked = at?.let { loc -> marks.any { it.version == opened.book.version && it.locationKey == epubLocationKey(loc) } } == true
                             Tool(if (marked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, if (marked) "책갈피 해제" else "책갈피 추가", "epub_bookmark", Modifier.semantics { selected = marked }, onClick = reader::toggleBookmark)
@@ -178,7 +177,7 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
             Icon(Icons.Outlined.ChevronLeft, if (chapter) "이전 장" else "이전 페이지")
         }
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            if (showReturn) PaperButton("이전 위치", "epub_link_return", outlined = true, onClick = onReturn)
+            if (showReturn) PaperButton("읽던 곳으로", "epub_link_return", outlined = true, onClick = onReturn)
         }
         if (showArrows) FilledTonalIconButton(onNext, Modifier.size(48.dp).testTag("epub_next"), enabled = next,
             shape = RoundedCornerShape(8.dp), colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -195,9 +194,9 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
         if (nextTitle == null) {
             Text("책의 끝입니다", color = LocalPaper.current.muted, modifier = Modifier.testTag("epub_book_end"))
         } else {
-            Text("다음 장 · $nextTitle", color = LocalPaper.current.muted, maxLines = 2,
+            Text(nextTitle, color = LocalPaper.current.muted, maxLines = 2,
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.testTag("epub_next_chapter_title"))
-            PaperButton("다음 장으로", "epub_next_chapter", Modifier.fillMaxWidth(), enabled = enabled, onClick = onNext)
+            PaperButton("다음으로", "epub_next_chapter", Modifier.fillMaxWidth(), enabled = enabled, onClick = onNext)
         }
     }
 }
@@ -215,12 +214,12 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
             SettingsSection("읽기 방식", Icons.Outlined.MenuBook) {
                 ChoiceGroup(EpubMode.entries, prefs.mode, label = { if (it == EpubMode.SCROLL) "장별 스크롤" else "페이지 넘김" },
                     tag = { "epub_mode_${it.name.lowercase()}" }) { vm.changeSetting("EPUB", "mode", it) }
-                Small("스크롤은 장 안에서 이어집니다. 하단 화살표나 장 끝의 ‘다음 장으로’ 버튼으로 이동합니다. 세로쓰기 책은 책의 쓰기 방향을 따릅니다.")
+                Small("스크롤은 장 안에서 이어집니다. 하단 화살표나 장 끝의 ‘다음으로’ 버튼으로 이동합니다. 세로쓰기 책은 책의 쓰기 방향을 따릅니다.")
             }
             if (prefs.mode == EpubMode.SCROLL) SettingsSection("장 이동 버튼", Icons.Outlined.SwapHoriz) {
                 ChoiceGroup(EpubChapterButtons.entries, prefs.chapterButtons, label = { it.label },
                     tag = { "epub_chapter_buttons_$it" }) { vm.changeSetting("EPUB", "chapterButtons", it) }
-                Small("장별 스크롤의 좌우 화살표에 적용됩니다. 화살표를 숨겨도 장 끝의 ‘다음 장으로’ 버튼은 표시됩니다.")
+                Small("장별 스크롤의 좌우 화살표에 적용됩니다. 화살표를 숨겨도 장 끝의 ‘다음으로’ 버튼은 표시됩니다.")
             }
             SettingsSection("글꼴과 크기", Icons.Outlined.TextFields) {
                 ChoiceGroup(EpubFont.entries, prefs.font, label = { it.label }, tag = { "epub_font_$it" }) { vm.changeSetting("EPUB", "font", it) }
@@ -268,12 +267,12 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
                 ?: epubOutlineIndex(outline, at?.href)
             val list = rememberLazyListState(initialFirstVisibleItemIndex = selectedIndex.coerceAtLeast(0))
             LazyColumn(Modifier.heightIn(max = 460.dp).testTag("epub_outline"), state = list) {
-                itemsIndexed(outline) { index, (link, depth) ->
+                itemsIndexed(outline) { index, entry ->
                     val current = index == selectedIndex
                     Column(Modifier.fillMaxWidth().background(if (current) LocalPaper.current.soft else LocalPaper.current.surface)
-                        .semantics { selected = current }.clickable { reader.follow(link); vm.sheet(null) }.testTag("epub_chapter_$index")
-                        .padding(start = (depth.coerceAtMost(6) * 12 + 8).dp, end = 8.dp, top = 14.dp, bottom = 14.dp)) {
-                        Text(link.title?.takeIf { it.isNotBlank() } ?: "${index + 1}장", maxLines = 3, overflow = TextOverflow.Ellipsis)
+                        .semantics { selected = current }.clickable { reader.follow(entry.link); vm.sheet(null) }.testTag("epub_chapter_$index")
+                        .padding(start = (entry.depth.coerceAtMost(6) * 12 + 8).dp, end = 8.dp, top = 14.dp, bottom = 14.dp)) {
+                        Text(entry.title, maxLines = 3, overflow = TextOverflow.Ellipsis)
                         if (current) Small("현재 위치")
                     }; Rule()
                 }
@@ -281,7 +280,7 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
         }
         "epub_bookmarks" -> {
             val marks by reader.marks.collectAsStateWithLifecycle()
-            if (marks.isEmpty()) Small("저장한 책갈피가 없습니다.")
+            if (marks.isEmpty()) Small("저장한 책갈피가 없어요.")
             LazyColumn(Modifier.heightIn(max = 460.dp)) {
                 itemsIndexed(marks, key = { _, mark -> mark.id }) { index, mark ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -301,7 +300,7 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 8.dp)) {
                 PaperButton("검색", "epub_search_submit", onClick = { reader.startSearch(query) })
                 if (state.running) PaperButton("중지", "epub_search_cancel", outlined = true, onClick = reader::cancelSearch)
-                else PaperButton("원래 위치로", "epub_search_return", outlined = true, onClick = { reader.returnFromSearch(); vm.sheet(null) })
+                else PaperButton("검색 전 위치로", "epub_search_return", outlined = true, onClick = { reader.returnFromSearch(); vm.sheet(null) })
             }
             if (state.running) LinearProgressIndicator(Modifier.fillMaxWidth())
             Small("${state.count}개${if (state.running) " · 검색 중" else ""}")

@@ -111,7 +111,7 @@ class EpubReaderTest {
             compose.onNodeWithTag("epub_chapter_buttons_HIDDEN").performScrollTo().performClick()
             compose.waitUntil(10_000) { vm.epub.value.chapterButtons == EpubChapterButtons.HIDDEN }
             compose.waitUntil(5_000) { compose.onAllNodes(hasTestTag("epub_chapter_buttons_HIDDEN") and isSelected()).fetchSemanticsNodes().isNotEmpty() }
-            compose.onNodeWithText("장별 스크롤의 좌우 화살표에 적용됩니다. 화살표를 숨겨도 장 끝의 ‘다음 장으로’ 버튼은 표시됩니다.").performScrollTo()
+            compose.onNodeWithText("장별 스크롤의 좌우 화살표에 적용됩니다. 화살표를 숨겨도 장 끝의 ‘다음으로’ 버튼은 표시됩니다.").performScrollTo()
             captureScreen("chapter-button-settings")
             withContext(Dispatchers.Main) { vm.closeEpubSettings() }
             waitReady(vm)
@@ -284,7 +284,7 @@ class EpubReaderTest {
             waitChapter(vm, 2)
             script("document.getElementById('p40').scrollIntoView()")
             compose.waitUntil(10_000) { vm.epubReader.navigation.value.outlineIndex == 5 }
-            compose.onNodeWithTag("epub_progress").assertTextContains("2 / 3", substring = true)
+            compose.onNodeWithTag("epub_current_chapter").assertTextEquals("둘째 절")
             compose.onNodeWithTag("epub_contents").performClick()
             compose.onNodeWithTag("epub_chapter_5").assertIsDisplayed().assertIsSelected()
             withContext(Dispatchers.Main) { vm.sheet(null) }

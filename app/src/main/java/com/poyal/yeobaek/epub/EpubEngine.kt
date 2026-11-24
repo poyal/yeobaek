@@ -31,7 +31,7 @@ data class OpenEpub(val book: Book, val document: EpubDocument, val initial: Loc
 
 class EpubDocument(val file: File, val publication: Publication, positions: List<Locator> = emptyList()) : java.io.Closeable {
     val fixed = publication.metadata.presentation.layout == EpubLayout.FIXED
-    val outline = epubOutline(publication.tableOfContents.ifEmpty { publication.readingOrder })
+    val outline = epubOutline(publication.tableOfContents.ifEmpty { publication.readingOrder }, publication.readingOrder)
     val closed = AtomicBoolean(false)
     private val starts = positions.groupBy { it.href.toString() }.mapValues { it.value.first().locations.totalProgression }
     fun resourceIndex(locator: Locator?) = publication.readingOrder.indexOfFirst { locator != null && sameEpubResource(it.url(), locator.href) }.coerceAtLeast(0)

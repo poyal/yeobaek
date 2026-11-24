@@ -24,10 +24,10 @@ import com.poyal.yeobaek.ReadingEnd
         title = { Text("끝까지 읽었어요") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             when {
-                end.loading -> { LinearProgressIndicator(Modifier.fillMaxWidth()); Small("다음 항목을 확인하고 있어요.") }
+                end.loading -> { LinearProgressIndicator(Modifier.fillMaxWidth()); Small("같은 폴더에서 다음 책을 찾고 있어요.") }
                 end.error != null -> Text(end.error)
                 end.next != null -> {
-                    Small("다음에 읽을 항목")
+                    Small("같은 폴더의 다음 책")
                     Surface(color = colors.alt, shape = RoundedCornerShape(4.dp)) {
                         Column(Modifier.fillMaxWidth().padding(16.dp)) {
                             Text(end.next.name, fontSize = 14.sp, lineHeight = 22.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -35,15 +35,15 @@ import com.poyal.yeobaek.ReadingEnd
                         }
                     }
                 }
-                else -> Text("이 폴더에 다음으로 읽을 항목이 없어요.")
+                else -> Text("같은 폴더에 다음 책이 없어요.")
             }
         } },
         confirmButton = {
             // Vertical, full-width actions keep long labels usable at larger system font sizes.
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (end.loading || end.next != null) PaperButton("다음 것 보기", "reading_end_next", Modifier.fillMaxWidth(),
+                if (end.loading || end.next != null) PaperButton("다음 책 열기", "reading_end_next", Modifier.fillMaxWidth(),
                     enabled = !end.loading && end.next != null, onClick = next)
-                PaperButton("나가기", "reading_end_exit", Modifier.fillMaxWidth(), outlined = end.loading || end.next != null, onClick = exit)
+                PaperButton("폴더로 돌아가기", "reading_end_exit", Modifier.fillMaxWidth(), outlined = end.loading || end.next != null, onClick = exit)
             }
         },
     )

@@ -26,7 +26,7 @@ class ReadingEndDialogTest {
         ui.onNodeWithTag("reading_end_exit").assertIsEnabled()
         ui.runOnIdle { state = ReadingEnd("test", loading = false, next = entry) }
         ui.onNodeWithText(entry.name).assertIsDisplayed()
-        ui.onNodeWithTag("reading_end_next").performClick()
+        ui.onNodeWithTag("reading_end_next").assertTextEquals("다음 책 열기").performClick()
         ui.runOnIdle { assertEquals(1, next); assertEquals(0, exits) }
         pressBack()
         ui.onNodeWithTag("reading_end_dialog").assertDoesNotExist()
@@ -36,11 +36,11 @@ class ReadingEndDialogTest {
         var exits = 0
         ui.setContent { YeobaekTheme(AppTheme.DARK) { ReadingEndDialog(state, {}, { exits++ }, {}) } }
         ui.onNodeWithTag("reading_end_next").assertDoesNotExist()
-        ui.onNodeWithText("이 폴더에 다음으로 읽을 항목이 없어요.").assertIsDisplayed()
-        ui.onNodeWithTag("reading_end_exit").performClick()
+        ui.onNodeWithText("같은 폴더에 다음 책이 없어요.").assertIsDisplayed()
+        ui.onNodeWithTag("reading_end_exit").assertTextEquals("폴더로 돌아가기").performClick()
         ui.runOnIdle { state = state.copy(error = "폴더 접근 권한을 확인해 주세요.") }
         ui.onNodeWithText("폴더 접근 권한을 확인해 주세요.").assertIsDisplayed()
-        ui.onNodeWithTag("reading_end_exit").performClick()
+        ui.onNodeWithTag("reading_end_exit").assertTextEquals("폴더로 돌아가기").performClick()
         ui.runOnIdle { assertEquals(2, exits) }
     }
 }

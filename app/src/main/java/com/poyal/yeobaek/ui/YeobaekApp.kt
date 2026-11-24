@@ -141,11 +141,10 @@ import java.util.Locale
     state.resume?.let { book ->
         val p = progress[book.id] ?: ReadingProgress.Unknown
         AlertDialog(shape = RoundedCornerShape(8.dp), modifier = Modifier.semantics { testTagsAsResourceId = true }, onDismissRequest = { vm.chooseResume(false) }, icon = { Icon(Icons.Outlined.MenuBook, null) },
-            title = { Heading("이어서\n읽으시겠습니까?") },
-            text = { Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            title = { Heading("읽던 곳에서 이어 볼까요?") },
+            text = {
                 Surface(color = appColors.alt, shape = RoundedCornerShape(4.dp)) { Column(Modifier.fillMaxWidth().padding(16.dp)) { Filename(book.name); Small("마지막 읽은 위치 · ${p.label}") } }
-                Small("마지막으로 읽던 위치부터\n이야기를 이어갈 수 있어요.")
-            } },
+            },
             confirmButton = { PaperButton("이어서 읽기", "resume_accept", onClick = { vm.chooseResume(true) }) },
             dismissButton = { PaperButton("폴더 보기", "resume_decline", outlined = true, onClick = { vm.chooseResume(false) }) }, containerColor = appColors.raised)
     }
@@ -253,7 +252,7 @@ import java.util.Locale
                 val position = progress[recent.id] ?: ReadingProgress.Unknown
                 Surface(onClick = { vm.openBook(recent) }, color = p.soft, shape = RoundedCornerShape(4.dp), border = BorderStroke(1.dp, p.line), modifier = Modifier.fillMaxWidth().testTag("continue_card")) {
                     Column(Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Outlined.MenuBook, null, Modifier.size(16.dp), tint = p.accent); Small("다시 펼치는 이야기", Modifier.padding(start = 8.dp)) }
+                        Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Outlined.MenuBook, null, Modifier.size(16.dp), tint = p.accent); Small("이어 읽기", Modifier.padding(start = 8.dp)) }
                         Text(if (recent.format == "IMAGE_FOLDER") recent.name else recent.name.substringBeforeLast(".", recent.name), Modifier.fillMaxWidth().padding(vertical = 12.dp), fontFamily = Serif, fontSize = 23.sp, lineHeight = 32.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) { Text(position.label, Modifier.weight(1f), color = p.accent, fontWeight = FontWeight.SemiBold, fontSize = 14.sp); Icon(Icons.Outlined.ChevronRight, null, Modifier.size(20.dp)) }
                         LinearProgressIndicator(progress = { position.fraction?.toFloat() ?: 0f }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(2.dp), color = p.accent, trackColor = p.line)
@@ -319,9 +318,6 @@ import java.util.Locale
 
 @Composable private fun AppSettings(vm: AppViewModel, modifier: Modifier) {
     SettingsPage("설정", "settings_screen", { vm.screen("folder") }, modifier, "app_settings") {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Small("나에게 맞는 여백"); Heading("편안한 읽기를 위해.")
-        }
         SettingsCard(contentPadding = PaddingValues(4.dp)) {
             SettingsRow(Icons.Outlined.Tune, "일반 설정", "앱 테마 · 백업 · 저장 공간", "settings_general", { vm.screen("general_settings") })
         }
@@ -430,12 +426,12 @@ import java.util.Locale
     FlowRow(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         PaperButton("검색", "search_submit", onClick = { vm.search(query) })
         if (state.searching) PaperButton("검색 취소", "search_cancel", outlined = true, onClick = vm::cancelSearch)
-        PaperButton("원래 위치로", "search_return", outlined = true, onClick = vm::returnFromSearch)
+        PaperButton("검색 전 위치로", "search_return", outlined = true, onClick = vm::returnFromSearch)
     }
     if (state.searching) { LinearProgressIndicator(progress = { state.searchScanned }, modifier = Modifier.fillMaxWidth()); Small("본문에서 찾고 있어요.") }
     state.searchError?.let { Text(it, color = LocalPaper.current.danger) }
     state.searchResult?.let { result ->
-        Small(if (result.count == 0L) "검색 결과가 없습니다." else "${result.count}개의 문장 · ${state.searchIndex + 1}번째")
+        Small(if (result.count == 0L) "검색 결과가 없습니다." else "검색 결과 ${result.count}개 · ${state.searchIndex + 1}번째")
         Row(Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PaperButton("이전", "search_previous", Modifier.weight(1f), outlined = true, enabled = state.searchIndex > 0, onClick = { vm.searchResult(state.searchIndex - 1) })
             PaperButton("다음", "search_next", Modifier.weight(1f), outlined = true, enabled = state.searchIndex + 1 < result.count, onClick = { vm.searchResult(state.searchIndex + 1) })
@@ -454,7 +450,7 @@ import java.util.Locale
 }
 @Composable private fun BookmarkSheet(vm: AppViewModel) {
     val marks by vm.bookmarks.collectAsStateWithLifecycle()
-    if (marks.isEmpty()) EmptyState("접어 둔 문장이 없어요.", "독서 화면 위쪽의 책갈피를 눌러 남겨 보세요.")
+    if (marks.isEmpty()) EmptyState("저장한 책갈피가 없어요.", "독서 화면 위쪽의 책갈피를 눌러 남겨 보세요.")
     else LazyColumn(Modifier.heightIn(max = 430.dp).testTag("bookmark_list")) { items(marks, key = { it.id }) { mark ->
         Row(verticalAlignment = Alignment.CenterVertically) { Text(mark.excerpt.ifEmpty { "빈 문장" }, Modifier.weight(1f).clickable { vm.openBookmark(mark) }.padding(vertical = 16.dp, horizontal = 8.dp), fontSize = 14.sp); Tool(Icons.Outlined.DeleteOutline, "책갈피 삭제", "bookmark_delete", destructive = true, onClick = { vm.deleteBookmark(mark.id) }) }; Rule()
     } }

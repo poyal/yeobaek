@@ -18,7 +18,7 @@ class EpubNavigationTest {
         assertEquals(listOf(0, 1, 1, 0), outline.map { it.depth })
         assertEquals("첫 장", epubChapterTitle(order, outline, 1))
         assertEquals("맺음말", epubChapterTitle(order, outline, 2))
-        assertEquals("1번째 구간", epubChapterTitle(order, outline, 0))
+        assertEquals("본문 1", epubChapterTitle(order, outline, 0))
         assertEquals(-1, epubOutlineIndex(outline, Url("cover.xhtml")))
         assertEquals(0, epubOutlineIndex(outline, Url("body.xhtml#two")))
     }
@@ -31,5 +31,14 @@ class EpubNavigationTest {
         assertEquals(1, epubOutlineIndex(outline, Url("two.xhtml#note")))
         assertEquals("둘째 장", epubChapterTitle(order, outline, 1))
         assertEquals(-1, epubOutlineIndex(outline, null))
+    }
+
+    @Test fun unnamedOutlineItemsShareTheHeaderTitleEvenWhenSpineAndOutlineIndexesDiffer() {
+        val order = listOf(link("cover.xhtml"), link("intro.xhtml", "프롤로그"), link("part.xhtml"), link("end.xhtml"))
+        val outline = epubOutline(listOf(link("intro.xhtml"), link("part.xhtml", " ", listOf(link("part.xhtml#note"))),
+            link("end.xhtml", "부록")), order)
+        assertEquals(listOf("프롤로그", "본문 2", "본문 3", "부록"), outline.map { it.title })
+        assertEquals("본문 2", epubChapterTitle(order, outline, 2))
+        assertEquals("부록", epubChapterTitle(order, outline, 3))
     }
 }

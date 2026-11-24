@@ -1,13 +1,40 @@
 package com.poyal.yeobaek
 
 import androidx.room.Room
+import androidx.room.withTransaction
 import androidx.test.platform.app.InstrumentationRegistry
 import com.poyal.yeobaek.data.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
 import org.junit.Assert.*
 import org.junit.Test
 
 class PersistenceTest {
+    @Test fun recentBooksKeepOldEntriesAndReopenWithoutDuplicates() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val db = Room.inMemoryDatabaseBuilder(context, LibraryDatabase::class.java).build()
+        try {
+            val dao = db.library()
+            val oldest = Book("1", "1", "content://test/1", "처음 읽은 책.txt", "서재", openedAt = 1420070400000L)
+            db.withTransaction {
+                dao.putBook(oldest)
+                for (index in 2..1001) {
+                    val id = index.toString()
+                    dao.putBook(oldest.copy(id = id, sourceKey = id, uri = "content://test/$id", openedAt = oldest.openedAt + index))
+                }
+            }
+            val original = dao.observeBooks().first()
+            assertEquals(1001, original.size)
+            assertEquals(oldest.id, original.last().id)
+            dao.activate(oldest)
+            val reopened = dao.observeBooks().first()
+            assertEquals(original.size, reopened.size)
+            assertEquals(oldest.id, reopened.first().id)
+            dao.forget(oldest.id)
+            assertEquals(original.dropLast(1), dao.observeBooks().first())
+        } finally { db.close() }
+    }
+
     @Test fun latePositionCannotResurrectDeletedRecordOrOverwriteNewSession() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val db = Room.inMemoryDatabaseBuilder(context, LibraryDatabase::class.java).build()

@@ -106,3 +106,6 @@ import com.poyal.yeobaek.R
     }
 }
 @Composable fun Filename(name: String, modifier: Modifier = Modifier) { Text(name, modifier, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+
+internal fun String.withoutReaderSuffix(suffix: String): String =
+    if (length > suffix.length && endsWith(suffix, ignoreCase = true)) dropLast(suffix.length) else this

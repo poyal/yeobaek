@@ -16,10 +16,21 @@ data class EpubNavigationState(
     val outlineIndex: Int = -1,
 )
 
-data class EpubOutlineEntry(val link: Link, val depth: Int)
+data class EpubOutlineEntry(val link: Link, val depth: Int, val title: String)
 
-fun epubOutline(links: List<Link>, depth: Int = 0): List<EpubOutlineEntry> =
-    links.flatMap { listOf(EpubOutlineEntry(it, depth)) + epubOutline(it.children, depth + 1) }
+fun epubOutline(links: List<Link>, readingOrder: List<Link> = emptyList()): List<EpubOutlineEntry> = buildList {
+    val namedResources = readingOrder.filterNot { it.title.isNullOrBlank() }
+    fun appendLinks(entries: List<Link>, depth: Int) {
+        for (link in entries) {
+            val title = link.title?.takeIf { it.isNotBlank() }
+                ?: namedResources.firstOrNull { it.url().isEquivalent(link.url()) }?.title
+                ?: "본문 ${size + 1}"
+            add(EpubOutlineEntry(link, depth, title))
+            appendLinks(link.children, depth + 1)
+        }
+    }
+    appendLinks(links, 0)
+}
 
 fun sameEpubResource(first: Url, second: Url): Boolean = first.removeFragment().isEquivalent(second.removeFragment())
 
@@ -29,6 +40,7 @@ fun epubOutlineIndex(outline: List<EpubOutlineEntry>, href: Url?): Int =
 
 fun epubChapterTitle(readingOrder: List<Link>, outline: List<EpubOutlineEntry>, index: Int): String {
     val resource = readingOrder.getOrNull(index) ?: return "본문"
-    return outline.firstOrNull { sameEpubResource(it.link.url(), resource.url()) && !it.link.title.isNullOrBlank() }
-        ?.link?.title ?: resource.title?.takeIf { it.isNotBlank() } ?: "${index + 1}번째 구간"
+    val entryIndex = epubOutlineIndex(outline, resource.url())
+    return outline.getOrNull(entryIndex)?.title
+        ?: resource.title?.takeIf { it.isNotBlank() } ?: "본문 ${index + 1}"
 }

@@ -173,7 +173,7 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
             Row(Modifier.padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PaperButton("검색", "pdf_search_submit", onClick = { reader.startSearch(query) })
                 if (state.running) PaperButton("중지", "pdf_search_cancel", outlined = true, onClick = reader::cancelSearch)
-                else PaperButton("원래 위치로", "pdf_search_return", outlined = true, onClick = { reader.returnFromSearch(); vm.sheet(null) })
+                else PaperButton("검색 전 위치로", "pdf_search_return", outlined = true, onClick = { reader.returnFromSearch(); vm.sheet(null) })
             }
             if (state.running) { LinearProgressIndicator(progress = { state.scanned.toFloat() / opened.document.pages.size }, modifier = Modifier.fillMaxWidth()); Small("${state.scanned} / ${opened.document.pages.size} 페이지 확인 중") }
             state.error?.let { Text(it, color = LocalPaper.current.danger) }
@@ -197,7 +197,7 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
         }
         "pdf_bookmarks" -> {
             val marks by reader.marks.collectAsStateWithLifecycle()
-            if (marks.isEmpty()) EmptyState("접어 둔 페이지가 없어요.", "위쪽 책갈피 버튼으로 현재 페이지를 남겨 보세요.")
+            if (marks.isEmpty()) EmptyState("저장한 책갈피가 없어요.", "위쪽 책갈피 버튼으로 현재 페이지를 남겨 보세요.")
             else LazyColumn(Modifier.heightIn(max = 420.dp).testTag("pdf_bookmark_list")) {
                 itemsIndexed(marks, key = { _, mark -> mark.id }) { _, mark ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
