@@ -31,7 +31,10 @@ data class ImageLocator(val page: Int = 0, val key: String = "", val x: Float = 
     val zoom: Float = 1f, val completed: Boolean = false, val segment: Int = -1) {
     fun constrained(pages: List<ImagePage>): ImageLocator {
         if (pages.isEmpty()) return copy(page = 0, key = "")
-        val index = pages.indexOfFirst { it.key == key }.takeIf { it >= 0 } ?: page.coerceIn(pages.indices)
+        val index = when {
+            key.isEmpty() || pages.getOrNull(page)?.key == key -> page.coerceIn(pages.indices)
+            else -> pages.indexOfFirst { it.key == key }.takeIf { it >= 0 } ?: page.coerceIn(pages.indices)
+        }
         return copy(page = index, key = pages[index].key, x = x.finite(0f).coerceIn(0f, 1f),
             y = y.finite(0f).coerceIn(0f, 1f), zoom = zoom.finite(1f).coerceIn(1f, 5f), segment = segment.coerceIn(-1, 1))
     }

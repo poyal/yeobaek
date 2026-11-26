@@ -6,6 +6,10 @@ import android.os.SystemClock
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.pinch
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.test.platform.app.InstrumentationRegistry
@@ -58,7 +62,7 @@ class ImageLoadTest {
                 AndroidView(factory = { ctx -> ImageDocumentView(ctx).also {
                     currentView = it; it.onReady = { ready = true }; it.onPosition = { p -> latest = p }
                     it.open(source, latest)
-                } }, modifier = Modifier.fillMaxSize(), onRelease = { it.dispose() })
+                } }, modifier = Modifier.fillMaxSize().testTag("image_load_canvas"), onRelease = { it.dispose() })
             }
         }
         suspend fun open(): Pair<ImageSource, Long> {
@@ -87,6 +91,30 @@ class ImageLoadTest {
         try {
             val first = open(); active = first.first
             settled(); report.put("first_display_ms", first.second).put("pages", first.first.pages.value.size)
+            compose.runOnIdle {
+                currentView!!.setContentInsets(0, 0)
+                currentView!!.move(ImageLocator(page = 0, x = .2f, y = .25f, zoom = 2f))
+            }
+            settled()
+            fun centerOnPage() = compose.runOnIdle {
+                val view = requireNotNull(currentView)
+                val position = view.locator()
+                assertEquals(0, position.page)
+                val page = first.first.pages.value[position.page]
+                val pageHeight = view.width * position.zoom * page.height / page.width
+                (position.x + .5f / position.zoom) to (position.y + view.height * .5f / pageHeight)
+            }
+            val before = centerOnPage()
+            compose.onNodeWithTag("image_load_canvas").performTouchInput {
+                pinch(start0 = center * .8f, start1 = center * 1.2f, end0 = center * .62f, end1 = center * 1.38f)
+            }
+            settled()
+            val after = centerOnPage()
+            compose.runOnIdle { assertTrue(currentView!!.locator().zoom > 2.5f) }
+            assertEquals(before.first, after.first, .015f)
+            assertEquals(before.second, after.second, .015f)
+            report.put("pinch_anchor_error_x", kotlin.math.abs(before.first - after.first))
+                .put("pinch_anchor_error_y", kotlin.math.abs(before.second - after.second))
             val count = first.first.pages.value.size
             repeat(30) { iteration ->
                 val page = when (iteration % 5) { 0 -> count - 1; 1 -> 0; else -> (iteration * 7919) % count }

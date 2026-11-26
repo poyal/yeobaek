@@ -87,7 +87,6 @@ class ImageSource private constructor(val version: String, initial: List<ImagePa
     private val extraction = Mutex()
     private val _pages = MutableStateFlow(initial)
     val pages = _pages.asStateFlow()
-    val activity = MutableStateFlow<String?>(null)
     @Volatile private var closed = false
     private suspend fun file(page: ImagePage): File {
         if (closed) throw ImageFailure("이미지 문서가 닫혔습니다.")
@@ -95,22 +94,23 @@ class ImageSource private constructor(val version: String, initial: List<ImagePa
             val deferred = files.computeIfAbsent(page.key) {
                 scope.async {
                     extraction.withLock {
-                        activity.value = "${page.name} 준비 중"
-                        try {
-                            if (archiveFile == null) store.copy({ requireNotNull(openImage)(page) }, ImageProtocol.MAX_ENTRY)
+                        val file = if (archiveFile == null) {
+                            store.copy({ requireNotNull(openImage)(page) }, ImageProtocol.MAX_ENTRY)
+                        } else {
+                            val target = store.target("$version:${page.key}")
+                            if (target.isFile && (page.size <= 0 || target.length() == page.size)) target
                             else {
-                                val target = store.target("$version:${page.key}")
-                                if (target.isFile && (page.size <= 0 || target.length() == page.size)) target
-                                else {
-                                    val part = store.part()
-                                    try {
-                                        engine.extract(page.key.substringBefore(':').toInt(), part)
-                                        if (!part.renameTo(target)) throw ImageFailure("이미지 캐시를 저장하지 못했습니다.")
-                                        target
-                                    } finally { part.delete() }
-                                }
-                            }.also { it.setLastModified(System.currentTimeMillis()); store.trim(setOf(it)) }
-                        } finally { activity.value = null }
+                                val part = store.part()
+                                try {
+                                    engine.extract(page.key.substringBefore(':').toInt(), part)
+                                    if (!part.renameTo(target)) throw ImageFailure("이미지 캐시를 저장하지 못했습니다.")
+                                    target
+                                } finally { part.delete() }
+                            }
+                        }
+                        file.setLastModified(System.currentTimeMillis())
+                        store.trim(setOf(file))
+                        file
                     }
                 }
             }
@@ -138,20 +138,23 @@ class ImageSource private constructor(val version: String, initial: List<ImagePa
         }
         try {
             val size = task.await()
-            _pages.update { values -> values.toMutableList().also { it[index] = page.copy(width = size.first, height = size.second, measured = true) } }
+            _pages.update { values ->
+                if (values[index].measured) values
+                else values.toMutableList().also { it[index] = page.copy(width = size.first, height = size.second, measured = true) }
+            }
             return pages.value[index]
         } catch (e: Exception) { if (task.isCompleted) measured.remove(page.key, task); throw e }
     }
-    suspend fun render(index: Int, pw: Int, ph: Int, x: Int, y: Int, w: Int, h: Int): Bitmap {
+    suspend fun render(index: Int, pw: Int, ph: Int, x: Int, y: Int, w: Int, h: Int): Bitmap = withContext(Dispatchers.IO) {
         val page = measure(index)
-        return engine.render(file(page), pw, ph, x, y, w, h)
+        engine.render(file(page), pw, ph, x, y, w, h)
     }
-    suspend fun thumbnail(index: Int): Bitmap {
+    suspend fun thumbnail(index: Int): Bitmap = withContext(Dispatchers.IO) {
         val page = measure(index)
         val scale = 192f / max(page.width, page.height)
         val w = (page.width * scale).roundToInt().coerceIn(1, 192)
         val h = (page.height * scale).roundToInt().coerceIn(1, 192)
-        return render(index, w, h, 0, 0, w, h)
+        engine.render(file(page), w, h, 0, 0, w, h)
     }
     fun close() {
         if (closed) return

@@ -3,13 +3,15 @@ package com.poyal.yeobaek.image
 import android.content.Context
 import android.graphics.*
 import android.os.Bundle
-import android.util.LruCache
+import android.os.SystemClock
 import android.view.*
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.OverScroller
 import com.poyal.yeobaek.pdf.PDF_INVERSION
 import com.poyal.yeobaek.ReadingEndSignal
 import com.poyal.yeobaek.ui.ReaderTouchGuard
+import com.poyal.yeobaek.image.ImageRaster.Preview
+import com.poyal.yeobaek.image.ImageRaster.Tile
 import kotlinx.coroutines.*
 import kotlin.math.*
 
@@ -23,32 +25,39 @@ class ImageDocumentView(context: Context) : View(context) {
     private var widths = FloatArray(0)
     private var heights = FloatArray(0)
     private var spreads = emptyList<List<Int>>()
+    private var currentGroup = emptyList<Int>()
     private var focus = 0
     private var segment = -1
+    private val uncropped = CropRect()
     private val autoCrops = mutableMapOf<Int, CropRect>()
     private val cropping = mutableMapOf<Int, Job>()
     private var deferredPages: List<ImagePage>? = null
     private fun splitEnabled() = preferences.splitWide && preferences.mode == ImageMode.PAGED && height > width
     private fun split(index: Int) = splitEnabled() && pages.getOrNull(index)?.wide == true
     private fun firstHalf() = if (preferences.direction == ImageDirection.LTR) 0 else 1
+    private fun needsAutoCrop(page: Int) = preferences.cropMode == CropMode.AUTO &&
+        page !in autoCrops && preferences.pageCrops[pages[page].key] == null
     private fun crop(index: Int): CropRect {
         val base = preferences.pageCrops[pages[index].key] ?: when (preferences.cropMode) {
-            CropMode.OFF -> CropRect()
+            CropMode.OFF -> uncropped
             CropMode.MANUAL -> preferences.crop
-            CropMode.AUTO -> autoCrops[index] ?: CropRect()
+            CropMode.AUTO -> autoCrops[index] ?: uncropped
         }
         return if (index == focus && split(index)) base.half(segment == 1) else base
-    }
-    private fun applyPages(updated: List<ImagePage>) {
-        val position = locator(); pages = updated; pending = position
-        layoutPages(); restore(); changed()
     }
 
     private var scroll = 0f
     private var pan = 0f
     private var zoom = 1f
-    private var total = 0f
-    private var groupWidth = 0f
+    private var pinchResolution: Float? = null
+    private var lastPinchReport = 0L
+    // Dimensions at 1x exclude page gaps, which stay the same size at every zoom.
+    private var baseHeight = 0f
+    private var baseGroupWidth = 0f
+    private val gap get() = preferences.spacing * density
+    private fun pageStart(index: Int) = starts[index] * zoom + index * gap
+    private val total get() = baseHeight * zoom + if (preferences.mode == ImageMode.VERTICAL) pages.lastIndex * gap else 0f
+    private val groupWidth get() = baseGroupWidth * zoom + (currentGroup.size - 1).coerceAtLeast(0) * gap
     private var pending: ImageLocator? = null
     private var ready = false
     private var disposed = false
@@ -58,28 +67,36 @@ class ImageDocumentView(context: Context) : View(context) {
     private val contentHeight get() = (height - topPad - bottomPad).coerceAtLeast(1f)
     private var backgroundColor = Color.LTGRAY
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-    private val label = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 13 * density; textAlign = Paint.Align.CENTER }
+    private val inversion = ColorMatrixColorFilter(PDF_INVERSION)
     private val scroller = OverScroller(context)
-    private data class Tile(val page: Int, val pw: Int, val ph: Int, val x: Int, val y: Int, val w: Int, val h: Int)
-    private val cache = object : LruCache<Tile, Bitmap>((Runtime.getRuntime().maxMemory() / 8).coerceAtMost(48L * 1024 * 1024).toInt()) {
-        override fun sizeOf(key: Tile, value: Bitmap) = value.byteCount
-    }
-    private val jobs = mutableMapOf<Tile, Job>()
-    private val measuring = mutableMapOf<Int, Job>()
-    private val failures = mutableSetOf<Int>()
+    private val cache = ImageTileCache()
+    private var queue = linkedSetOf<ImageRaster>()
+    private var rendering = false
+    private var renderJob: Job? = null
+    private var queuedPreview: Preview? = null
+    private var activePrefetch: Preview? = null
+    private val failures = mutableMapOf<Int, String>()
+    private var reportedFailure: Int? = null
+    private var scrollDirection = 1
+    private var emptySince = -1L
+    private val waitingTimer = Runnable { invalidate() }
+    private var waiting = false
+    var onWaiting: (Boolean) -> Unit = {}
     private var visible = emptySet<Tile>()
+    private var visibleGeometryReady = false
     private var rendered = 0L
     internal data class RenderStatus(val visible: Int, val complete: Int, val cacheBytes: Int, val cacheLimit: Int,
         val queued: Int, val rendered: Long, val failures: Int, val settled: Boolean)
     internal fun renderStatus() = RenderStatus(visible.size, visible.count { cache.get(it) != null }, cache.size(), cache.maxSize(),
-        jobs.size + measuring.size, rendered, failures.size, scroller.isFinished && !scales.isInProgress)
+        queue.size + if (rendering) 1 else 0, rendered, failures.size,
+        visibleGeometryReady && !touching && scroller.isFinished && !scales.isInProgress)
     var onReady: () -> Unit = {}
     var onPosition: (ImageLocator) -> Unit = {}
     var onEndReached: () -> Unit = {}
     private val endSignal = ReadingEndSignal()
     private var touching = false
     var onTap: () -> Unit = {}
-    var onFailure: (String) -> Unit = {}
+    var onFailure: (Int, String) -> Unit = { _, _ -> }
     private var downX = 0f
     private var downY = 0f
     private var pinched = false
@@ -109,9 +126,12 @@ class ImageDocumentView(context: Context) : View(context) {
         override fun onLongPress(e: MotionEvent) { touchGuard.reject() }
         override fun onScroll(e1: MotionEvent?, e2: MotionEvent, dx: Float, dy: Float): Boolean {
             if (!touchGuard.multiplePointers && !scales.isInProgress) {
-                if (preferences.mode == ImageMode.VERTICAL && abs(dy) > abs(dx)) endSignal.advance(dy > 0)
+                if (preferences.mode == ImageMode.VERTICAL && abs(dy) > abs(dx)) {
+                    endSignal.advance(dy > 0)
+                    scrollDirection = if (dy > 0) 1 else -1
+                }
                 scroll = (scroll + dy).coerceIn(0f, maxScroll())
-                val overflow = (if (preferences.mode == ImageMode.VERTICAL) widths.getOrElse(pageAt(scroll)) { 0f } else groupWidth) - width
+                val overflow = (if (preferences.mode == ImageMode.VERTICAL) widths.getOrElse(pageAt(scroll)) { 0f } * zoom else groupWidth) - width
                 if (overflow > 0f) pan = (pan + dx / overflow).coerceIn(0f, 1f)
                 changed()
             }
@@ -124,9 +144,26 @@ class ImageDocumentView(context: Context) : View(context) {
         }
     })
     private val scales = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-        override fun onScaleBegin(detector: ScaleGestureDetector): Boolean { endSignal.cancel(); pinched = true; return true }
+        private var previousX = 0f
+        private var previousY = 0f
+        override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+            endSignal.cancel()
+            pinched = true
+            pinchResolution = ceil(zoom * 2) / 2
+            lastPinchReport = SystemClock.uptimeMillis()
+            previousX = detector.focusX
+            previousY = detector.focusY
+            return true
+        }
         override fun onScale(detector: ScaleGestureDetector): Boolean {
-            scaleTo((zoom * detector.scaleFactor).coerceIn(1f, 5f), detector.focusX, detector.focusY); return true
+            scaleTo((zoom * detector.scaleFactor).coerceIn(1f, 5f), detector.focusX, detector.focusY, previousX, previousY)
+            previousX = detector.focusX
+            previousY = detector.focusY
+            return true
+        }
+        override fun onScaleEnd(detector: ScaleGestureDetector) {
+            pinchResolution = null
+            changed()
         }
     })
     init { scales.isQuickScaleEnabled = false; isFocusable = true; importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES }
@@ -136,9 +173,9 @@ class ImageDocumentView(context: Context) : View(context) {
         layoutPages(); restore(); invalidate()
         scope.launch {
             value.pages.collect { updated ->
-                if (updated != pages) {
-                    if (touching || !scroller.isFinished || scales.isInProgress) deferredPages = updated
-                    else applyPages(updated)
+                if (updated !== pages) {
+                    deferredPages = updated
+                    applyDeferred()
                 }
             }
         }
@@ -161,7 +198,7 @@ class ImageDocumentView(context: Context) : View(context) {
     }
     private fun double() = preferences.mode == ImageMode.PAGED && (preferences.spread == ImageSpread.DOUBLE ||
         preferences.spread == ImageSpread.LANDSCAPE && width > height)
-    private fun group() = if (split(focus)) listOf(focus) else spreads.firstOrNull { focus in it } ?: listOf(focus)
+    private fun group() = currentGroup
     private fun layoutPages() {
         visible = emptySet()
         if (width <= 0 || height <= 0 || pages.isEmpty()) return
@@ -170,8 +207,6 @@ class ImageDocumentView(context: Context) : View(context) {
             else if (pages[focus].measured && !pages[focus].wide) -1
             else pending?.segment ?: segment
         starts = FloatArray(pages.size); widths = FloatArray(pages.size); heights = FloatArray(pages.size)
-        spreads = imageSpreads(pages, double(), preferences.coverAlone)
-        val gap = preferences.spacing * density
         if (preferences.mode == ImageMode.VERTICAL) {
             var y = 0f
             pages.forEachIndexed { i, size ->
@@ -179,40 +214,47 @@ class ImageDocumentView(context: Context) : View(context) {
                 val ratio = size.height * c.height / (size.width * c.width)
                 val available = width.toFloat()
                 val base = if (preferences.fit == ImageFit.PAGE) min(available, contentHeight / ratio) else available
-                starts[i] = y; widths[i] = base * zoom; heights[i] = widths[i] * ratio
-                y += heights[i] + gap
+                starts[i] = y; widths[i] = base; heights[i] = base * ratio
+                y += heights[i]
             }
-            total = (y - gap).coerceAtLeast(0f)
+            baseHeight = y
         } else {
-            val group = group()
+            spreads = imageSpreads(pages, double(), preferences.coverAlone)
+            val group = if (split(focus)) listOf(focus) else spreads.first { focus in it }
+            currentGroup = group
             val available = (width - gap * (group.size - 1)) / group.size
             group.forEach { i ->
                 val c = crop(i)
                 val ratio = pages[i].height * c.height / (pages[i].width * c.width)
                 val base = if (preferences.fit == ImageFit.PAGE) min(available, contentHeight / ratio) else available
-                widths[i] = base * zoom; heights[i] = widths[i] * ratio
+                widths[i] = base; heights[i] = base * ratio
             }
-            total = group.maxOf { heights[it] }
-            groupWidth = group.sumOf { widths[it].toDouble() }.toFloat() + gap
-            if (group.size == 1) groupWidth -= gap
+            baseHeight = group.maxOf { heights[it] }
+            baseGroupWidth = group.sumOf { widths[it].toDouble() }.toFloat()
         }
     }
-    private fun maxScroll() = if (preferences.mode == ImageMode.VERTICAL) max((total - contentHeight).coerceAtLeast(0f), starts.lastOrNull() ?: 0f)
+    private fun maxScroll() = if (preferences.mode == ImageMode.VERTICAL && starts.isNotEmpty()) max((total - contentHeight).coerceAtLeast(0f), pageStart(starts.lastIndex))
         else (total - contentHeight).coerceAtLeast(0f)
     private fun pageAt(y: Float): Int {
         if (starts.isEmpty()) return focus
-        val index = starts.binarySearch(y)
-        return if (index >= 0) index else (-index - 2).coerceIn(starts.indices)
+        var low = 0
+        var high = starts.lastIndex
+        while (low < high) {
+            val mid = (low + high + 1) / 2
+            if (pageStart(mid) <= y) low = mid else high = mid - 1
+        }
+        return low
     }
     private fun rect(index: Int): RectF {
-        val w = widths[index]; val h = heights[index]
+        val w = widths[index] * zoom; val h = heights[index] * zoom
         if (preferences.mode == ImageMode.VERTICAL) {
             val left = if (w <= width) (width - w) / 2 else -pan * (w - width)
-            return RectF(left, topPad + starts[index] - scroll, left + w, topPad + starts[index] - scroll + h)
+            val top = topPad + pageStart(index) - scroll
+            return RectF(left, top, left + w, top + h)
         }
         val group = group().let { if (preferences.direction == ImageDirection.RTL) it.reversed() else it }
         var left = if (groupWidth <= width) (width - groupWidth) / 2 else -pan * (groupWidth - width)
-        for (i in group) { if (i == index) break; left += widths[i] + preferences.spacing * density }
+        for (i in group) { if (i == index) break; left += widths[i] * zoom + gap }
         val top = topPad + (if (total <= contentHeight) (contentHeight - total) / 2 else -scroll) + (total - h) / 2
         return RectF(left, top, left + w, top + h)
     }
@@ -224,12 +266,13 @@ class ImageDocumentView(context: Context) : View(context) {
         val localX = ((p.x - c.left) / c.width).coerceIn(0f, 1f)
         val localY = ((p.y - c.top) / c.height).coerceIn(0f, 1f)
         if (preferences.mode == ImageMode.VERTICAL) {
-            scroll = if (p.completed) maxScroll() else (starts[p.page] + heights[p.page] * localY).coerceIn(0f, maxScroll())
-            pan = if (widths[p.page] > width) (localX * widths[p.page] / (widths[p.page] - width)).coerceIn(0f, 1f) else 0f
+            scroll = if (p.completed) maxScroll() else (pageStart(p.page) + heights[p.page] * zoom * localY).coerceIn(0f, maxScroll())
+            val w = widths[p.page] * zoom
+            pan = if (w > width) (localX * w / (w - width)).coerceIn(0f, 1f) else 0f
         } else {
-            scroll = ((total - heights[focus]) / 2 + heights[focus] * localY).coerceIn(0f, maxScroll())
+            scroll = ((total - heights[focus] * zoom) / 2 + heights[focus] * zoom * localY).coerceIn(0f, maxScroll())
             pan = 0f
-            if (groupWidth > width) pan = ((rect(focus).left + widths[focus] * localX) / (groupWidth - width)).coerceIn(0f, 1f)
+            if (groupWidth > width) pan = ((rect(focus).left + widths[focus] * zoom * localX) / (groupWidth - width)).coerceIn(0f, 1f)
         }
         pending = null
     }
@@ -252,6 +295,7 @@ class ImageDocumentView(context: Context) : View(context) {
     }
     fun turn(delta: Int) {
         if (pages.isEmpty()) return
+        scrollDirection = if (delta > 0) 1 else -1
         if (preferences.mode == ImageMode.VERTICAL) {
             endSignal.advance(delta > 0)
             scroll = (scroll + contentHeight * delta).coerceIn(0f, maxScroll()); changed()
@@ -270,11 +314,12 @@ class ImageDocumentView(context: Context) : View(context) {
         }
     }
     fun resetZoom() { scroller.forceFinished(true); scaleTo(1f, width / 2f, topPad + contentHeight / 2f) }
-    fun retry() { failures.clear(); invalidate() }
+    fun retry() { failures.clear(); reportedFailure = null; invalidate() }
     private fun changed() {
         visible = emptySet()
-        if (ready && pending == null) onPosition(locator())
-        contentDescription = "이미지 ${locator().page + 1} / ${pages.size} 페이지${if (split(focus)) if (segment == 0) " · 왼쪽" else " · 오른쪽" else ""} · ${(zoom * 100).toInt()}%"
+        val position = locator()
+        if (ready && pending == null) onPosition(position)
+        contentDescription = "이미지 ${position.page + 1} / ${pages.size} 페이지${if (split(focus)) if (segment == 0) " · 왼쪽" else " · 오른쪽" else ""} · ${(zoom * 100).toInt()}%"
         invalidate()
     }
     private fun hit(x: Float, y: Float): Triple<Int, Float, Float>? {
@@ -284,127 +329,203 @@ class ImageDocumentView(context: Context) : View(context) {
         }
         return null
     }
-    private fun scaleTo(value: Float, x: Float, y: Float) {
+    private fun scaleTo(value: Float, x: Float, y: Float, fromX: Float = x, fromY: Float = y) {
         endSignal.cancel()
         if (widths.isEmpty()) return
-        val point = hit(x, y) ?: Triple(locator().page, .5f, 0f)
-        focus = point.first; zoom = value; layoutPages()
+        if (value == zoom && fromX == x && fromY == y) return
+        val point = hit(fromX, fromY) ?: Triple(locator().page, .5f, 0f)
+        focus = point.first; zoom = value
         pan = 0f; scroll = 0f
         val r = rect(point.first)
         scroll = (r.top + point.third * r.height() - y).coerceIn(0f, maxScroll())
         val overflow = (if (preferences.mode == ImageMode.VERTICAL) r.width() else groupWidth) - width
         if (overflow > 0) pan = ((r.left + point.second * r.width() - x) / overflow).coerceIn(0f, 1f)
-        changed()
+        // The native canvas follows every input. Publish interim toolbar/accessibility and
+        // persistence updates at 10 Hz, then publish the exact locator in onScaleEnd.
+        val now = SystemClock.uptimeMillis()
+        if (pinchResolution == null || now - lastPinchReport >= 100) {
+            lastPinchReport = now
+            changed()
+        } else invalidate()
     }
     override fun onDraw(canvas: Canvas) {
         canvas.drawColor(backgroundColor)
         val doc = source ?: return
-        if (widths.isEmpty()) return
+        if (disposed || widths.isEmpty()) return
+        val indices: Iterable<Int> = if (preferences.mode == ImageMode.PAGED) group() else
+            pageAt(scroll - topPad)..pageAt(scroll + height - topPad)
+        val screen = RectF(0f, 0f, width.toFloat(), height.toFloat())
         val needed = linkedSetOf<Tile>()
-        var visibleMeasured = true
-        val indices = if (preferences.mode == ImageMode.PAGED) group() else {
-            val first = pageAt((scroll - topPad).coerceAtLeast(0f))
-            (first..pageAt(scroll + height)).toList()
-        }
-        paint.colorFilter = if (preferences.inverted) ColorMatrixColorFilter(PDF_INVERSION) else null
-        indices.forEach { page ->
+        val requests = linkedSetOf<ImageRaster>()
+        var first = -1
+        var last = -1
+        var painted = false
+        var geometryReady = true
+        var failedPage: Int? = null
+        val resolution = pinchResolution ?: (ceil(zoom * 2) / 2)
+        paint.color = Color.WHITE
+        paint.colorFilter = if (preferences.inverted) inversion else null
+
+        for (page in indices) {
             val area = rect(page)
-            if (preferences.cropMode == CropMode.AUTO && page !in autoCrops && page !in failures && preferences.pageCrops[pages[page].key] == null) {
-                visibleMeasured = false
-                prepareCrop(page)
-                label.color = Color.GRAY
-                canvas.drawText("여백 확인 중", width / 2f, topPad + 48 * density, label)
-                return@forEach
-            }
+            val viewport = RectF(area)
+            if (!viewport.intersect(screen)) continue
+            if (first < 0) first = page
+            last = page
             val c = crop(page)
-            val rw = area.width() / c.width; val rh = area.height() / c.height
-            val r = RectF(area.left - c.left * rw, area.top - c.top * rh, area.left + (1 - c.left) * rw, area.top + (1 - c.top) * rh)
-            if (!area.intersects(0f, 0f, width.toFloat(), height.toFloat())) return@forEach
-            if (!pages[page].measured) visibleMeasured = false
+            val rw = area.width() / c.width
+            val rh = area.height() / c.height
+            val full = RectF(area.left - c.left * rw, area.top - c.top * rh,
+                area.left + (1 - c.left) * rw, area.top + (1 - c.top) * rh)
+            val needsCrop = needsAutoCrop(page)
+            val measured = pages[page].measured && !needsCrop
+            if (!measured) geometryReady = false
+            val exact = if (measured) viewportTiles(page, full, viewport, c, resolution) else emptyList()
             val save = canvas.save()
-            canvas.clipRect(area)
-            paint.color = Color.WHITE; canvas.drawRect(r, paint)
-            if (!pages[page].measured && page !in failures) measure(page)
-            cache.snapshot().filterKeys { it.page == page }.forEach { (tile, bitmap) -> drawTile(canvas, tile, bitmap, r) }
-            if (pages[page].measured) {
-                val rasterZoom = ceil(zoom * 2) / 2
-                val pw = (r.width() / zoom * rasterZoom).roundToInt().coerceIn(1, 200_000)
-                val ph = (r.height() / zoom * rasterZoom).roundToInt().coerceIn(1, 200_000)
-                val sx = r.width() / pw; val sy = r.height() / ph
-                val fromX = (max(0f, max(0f, area.left) - r.left) / sx / 512).toInt() * 512
-                val fromY = (max(0f, max(0f, area.top) - r.top) / sy / 512).toInt() * 512
-                val untilX = min(pw, ceil((min(width.toFloat(), area.right) - r.left) / sx).toInt())
-                val untilY = min(ph, ceil((min(height.toFloat(), area.bottom) - r.top) / sy).toInt())
-                for (y in fromY until untilY step 512) for (x in fromX until untilX step 512) {
-                    val tile = Tile(page, pw, ph, x, y, min(512, pw - x), min(512, ph - y)); needed += tile
-                    cache.get(tile)?.let { drawTile(canvas, tile, it, r) }
-                }
-            }
-            if (page in failures || needed.none { it.page == page && cache.get(it) != null }) {
-                label.color = if (preferences.inverted) Color.LTGRAY else Color.DKGRAY
-                canvas.drawText(if (page in failures) "이미지를 읽지 못했습니다" else "${page + 1} 페이지 준비 중", r.centerX().coerceIn(0f, width.toFloat()),
-                    (r.top + 48 * density).coerceIn(topPad + 24 * density, height - bottomPad), label)
-            }
+            canvas.clipRect(viewport)
+            canvas.drawRect(viewport, paint)
+            val hasPixels = cache.draw(canvas, page, full, viewport, exact, paint)
             canvas.restoreToCount(save)
+            painted = painted || hasPixels
+            if (page in failures) {
+                if (failedPage == null || page == locator().page) failedPage = page
+                continue
+            }
+            val preview = Preview(page)
+            if (!hasPixels || !measured || (pinchResolution != null && exact.any { cache.get(it) == null })) {
+                val bitmap = cache.get(preview)
+                if (bitmap == null) requests.add(preview)
+                else if (needsCrop) prepareCrop(page, bitmap)
+            }
+            if (pinchResolution == null) needed.addAll(exact)
         }
-        visible = needed.toSet()
-        jobs.keys.filter { it !in needed }.forEach { jobs.remove(it)?.cancel() }
-        needed.filter { cache.get(it) == null && it !in jobs && it.page !in failures }.forEach { tile ->
-            jobs[tile] = scope.launch {
-                try {
-                    val bitmap = doc.render(tile.page, tile.pw, tile.ph, tile.x, tile.y, tile.w, tile.h)
-                    ensureActive(); cache.put(tile, bitmap); rendered++
-                    if (!ready) { ready = true; onReady(); changed() }; invalidate()
-                } catch (e: CancellationException) { throw e }
-                catch (e: Exception) { if (failures.add(tile.page)) onFailure(e.message ?: "이미지를 표시하지 못했습니다."); invalidate() }
-                finally { if (jobs[tile] == coroutineContext[Job]) jobs.remove(tile) }
+
+        if (painted && !ready && pending == null && locator().page.let { pages[it].measured && !needsAutoCrop(it) }) {
+            ready = true
+            onReady()
+            changed()
+        }
+        updateWaiting(first >= 0 && !painted && failedPage == null)
+        if (failedPage != null && failedPage != reportedFailure) {
+            reportedFailure = failedPage
+            onFailure(failedPage, failures.getValue(failedPage))
+        } else if (failedPage == null) reportedFailure = null
+        visible = needed
+        visibleGeometryReady = geometryReady && failedPage == null
+        val complete = geometryReady && needed.isNotEmpty() && needed.all { cache.get(it) != null }
+        for (tile in needed) if (cache.get(tile) == null) requests.add(tile)
+        var prefetch: Preview? = null
+        if (complete && failedPage == null) {
+            val adjacent = if (scrollDirection > 0) last + 1 else first - 1
+            if (adjacent in pages.indices && adjacent !in failures) {
+                val preview = Preview(adjacent)
+                if (cache.get(preview) == null) prefetch = preview
             }
         }
-        // Headers of the next two pages allow wide spreads to become single pages before a turn.
-        if (ready && needed.all { cache.get(it) != null }) {
-            listOf(indices.last() + 1, indices.last() + 2).filter { it in pages.indices && !pages[it].measured && it !in failures }.forEach(::measure)
-        }
+        schedule(doc, requests, prefetch)
         if (endSignal.take(locator().completed, !touching && scroller.isFinished && !scales.isInProgress,
-                ready && visibleMeasured && visible.isNotEmpty() && visible.all { cache.get(it) != null })) {
-            if (!disposed) onEndReached()
+                ready && complete && failedPage == null)) onEndReached()
+    }
+
+    private fun viewportTiles(page: Int, full: RectF, viewport: RectF, crop: CropRect, resolution: Float): List<Tile> {
+        // Once native pixels are available, further magnification is a canvas transform.
+        val image = pages[page]
+        val pw = (widths[page] / crop.width * resolution).roundToInt().coerceIn(1, image.width)
+        val ph = (heights[page] / crop.height * resolution).roundToInt().coerceIn(1, image.height)
+        val sx = pw / full.width()
+        val sy = ph / full.height()
+        val left = ((viewport.left - full.left) * sx).toInt().coerceAtLeast(0) / 512 * 512
+        val top = ((viewport.top - full.top) * sy).toInt().coerceAtLeast(0) / 512 * 512
+        val right = ceil((viewport.right - full.left) * sx).toInt().coerceAtMost(pw)
+        val bottom = ceil((viewport.bottom - full.top) * sy).toInt().coerceAtMost(ph)
+        return buildList {
+            for (y in top until bottom step 512) for (x in left until right step 512)
+                add(Tile(page, pw, ph, x, y, min(512, pw - x), min(512, ph - y)))
         }
     }
-    private fun prepareCrop(page: Int) {
-        if (page in cropping) return
+
+    // The worker itself is serial. Only the current request is committed; each frame
+    // replaces the remaining queue so a fling cannot enqueue a book's worth of IPC.
+    private fun schedule(doc: ImageSource, requests: LinkedHashSet<ImageRaster>, prefetch: Preview?) {
+        val background = activePrefetch
+        if (background != null && requests.isNotEmpty() && background !in requests) renderJob?.cancel()
+        queuedPreview = prefetch
+        queue = requests
+        if (prefetch != null) queue.add(prefetch)
+        if (rendering || queue.isEmpty()) return
+        rendering = true
+        renderJob = scope.launch {
+            try {
+                while (queue.isNotEmpty()) {
+                    val key = queue.first()
+                    queue.remove(key)
+                    if (key.page in failures || cache.get(key) != null) continue
+                    activePrefetch = queuedPreview?.takeIf { it == key }
+                    try {
+                        val bitmap = when (key) {
+                            is Preview -> doc.thumbnail(key.page)
+                            is Tile -> doc.render(key.page, key.pw, key.ph, key.x, key.y, key.w, key.h)
+                        }
+                        cache.store(key, bitmap)
+                        rendered++
+                    } catch (e: CancellationException) { throw e }
+                    catch (e: Exception) { failures[key.page] = e.message ?: "이미지를 읽지 못했습니다." }
+                    postInvalidateOnAnimation()
+                }
+            } finally {
+                activePrefetch = null
+                rendering = false
+                if (!disposed && queue.isNotEmpty()) postInvalidateOnAnimation()
+            }
+        }
+    }
+
+    private fun updateWaiting(empty: Boolean) {
+        val now = SystemClock.uptimeMillis()
+        if (empty && emptySince < 0) {
+            emptySince = now
+            postDelayed(waitingTimer, 500)
+        } else if (!empty && emptySince >= 0) {
+            emptySince = -1L
+            removeCallbacks(waitingTimer)
+        }
+        val show = empty && now - emptySince >= 500
+        if (waiting != show) {
+            waiting = show
+            onWaiting(show)
+        }
+    }
+
+    private val deferredCrops = mutableMapOf<Int, CropRect>()
+    private fun prepareCrop(page: Int, bitmap: Bitmap) {
+        if (page in cropping || page in deferredCrops) return
         cropping[page] = scope.launch {
             try {
-                val bitmap = source?.thumbnail(page) ?: return@launch
-                val result = withContext(Dispatchers.Default) {
+                deferredCrops[page] = withContext(Dispatchers.Default) {
                     val pixels = IntArray(bitmap.width * bitmap.height)
                     bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
                     detectImageCrop(pixels, bitmap.width, bitmap.height)
                 }
-                bitmap.recycle()
-                // Apply only at rest; an asynchronous crop must not move the current gesture.
-                while (touching || !scroller.isFinished || scales.isInProgress) delay(32)
-                val position = locator(); autoCrops[page] = result; pending = position
-                layoutPages(); restore(); changed()
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { autoCrops[page] = CropRect() }
-            finally { cropping.remove(page); invalidate() }
+            catch (_: Exception) { deferredCrops[page] = CropRect() }
+            finally { cropping.remove(page) }
+            applyDeferred()
+            invalidate()
         }
     }
+
     private fun applyDeferred() {
-        if (!touching && scroller.isFinished && !scales.isInProgress) deferredPages?.let { deferredPages = null; applyPages(it) }
-    }
-    private fun measure(page: Int) {
-        if (page in measuring) return
-        measuring[page] = scope.launch {
-            try { source?.measure(page) }
-            catch (e: CancellationException) { throw e }
-            catch (e: Exception) { if (failures.add(page) && page == locator().page) onFailure(e.message ?: "이미지를 읽지 못했습니다.") }
-            finally { measuring.remove(page); invalidate() }
-        }
-    }
-    private fun drawTile(canvas: Canvas, tile: Tile, bitmap: Bitmap, r: RectF) {
-        val sx = r.width() / tile.pw; val sy = r.height() / tile.ph
-        canvas.drawBitmap(bitmap, null, RectF(r.left + tile.x * sx, r.top + tile.y * sy,
-            r.left + (tile.x + tile.w) * sx, r.top + (tile.y + tile.h) * sy), paint)
+        if (touching || !scroller.isFinished || scales.isInProgress) return
+        if (deferredPages == null && deferredCrops.isEmpty()) return
+        val position = locator()
+        deferredPages?.let { pages = it }
+        deferredPages = null
+        autoCrops.putAll(deferredCrops)
+        deferredCrops.clear()
+        pending = position
+        layoutPages()
+        restore()
+        changed()
     }
     override fun computeScroll() { if (scroller.computeScrollOffset()) { scroll = scroller.currY.toFloat(); changed(); postInvalidateOnAnimation() }; applyDeferred() }
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -447,6 +568,6 @@ class ImageDocumentView(context: Context) : View(context) {
         }
         return super.performAccessibilityAction(action, arguments)
     }
-    fun dispose() { if (!disposed) { touchGuard.clear(); doubleTapPending = false; disposed = true; scope.cancel(); cache.evictAll(); scroller.forceFinished(true) } }
+    fun dispose() { if (!disposed) { touchGuard.clear(); doubleTapPending = false; disposed = true; removeCallbacks(waitingTimer); scope.cancel(); cache.evictAll(); scroller.forceFinished(true) } }
     override fun onDetachedFromWindow() { super.onDetachedFromWindow(); dispose() }
 }

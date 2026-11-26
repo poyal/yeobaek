@@ -47,7 +47,7 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
     val locator by reader.locator.collectAsStateWithLifecycle()
     val seek by reader.seek.collectAsStateWithLifecycle()
     val marks by reader.marks.collectAsStateWithLifecycle()
-    val activity by opened.source.activity.collectAsStateWithLifecycle()
+    var waitingForImage by remember(opened.token) { mutableStateOf(false) }
     val pages by opened.source.pages.collectAsStateWithLifecycle()
     val p = LocalPaper.current
     val density = LocalDensity.current
@@ -58,14 +58,16 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
     var headerHeight by remember { mutableIntStateOf(with(density) { 60.dp.roundToPx() }) }
     var footerHeight by remember { mutableIntStateOf(with(density) { 76.dp.roundToPx() }) }
     var consumed by remember(opened.token) { mutableLongStateOf(-1) }
-    var failure by remember(opened.token) { mutableStateOf<String?>(null) }
+    var failure by remember(opened.token) { mutableStateOf<Pair<Int, String>?>(null) }
     Box(modifier.fillMaxSize()) {
         key(opened.token) {
             AndroidView(factory = { ctx -> ImageDocumentView(ctx).also { native ->
                 native.onReady = reader::ready
+                native.onWaiting = { waitingForImage = it }
                 native.onPosition = { reader.position(it); vm.readingProgress(opened.token, it.completed) }
                 native.onEndReached = { vm.readingFinished(opened.token) }
-                native.onTap = { if (nativeMenu == MenuVisibility.TAP) chrome = !chrome }; native.onFailure = { failure = it }
+                native.onTap = { if (nativeMenu == MenuVisibility.TAP) chrome = !chrome }
+                native.onFailure = { page, message -> failure = page to message }
                 native.configure(prefs, imageBackground(prefs, p).toArgb()); native.open(opened.source, locator)
                 view = native
             } }, modifier = Modifier.fillMaxSize().clipToBounds().testTag("image_body"), onRelease = { it.dispose() }, update = { native ->
@@ -99,23 +101,23 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                 ), Modifier.testTag("image_footer"))
             }
         }
-        activity?.let { message ->
+        if (waitingForImage && failure == null) {
             Surface(color = p.raised, contentColor = p.ink, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp, start = 16.dp, end = 16.dp)) {
                 Row(Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                    Text(message, Modifier.weight(1f).padding(8.dp), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("이미지 준비 중", Modifier.weight(1f).padding(8.dp), fontSize = 12.sp)
                     Tool(Icons.Outlined.Close, "이미지 준비 취소", "image_prepare_cancel", onClick = { vm.closeReader() })
                 }
             }
         }
-        failure?.let { message ->
+        failure?.let { (page, message) ->
             Surface(color = p.raised, contentColor = p.ink, modifier = Modifier.align(Alignment.Center).padding(24.dp)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(message)
                     PaperButton("다시 시도", "image_retry", Modifier.fillMaxWidth(), onClick = { failure = null; view?.retry() })
                     PaperButton("다음 이미지", "image_skip", Modifier.fillMaxWidth(), outlined = true,
-                        enabled = locator.page < pages.lastIndex,
-                        onClick = { failure = null; reader.move(ImageLocator(page = locator.page + 1)) })
+                        enabled = page < pages.lastIndex,
+                        onClick = { failure = null; reader.move(ImageLocator(page = page + 1)) })
                     PaperButton("문서 닫기", "image_failure_close", Modifier.fillMaxWidth(), outlined = true, onClick = { vm.closeReader() })
                 }
             }

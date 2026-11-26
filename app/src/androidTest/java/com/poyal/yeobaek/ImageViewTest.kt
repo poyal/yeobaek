@@ -7,6 +7,15 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.test.platform.app.InstrumentationRegistry
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.net.Uri
+import android.os.ParcelFileDescriptor
+import android.os.SystemClock
+import android.view.MotionEvent
+import com.poyal.yeobaek.data.DocumentEntry
+import com.poyal.yeobaek.data.FolderSource
 import com.poyal.yeobaek.image.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -16,6 +25,80 @@ import java.io.File
 
 class ImageViewTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test fun waitingEndsWithFirstPixelsAndPrefetchStaysSilentDuringZoom() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val dir = File(context.cacheDir, "slow-image-pages")
+        val pipes = List(2) { ParcelFileDescriptor.createPipe() }
+        val entries = pipes.mapIndexed { index, (read, _) ->
+            val uri = Uri.fromFile(File("/proc/self/fd/${read.fd}")).toString()
+            DocumentEntry("$index", uri, "$index.png", false, null, null, "image/png")
+        }
+        val source = ImageSource.folder(context, ImageStore(dir), entries, FolderSource(context.contentResolver))
+        val writers = pipes.map { ParcelFileDescriptor.AutoCloseOutputStream(it[1]) }
+        val waits = java.util.concurrent.CopyOnWriteArrayList<Boolean>()
+        lateinit var view: ImageDocumentView
+        fun deliver(index: Int, color: Int) {
+            val image = if (index == 0) Bitmap.createBitmap(1600, 2400, Bitmap.Config.ARGB_8888)
+                else Bitmap.createBitmap(64, 96, Bitmap.Config.ARGB_8888)
+            image.eraseColor(color)
+            writers[index].use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            image.recycle()
+        }
+        fun centerColor(): Int {
+            val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            canvas.translate(-view.width / 2f, -view.height / 2f)
+            view.draw(canvas)
+            return bitmap.getPixel(0, 0).also { bitmap.recycle() }
+        }
+        try {
+            compose.setContent { AndroidView(factory = { ctx -> ImageDocumentView(ctx).also {
+                view = it
+                it.onWaiting = { waiting -> waits.add(waiting) }
+                it.configure(ImagePreferences(mode = ImageMode.PAGED), Color.WHITE)
+                it.open(source, ImageLocator())
+            } }, modifier = Modifier.fillMaxSize()) }
+            compose.waitUntil(10_000) { waits == listOf(true) }
+            deliver(0, Color.RED)
+            compose.waitUntil(10_000) { view.renderStatus().let { it.visible > 0 && it.complete == it.visible && it.queued > 0 } }
+            SystemClock.sleep(600) // The adjacent page is still blocked beyond the foreground indicator delay.
+            compose.runOnIdle {
+                assertEquals(listOf(true, false), waits)
+                view.move(view.locator().copy(zoom = 2f))
+                assertEquals("Cached pixels must cover the new zoom immediately", Color.RED, centerColor())
+            }
+            compose.waitUntil(10_000) { view.renderStatus().let { it.visible > 0 && it.complete == it.visible } }
+            val down = SystemClock.uptimeMillis()
+            compose.runOnIdle {
+                MotionEvent.obtain(down, down, MotionEvent.ACTION_DOWN, 30f, 30f, 0).also { view.onTouchEvent(it); it.recycle() }
+                view.turn(1)
+            }
+            // Keep the touch down: geometry must stay stable, but the preview can already paint.
+            deliver(1, Color.BLUE)
+            compose.waitUntil(10_000) { compose.runOnUiThread { centerColor() } == Color.BLUE }
+            compose.runOnIdle {
+                MotionEvent.obtain(down, SystemClock.uptimeMillis(), MotionEvent.ACTION_CANCEL, 30f, 30f, 0)
+                    .also { view.onTouchEvent(it); it.recycle() }
+            }
+            compose.waitUntil(10_000) { view.renderStatus().let { it.visible > 0 && it.complete == it.visible } }
+            compose.runOnIdle {
+                assertEquals(1, view.locator().page)
+                assertEquals(listOf(true, false), waits)
+                view.move(view.locator().copy(zoom = 4f))
+                assertEquals(Color.BLUE, centerColor())
+                val status = view.renderStatus()
+                assertEquals("A small image is complete at its native resolution", 1, status.visible)
+                assertEquals(1, status.complete)
+            }
+        } finally {
+            writers.forEach { it.close() }
+            compose.runOnIdle { view.dispose() }
+            source.close()
+            pipes.forEach { it[0].close() }
+            dir.deleteRecursively()
+        }
+    }
 
     @Test fun previousUnmeasuredSpreadLtr() = checkPreviousUnmeasuredSpread(ImageDirection.LTR)
     @Test fun previousUnmeasuredSpreadRtl() = checkPreviousUnmeasuredSpread(ImageDirection.RTL)
