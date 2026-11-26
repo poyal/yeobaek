@@ -44,3 +44,11 @@ Android 16 전용 AVD 한 대에서 합성 TXT의 스크롤, 80% 위치 이동, 
 | 100 MiB | 4,366 ms | 92,675 KiB | 26 ms |
 
 실물 기기, ARM ABI, 16 KiB 페이지 OS, TalkBack 실제 발화와 30분 연속 읽기는 이번 후보에서 미실행입니다. 이미지 프레임 비교는 위에 명시한 버전 변경 전 측정값입니다.
+
+## 공개 파일과 앱 내 업데이트
+
+2026년 11월 26일 20시 57분 07초 KST에 v1.0.7을 GitHub 최신 정식 릴리즈로 공개했습니다. 릴리즈 ID는 `459349987`, 주석 태그가 가리키는 커밋은 `16fc5316e6caa00a1ffb57415e9b30308f01a8d1`입니다. [GitHub 릴리즈](https://github.com/poyal/yeobaek/releases/tag/v1.0.7)
+
+초안에서 인증해 내려받은 두 파일과 게시 후 공개 URL에서 로그인 없이 내려받은 두 파일 모두 고정 원본과 크기·SHA-256이 일치했습니다. GitHub 첨부 digest도 일치했습니다. APK 첨부 ID는 `795677601`, 체크섬 첨부 ID는 `795677625`입니다. [APK](https://github.com/poyal/yeobaek/releases/download/v1.0.7/yeobaek-1.0.7.apk) · [체크섬](https://github.com/poyal/yeobaek/releases/download/v1.0.7/yeobaek-1.0.7.sha256)
+
+Android 16 전용 AVD에서 같은 정식 APK의 **설정 → 업데이트 → 업데이트 확인**을 눌렀습니다. 현재 버전과 최신 확인 버전 모두 1.0.7이었고 “최신 버전을 사용하고 있어요.”라는 안내를 확인했습니다.
