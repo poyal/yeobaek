@@ -41,3 +41,11 @@ Android 16에서 1·10·50·100 MiB 합성 TXT의 스크롤과 80% 위치 이동
 | 100 MiB | 7,311 ms | 79,008 KiB | 38 ms |
 
 검사 범위는 x86_64 에뮬레이터입니다. 실물 기기, ARM ABI, 16 KiB 페이지 OS, TalkBack 발화와 30분 연속 읽기는 이번 후보에서 미실행입니다.
+
+## 공개 파일 확인
+
+2026년 11월 26일 17시 03분 33초 KST에 v1.0.6을 GitHub 최신 정식 릴리즈로 공개했습니다. 주석 있는 태그가 가리키는 커밋은 `ac118d6964d518489e5740479f5bdfa7b73643d9`이고 릴리즈 ID는 `459108533`입니다. [v1.0.6 릴리즈](https://github.com/poyal/yeobaek/releases/tag/v1.0.6)
+
+APK 첨부 ID는 `794869451`, 체크섬 첨부 ID는 `794869738`입니다. 초안에서 인증해 내려받은 두 파일과 게시 후 공개 주소에서 비로그인으로 내려받은 두 파일 모두 크기 및 SHA-256이 고정 원본과 GitHub 첨부 digest에 일치했습니다. [APK](https://github.com/poyal/yeobaek/releases/download/v1.0.6/yeobaek-1.0.6.apk) · [체크섬](https://github.com/poyal/yeobaek/releases/download/v1.0.6/yeobaek-1.0.6.sha256)
+
+Android 11 전용 AVD에 설치한 같은 정식 APK의 **설정 → 업데이트 → 업데이트 확인**에서 현재 버전과 최신 확인 버전이 모두 1.0.6이고, 최신 버전을 사용 중이라는 안내가 표시됐습니다.
