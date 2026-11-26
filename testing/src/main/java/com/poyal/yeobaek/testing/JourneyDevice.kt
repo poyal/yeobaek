@@ -179,7 +179,7 @@ class JourneyDevice(val pkg: String = InstrumentationRegistry.getArguments().get
         check(systemClick(By.text(folder))) { "Missing document folder: $folder" }
     }
     fun connect(folder: String = "YeobaekQA") {
-        click("connect_folder"); pickerFolder(folder, navigateFromRoot = true)
+        find("connect_folder").click(); pickerFolder(folder, navigateFromRoot = true)
         check(systemClick(By.res(Pattern.compile(".*:id/action_menu_select")), optional = true) ||
             systemClick(By.text("USE THIS FOLDER"), optional = true) ||
             systemClick(By.text("이 폴더 사용"), optional = true)) { "Folder selection action missing" }
