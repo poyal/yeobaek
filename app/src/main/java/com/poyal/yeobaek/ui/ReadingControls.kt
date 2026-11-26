@@ -88,7 +88,7 @@ import kotlin.math.min
     if (scope != SettingsScope.COMMON && book != null) {
         val values = settings.overrides[settings.scopeKey(scope, format, book.id)].orEmpty()
         val labels = mapOf("menuVisibility" to "독서 메뉴 표시", "chapterButtons" to "장 이동 버튼", "doubleTapZoom" to "두 번 탭 확대", "pinchZoom" to "두 손가락 확대·축소", "swipeToTurn" to "좌우 스와이프 이동", "tapToTurn" to "가장자리 탭 넘김", "publisherStyles" to "원본 서식", "font" to "글꼴", "size" to "글자 크기", "line" to "줄 간격", "margin" to "좌우 여백", "paper" to "본문 색상",
-            "fit" to "화면 맞춤", "inverted" to "색상 반전", "spacing" to "페이지 간격", "canvas" to "배경", "mode" to "읽기 방식",
+            "fit" to "화면 맞춤", "inverted" to "색상 반전", "spacing" to if (format == "IMAGE") "이미지 간격" else "페이지 간격", "canvas" to "배경", "mode" to "읽기 방식",
             "direction" to "읽기 방향", "spread" to "두 쪽 보기", "coverAlone" to "표지 단독", "verticalFit" to "세로 맞춤", "pagedFit" to "페이지 맞춤",
             "splitWide" to "펼침면 분할", "cropMode" to "여백 자르기", "cropLeft" to "왼쪽 여백", "cropTop" to "위 여백", "cropRight" to "오른쪽 여백", "cropBottom" to "아래 여백")
         values.forEach { (field, _) ->
@@ -120,55 +120,49 @@ import kotlin.math.min
 @Composable fun QuickReaderSettings(vm: AppViewModel) {
     val state by vm.ui.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
-    val txt by vm.editTxt.collectAsStateWithLifecycle()
-    val pdf by vm.editPdf.collectAsStateWithLifecycle()
-    val image by vm.editImage.collectAsStateWithLifecycle()
-    val format = when { state.imageReader != null -> "IMAGE"; state.pdfReader != null -> "PDF"; else -> "TXT" }
-    Column(Modifier.fillMaxWidth().heightIn(max = 540.dp).verticalScroll(rememberScrollState()).testTag("quick_options"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val format = when {
+        state.epubReader != null -> "EPUB"
+        state.pdfReader != null -> "PDF"
+        state.imageReader != null -> "IMAGE"
+        else -> "TXT"
+    }
+    Column(Modifier.fillMaxWidth().heightIn(max = 540.dp).verticalScroll(rememberScrollState()).testTag("quick_options"),
+        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        PaperButton("자세한 읽기 설정", "quick_details", Modifier.fillMaxWidth(), outlined = true, onClick = {
+            when (format) {
+                "TXT" -> vm.openTxtSettings()
+                "EPUB" -> vm.openEpubSettings()
+                "PDF" -> vm.openPdfSettings()
+                "IMAGE" -> vm.openImageSettings()
+            }
+        })
         SettingsScopePicker(vm, format)
         when (format) {
             "TXT" -> {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("글자 크기 ${txt.size.toInt()}", Modifier.weight(1f))
-                    Tool(Icons.Outlined.Remove, "글자 작게", "font_smaller") { vm.changeSetting("TXT", "size", (txt.size - 1).coerceAtLeast(14f)) }
-                    Tool(Icons.Outlined.Add, "글자 크게", "font_larger") { vm.changeSetting("TXT", "size", (txt.size + 1).coerceAtMost(32f)) }
-                }
-                var fontMenu by remember { mutableStateOf(false) }
-                Box {
-                    PaperButton("글꼴 · ${txt.font.label}", "quick_font", Modifier.fillMaxWidth(), outlined = true, onClick = { fontMenu = true })
-                    DropdownMenu(fontMenu, onDismissRequest = { fontMenu = false }) {
-                        TxtFont.entries.forEach { font -> DropdownMenuItem(text = { Text(font.label) }, onClick = { vm.changeSetting("TXT", "font", font.name); fontMenu = false }) }
-                    }
-                }
-                ChoiceGroup(TxtPaper.entries, txt.paper, label = { when (it) { TxtPaper.FOLLOW_APP -> "앱 테마"; TxtPaper.LIGHT -> "라이트"; TxtPaper.SEPIA -> "세피아"; TxtPaper.DARK -> "다크" } },
-                    tag = { "paper_$it" }) { vm.changeSetting("TXT", "paper", it) }
+                val txt by vm.editTxt.collectAsStateWithLifecycle()
+                TxtTextOptions(vm, txt)
+                ReaderGestureSettings(vm, format, txt.menuVisibility, quick = true)
+            }
+            "EPUB" -> {
+                val epub by vm.editEpub.collectAsStateWithLifecycle()
+                val fixed = state.epubReader?.document?.fixed == true
+                if (fixed) EpubCanvasOptions(vm, epub) else EpubTextOptions(vm, epub)
+                EpubGestureOptions(vm, epub, fixed, quick = true)
             }
             "PDF" -> {
-                ChoiceGroup(PdfFit.entries, pdf.fit, label = { if (it == PdfFit.WIDTH) "너비에 맞춤" else "페이지에 맞춤" }, tag = { "pdf_fit_$it" }) { vm.changeSetting("PDF", "fit", it) }
-                LabeledSwitch("색상 반전", pdf.inverted, "pdf_inversion_switch") { vm.changeSetting("PDF", "inverted", it) }
-            }
-            else -> {
-                ChoiceGroup(ImageMode.entries, image.mode, label = { if (it == ImageMode.VERTICAL) "세로 연속" else "좌우 넘김" }, tag = { "image_mode_$it" }) { vm.setImage(image.copy(mode = it)) }
-                ChoiceGroup(ImageFit.entries, image.fit, label = { if (it == ImageFit.WIDTH) "너비에 맞춤" else "전체 이미지" }, tag = { "image_fit_$it" }) {
-                    vm.setImage(if (image.mode == ImageMode.VERTICAL) image.copy(verticalFit = it) else image.copy(pagedFit = it))
-                }
-                if (image.mode == ImageMode.PAGED) ChoiceGroup(ImageDirection.entries, image.direction, label = { if (it == ImageDirection.LTR) "왼쪽부터" else "오른쪽부터" }, tag = { "image_direction_$it" }) { vm.setImage(image.copy(direction = it)) }
-                ImageCropOptions(vm, image)
-            }
-        }
-        when (format) {
-            "TXT" -> ReaderGestureSettings(vm, format, txt.menuVisibility, quick = true)
-            "PDF" -> {
+                val pdf by vm.editPdf.collectAsStateWithLifecycle()
+                PdfPageOptions(vm, pdf)
                 ReaderGestureSettings(vm, format, pdf.menuVisibility, pdf.doubleTapZoom, pdf.pinchZoom, quick = true)
                 PaperButton("확대 초기화", "pdf_zoom_reset", outlined = true, onClick = { vm.pdfReader.resetZoom(); vm.sheet(null) })
             }
-            else -> {
+            "IMAGE" -> {
+                val image by vm.editImage.collectAsStateWithLifecycle()
+                ImagePageOptions(vm, image, showPageLayout = false)
                 ReaderGestureSettings(vm, format, image.menuVisibility, image.doubleTapZoom, image.pinchZoom, quick = true,
                     swipeToTurn = image.swipeToTurn.takeIf { image.mode == ImageMode.PAGED })
                 PaperButton("확대 초기화", "image_zoom_reset", outlined = true, onClick = { vm.imageReader.resetZoom(); vm.sheet(null) })
             }
         }
-        PaperButton("자세한 읽기 설정", "quick_details", Modifier.fillMaxWidth(), outlined = true, onClick = { when (format) { "TXT" -> vm.openTxtSettings(); "PDF" -> vm.openPdfSettings(); else -> vm.openImageSettings() } })
         Rule(); Text("독서 화면 · 모든 책 공통")
         val screen = settings.screen
         LabeledSwitch("시스템 밝기 사용", screen.brightness < 0, "brightness_system") { vm.setScreen(screen.copy(brightness = if (it) -1f else .5f)) }
@@ -192,9 +186,9 @@ import kotlin.math.min
     Slider(current, { current = it }, Modifier.testTag(tag).semantics { contentDescription = label }, valueRange = range, onValueChangeFinished = { commit(current) })
 }
 @Composable fun ImageCropOptions(vm: AppViewModel, prefs: ImagePreferences) {
-    LabeledSwitch("펼침면 반쪽씩 읽기", prefs.splitWide, "image_split") { vm.setImage(prefs.copy(splitWide = it)) }
+    LabeledSwitch("펼침면 반쪽씩 읽기", prefs.splitWide, "image_split") { vm.changeSetting("IMAGE", "splitWide", it) }
     Small("세로 화면 · 좌우 넘김에서 가로로 긴 페이지에 적용합니다.")
-    LabeledSwitch("자동 여백 자르기", prefs.cropMode == CropMode.AUTO, "image_auto_crop") { vm.setImage(prefs.copy(cropMode = if (it) CropMode.AUTO else CropMode.OFF)) }
+    LabeledSwitch("자동 여백 자르기", prefs.cropMode == CropMode.AUTO, "image_auto_crop") { vm.changeSetting("IMAGE", "cropMode", if (it) CropMode.AUTO else CropMode.OFF) }
     if (vm.currentBook?.format?.startsWith("IMAGE_") == true) PaperButton("여백 직접 조절", "image_crop_edit", Modifier.fillMaxWidth(), outlined = true, onClick = { vm.sheet("image_crop") })
 }
 

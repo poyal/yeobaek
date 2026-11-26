@@ -28,7 +28,8 @@ class ImageDocumentView(context: Context) : View(context) {
     private val autoCrops = mutableMapOf<Int, CropRect>()
     private val cropping = mutableMapOf<Int, Job>()
     private var deferredPages: List<ImagePage>? = null
-    private fun split(index: Int) = preferences.splitWide && preferences.mode == ImageMode.PAGED && height > width && pages.getOrNull(index)?.wide == true
+    private fun splitEnabled() = preferences.splitWide && preferences.mode == ImageMode.PAGED && height > width
+    private fun split(index: Int) = splitEnabled() && pages.getOrNull(index)?.wide == true
     private fun firstHalf() = if (preferences.direction == ImageDirection.LTR) 0 else 1
     private fun crop(index: Int): CropRect {
         val base = preferences.pageCrops[pages[index].key] ?: when (preferences.cropMode) {
@@ -166,6 +167,7 @@ class ImageDocumentView(context: Context) : View(context) {
         if (width <= 0 || height <= 0 || pages.isEmpty()) return
         focus = (pending?.constrained(pages)?.page ?: focus).coerceIn(pages.indices)
         segment = if (split(focus)) pending?.let { if (it.segment >= 0) it.segment else if (it.x > 0f) (if (it.x >= .5f) 1 else 0) else firstHalf() } ?: segment.takeIf { it >= 0 } ?: firstHalf()
+            else if (pages[focus].measured && !pages[focus].wide) -1
             else pending?.segment ?: segment
         starts = FloatArray(pages.size); widths = FloatArray(pages.size); heights = FloatArray(pages.size)
         spreads = imageSpreads(pages, double(), preferences.coverAlone)
@@ -260,8 +262,11 @@ class ImageDocumentView(context: Context) : View(context) {
             }
             val current = spreads.indexOfFirst { focus in it }
             val target = (current + delta).coerceIn(spreads.indices)
-            if (target != current) move(ImageLocator(page = spreads[target].first(), segment = if (delta < 0 && split(spreads[target].first())) 1 - firstHalf() else -1), announceEnd = false)
-            else { endSignal.advance(delta > 0); changed() }
+            if (target != current) {
+                // Preserve the entry side even when the destination's dimensions arrive after the turn.
+                val entryHalf = if (delta < 0 && splitEnabled()) 1 - firstHalf() else -1
+                move(ImageLocator(page = spreads[target].first(), segment = entryHalf), announceEnd = false)
+            } else { endSignal.advance(delta > 0); changed() }
         }
     }
     fun resetZoom() { scroller.forceFinished(true); scaleTo(1f, width / 2f, topPad + contentHeight / 2f) }

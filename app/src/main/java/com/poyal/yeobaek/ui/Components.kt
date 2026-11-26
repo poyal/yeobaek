@@ -41,15 +41,15 @@ import com.poyal.yeobaek.R
         colors = ButtonDefaults.buttonColors(containerColor = accent, contentColor = if (destructive) MaterialTheme.colorScheme.onError else p.onAccent),
         contentPadding = padding, content = label)
 }
-@Composable fun Tool(icon: ImageVector, label: String, tag: String, modifier: Modifier = Modifier, outlined: Boolean = false, destructive: Boolean = false, onClick: () -> Unit) {
+@Composable fun Tool(icon: ImageVector, label: String, tag: String, modifier: Modifier = Modifier, outlined: Boolean = false, destructive: Boolean = false, enabled: Boolean = true, onClick: () -> Unit) {
     val p = LocalPaper.current
     val tint = if (destructive) p.danger else p.ink
     val buttonModifier = modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).testTag(tag)
-    if (outlined || destructive) OutlinedIconButton(onClick, buttonModifier, shape = RoundedCornerShape(8.dp),
+    if (outlined || destructive) OutlinedIconButton(onClick, buttonModifier, enabled = enabled, shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, if (destructive) p.danger else p.control),
         colors = IconButtonDefaults.outlinedIconButtonColors(containerColor = if (destructive) p.danger.copy(alpha = .06f) else p.raised, contentColor = tint)) {
         Icon(icon, label, Modifier.size(22.dp))
-    } else IconButton(onClick, buttonModifier) { Icon(icon, label, Modifier.size(22.dp), tint = tint) }
+    } else IconButton(onClick, buttonModifier, enabled = enabled) { Icon(icon, label, Modifier.size(22.dp), tint = tint) }
 }
 @Composable fun PageHeader(title: String, onBack: () -> Unit) {
     Column { Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {

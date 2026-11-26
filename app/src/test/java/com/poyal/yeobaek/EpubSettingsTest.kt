@@ -8,6 +8,20 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class EpubSettingsTest {
+    @Test fun epubFontChoicesMatchTxtAndKeepSavedNamesThroughBackup() {
+        assertEquals(TxtFont.entries, EpubFont.entries.mapNotNull { it.textFont })
+        val legacy = mapOf("ORIGINAL" to null, "SERIF" to TxtFont.NOTO_SERIF, "SANS" to TxtFont.SYSTEM_SANS,
+            "MONOSPACE" to TxtFont.SYSTEM_MONOSPACE)
+        for ((name, font) in legacy) {
+            assertEquals(font, ReaderSettingValues.epub(EpubReaderPreferences(), mapOf("font" to name)).font.textFont)
+        }
+        for (font in EpubFont.entries) {
+            val settings = ReaderSettings(overrides = mapOf("common:EPUB" to mapOf("font" to font.name)))
+            val backup = ReadingBackup(library = LibrarySnapshot(), settings = settings, theme = AppTheme.SYSTEM)
+            val restored = Json.decodeFromString<ReadingBackup>(Json.encodeToString(backup))
+            assertEquals(font, ReaderSettingValues.epub(EpubReaderPreferences(), restored.settings.fields("EPUB", null)).font)
+        }
+    }
     @Test fun chapterButtonsInheritByScopeAndSurviveBackupWithoutChangingOlderDefaults() {
         var settings = ReaderSettings(folders = mapOf("book" to "folder"), overrides = mapOf(
             "common:EPUB" to mapOf("chapterButtons" to "WITH_MENU"),

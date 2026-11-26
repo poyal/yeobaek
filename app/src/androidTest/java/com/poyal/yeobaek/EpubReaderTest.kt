@@ -40,6 +40,10 @@ class EpubReaderTest {
         file.inputStream().use { input -> context.contentResolver.openOutputStream(uri)!!.use { input.copyTo(it) } }; file.delete()
         return DocumentEntry(uri.toString(), uri.toString(), name, false, null, null, "application/epub+zip") to uri
     }
+    private fun openDetailedSettings() {
+        compose.onNodeWithTag("epub_settings").performClick()
+        compose.onNodeWithTag("quick_details").performScrollTo().performClick()
+    }
     private fun waitReady(vm: AppViewModel) { compose.waitUntil(30_000) { vm.epubReader.ready.value && vm.epubReader.renderer != null && vm.ui.value.error == null } }
     private suspend fun close(vm: AppViewModel) {
         withContext(Dispatchers.Main) { vm.closeReader() }
@@ -80,6 +84,88 @@ class EpubReaderTest {
         }
     }
 
+    @Test fun quickFontUsesTxtBodyWeightAndPreservesEmphasisAndAnchor() = runBlocking<Unit> {
+        val vm = ViewModelProvider(compose.activity)[AppViewModel::class.java]
+        val original = context.readerSettings.data.first()
+        val (entry, uri) = book(false)
+        var bookId: String? = null
+        try {
+            withContext(Dispatchers.Main) { vm.chooseResume(false); vm.open(entry) }
+            waitReady(vm)
+            bookId = vm.currentBook!!.id
+            script("document.getElementById('p20').scrollIntoView()")
+            delay(500)
+            val anchor = withContext(Dispatchers.Main) { vm.epubReader.capture() }!!
+            val weight = "Number(getComputedStyle(document.getElementById('p20')).fontWeight)"
+            assertEquals("400", script(weight))
+            compose.onNodeWithTag("epub_settings").performClick()
+            compose.onNodeWithTag("scope_BOOK").performScrollTo().performClick()
+            compose.onNodeWithTag("epub_line").assertDoesNotExist()
+            for (font in EpubFont.entries.filter { it.textFont != null }) {
+                compose.onNodeWithTag("epub_font").performScrollTo().performClick()
+                compose.onNodeWithTag("epub_font_$font").performScrollTo().performClick()
+                val expected = font.textFont!!.weight
+                withTimeout(20_000) {
+                    while (!vm.epubReader.ready.value || vm.epub.value.font != font ||
+                        runCatching { script(weight) }.getOrNull() != expected.toString()) delay(100)
+                }
+                assertEquals("Book emphasis must survive $font", "true",
+                    script("Number(getComputedStyle(document.querySelector('h1')).fontWeight) > $expected"))
+                if (font == EpubFont.SERIF) {
+                    withTimeout(20_000) {
+                        while (script("""getComputedStyle(document.querySelector('p')).fontFamily.includes('Yeobaek Serif') &&
+                            Array.from(document.fonts).some(f => f.family.includes('Yeobaek Serif') && f.status === 'loaded')""") != "true") delay(100)
+                    }
+                    compareSerifInk()
+                }
+            }
+            compose.onNodeWithTag("epub_publisher_styles").performScrollTo().performClick()
+            compose.onNodeWithTag("epub_line").performScrollTo().assertExists()
+            compose.onNodeWithTag("font_larger").performScrollTo().performClick()
+            compose.waitUntil(5_000) { vm.epub.value.size == 1.05f }
+            compose.onNodeWithTag("quick_details").performScrollTo().performClick()
+            compose.onNodeWithTag("epub_size").performScrollTo().assertTextEquals("105%")
+            compose.onNodeWithTag("epub_publisher_styles").performScrollTo().assertIsOff()
+            compose.onNodeWithTag("page_back").performClick()
+            waitReady(vm)
+            delay(500)
+            assertVisible(anchor, "quick font and size changes")
+        } finally {
+            close(vm); bookId?.let { context.database.library().forget(it) }
+            context.readerSettings.update { original }; context.contentResolver.delete(uri, null, null)
+        }
+    }
+
+    private suspend fun compareSerifInk() {
+        // Compare the same face at 36 physical pixels. Book CSS normally chooses its own size.
+        val sample = "여백의 독서는 문장을 천천히 따라갑니다."
+        val width = 840
+        val height = 60
+        val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+        val paint = android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.SUBPIXEL_TEXT_FLAG).apply {
+            typeface = context.resources.getFont(R.font.noto_serif_kr)
+            textSize = 36f
+        }
+        android.graphics.Canvas(bitmap).drawText(sample, 4f, 45f, paint)
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+        bitmap.recycle()
+        val nativeInk = pixels.sumOf { android.graphics.Color.alpha(it) }
+        val webInk = script("""
+            (() => {
+                const c = document.createElement('canvas'); c.width = $width; c.height = $height;
+                const ctx = c.getContext('2d'), style = getComputedStyle(document.querySelector('p'));
+                ctx.font = style.fontWeight + ' 36px ' + style.fontFamily;
+                ctx.fillText(${JSONObject.quote(sample)}, 4, 45);
+                const rgba = ctx.getImageData(0, 0, c.width, c.height).data;
+                let ink = 0; for (let i = 3; i < rgba.length; i += 4) ink += rgba[i];
+                return ink;
+            })()
+        """.trimIndent())!!.toInt()
+        assertTrue(nativeInk > 0 && webInk > 0)
+        android.util.Log.i("ReadingTypography", "Noto Serif KR 400 at 36px: native=$nativeInk web=$webInk")
+    }
+
     @Test fun chapterButtonSettingsKeepLocationAndEndActionAvailable() = runBlocking<Unit> {
         val vm = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         val original = context.readerSettings.data.first()
@@ -105,7 +191,7 @@ class EpubReaderTest {
                 assertEquals(top, script("document.getElementById('p20').getBoundingClientRect().top")!!.toDouble(), 1.0)
                 assertEquals("1", script("window.__buttonSettingsProbe"))
             }
-            compose.onNodeWithTag("epub_settings").performClick()
+            openDetailedSettings()
             compose.onNodeWithTag("scope_BOOK").performClick()
             compose.onNodeWithTag("epub_chapter_buttons_WITH_MENU").performScrollTo().assertIsSelected()
             compose.onNodeWithTag("epub_chapter_buttons_HIDDEN").performScrollTo().performClick()
@@ -133,7 +219,7 @@ class EpubReaderTest {
             waitReady(vm)
             assertEquals(EpubChapterButtons.HIDDEN, vm.epub.value.chapterButtons)
             compose.onNodeWithTag("epub_next").assertDoesNotExist()
-            compose.onNodeWithTag("epub_settings").performClick()
+            openDetailedSettings()
             compose.onNodeWithTag("scope_BOOK").performScrollTo().performClick()
             compose.onNodeWithTag("epub_reset").performScrollTo().performClick()
             compose.waitUntil(10_000) { vm.epub.value.chapterButtons == EpubChapterButtons.ALWAYS }
@@ -155,7 +241,7 @@ class EpubReaderTest {
             withContext(Dispatchers.Main) { vm.chooseResume(false); vm.screen("folder"); vm.open(entry) }
             waitReady(vm); bookId = vm.currentBook!!.id
             for (mode in listOf(EpubMode.PAGED, EpubMode.SCROLL)) {
-                compose.onNodeWithTag("epub_settings").performClick()
+                openDetailedSettings()
                 compose.onNodeWithTag("scope_BOOK").performClick()
                 withContext(Dispatchers.Main) {
                     vm.changeSetting("EPUB", "font", EpubFont.SERIF)
@@ -320,7 +406,7 @@ class EpubReaderTest {
             vm = ViewModelProvider(compose.activity)[AppViewModel::class.java]
             waitReady(vm); delay(700)
             assertVisible(anchor, "long scroll recreation")
-            compose.onNodeWithTag("epub_settings").performClick()
+            openDetailedSettings()
             compose.onNodeWithTag("scope_BOOK").performClick()
             withContext(Dispatchers.Main) { vm.changeSetting("EPUB", "size", 1.6f) }
             compose.waitUntil(10_000) { vm.epub.value.size == 1.6f }
@@ -364,12 +450,12 @@ class EpubReaderTest {
             assertNotNull(anchor.locations.cssSelector)
             compose.onNodeWithTag("epub_bookmark").performClick()
             compose.waitUntil(10_000) { vm.epubReader.marks.value.isNotEmpty() }
-            compose.onNodeWithTag("epub_settings").performClick()
+            openDetailedSettings()
             compose.waitUntil(10_000) { vm.ui.value.screen == "epub_settings" }
             assertFalse(vm.epubReader.ready.value)
             val settingsAnchor = vm.epubReader.locator.value!!
             compose.onNodeWithTag("scope_BOOK").performClick()
-            compose.onNodeWithTag("epub_mode_paged").performClick()
+            compose.onNodeWithTag("epub_mode_paged").performScrollTo().performClick()
             compose.waitUntil(10_000) { vm.epub.value.mode == EpubMode.PAGED }
             withContext(Dispatchers.Main) { vm.closeEpubSettings(); assertFalse(vm.epubReader.ready.value) }
             waitReady(vm); delay(700)
@@ -414,7 +500,7 @@ class EpubReaderTest {
                 compose.onNodeWithTag("epub_body").performTouchInput { click(center) }
                 compose.waitUntil(3000) { vm.epubReader.chrome.value }
             }
-            compose.onNodeWithTag("epub_settings").performClick()
+            openDetailedSettings()
             compose.onNodeWithTag("scope_BOOK").performClick()
             withContext(Dispatchers.Main) { vm.changeSetting("EPUB", "mode", mode) }
             compose.waitUntil(5000) { vm.epub.value.mode == mode }
@@ -468,7 +554,7 @@ class EpubReaderTest {
             return compose.runOnIdle { collect(compose.activity.window.decorView).maxOrNull() ?: error("Missing fixed layout") }
         }
         suspend fun settings(pinch: Boolean) {
-            compose.onNodeWithTag("epub_settings").performClick()
+            openDetailedSettings()
             compose.onNodeWithTag("scope_BOOK").performClick()
             compose.onNodeWithTag("epub_swipe_to_turn").assertDoesNotExist()
             if (vm.epub.value.pinchZoom != pinch) compose.onNodeWithTag("epub_pinch_zoom").performScrollTo().performClick()
@@ -510,6 +596,10 @@ class EpubReaderTest {
             compose.waitUntil(10_000) { vm.epubReader.locator.value?.href.toString().contains("chapter2") }
             compose.onNodeWithTag("epub_body").performTouchInput { pinch(center * .8f, center * .4f, center * 1.2f, center * 1.6f) }
             compose.onNodeWithTag("epub_settings").performClick()
+            compose.onNodeWithTag("epub_font").assertDoesNotExist()
+            compose.onNodeWithTag("epub_line").assertDoesNotExist()
+            compose.onNodeWithTag("epub_canvas_AUTO").performScrollTo().assertExists()
+            compose.onNodeWithTag("quick_details").performScrollTo().performClick()
             compose.waitUntil(10_000) { vm.ui.value.screen == "epub_settings" }
             compose.onNodeWithTag("epub_size").assertDoesNotExist()
             compose.onNodeWithTag("epub_canvas_AUTO").assertExists()

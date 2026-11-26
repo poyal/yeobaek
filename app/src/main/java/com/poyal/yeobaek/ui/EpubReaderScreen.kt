@@ -144,7 +144,7 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
                             ReaderToolbarItem(ReaderAction.CONTENTS, "epub_contents") { vm.sheet("epub_contents") },
                             ReaderToolbarItem(ReaderAction.BOOKMARKS, "epub_bookmarks") { vm.sheet("epub_bookmarks") },
                             ReaderToolbarItem(ReaderAction.SEARCH, "epub_search") { vm.sheet("epub_search") },
-                            ReaderToolbarItem(ReaderAction.SETTINGS, "epub_settings") { vm.openEpubSettings() },
+                            ReaderToolbarItem(ReaderAction.SETTINGS, "epub_settings") { vm.sheet("quick_settings") },
                         ), Modifier.testTag("epub_footer"))
                     }
                 }
@@ -206,10 +206,8 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
     val fixed = state.epubReader?.document?.fixed == true
     SettingsPage("EPUB 읽기 설정", "epub_settings_screen", vm::closeEpubSettings, contentTag = "epub_options") {
         SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "EPUB", showTitle = false, showReset = false) }
-        ReaderGestureSettings(vm, "EPUB", prefs.menuVisibility,
-            pinch = prefs.pinchZoom.takeIf { fixed || state.epubReader == null }, swipeToTurn = prefs.swipeToTurn.takeUnless { fixed },
-            swipeLabel = if (prefs.mode == EpubMode.SCROLL) "좌우 스와이프로 장 이동" else "좌우 스와이프로 페이지 넘김",
-            pinchDetail = "고정 지면 EPUB에 적용됩니다.")
+        if (!fixed) EpubTextOptions(vm, prefs)
+        EpubGestureOptions(vm, prefs, state.epubReader?.document?.fixed)
         if (!fixed) {
             SettingsSection("읽기 방식", Icons.Outlined.MenuBook) {
                 ChoiceGroup(EpubMode.entries, prefs.mode, label = { if (it == EpubMode.SCROLL) "장별 스크롤" else "페이지 넘김" },
@@ -221,38 +219,27 @@ fun epubColors(p: EpubReaderPreferences, fixed: Boolean, app: PaperColors) = if 
                     tag = { "epub_chapter_buttons_$it" }) { vm.changeSetting("EPUB", "chapterButtons", it) }
                 Small("장별 스크롤의 좌우 화살표에 적용됩니다. 화살표를 숨겨도 장 끝의 ‘다음으로’ 버튼은 표시됩니다.")
             }
-            SettingsSection("글꼴과 크기", Icons.Outlined.TextFields) {
-                ChoiceGroup(EpubFont.entries, prefs.font, label = { it.label }, tag = { "epub_font_$it" }) { vm.changeSetting("EPUB", "font", it) }
-                EpubSlider("글자 크기", "epub_size", prefs.size, .75f..2.5f, { "${(it * 100).roundToInt()}%" }) { vm.changeSetting("EPUB", "size", it) }
-            }
-            SettingsSection("본문 서식", Icons.Outlined.FormatLineSpacing) {
-                LabeledSwitch("원본 서식", prefs.publisherStyles, "epub_publisher_styles", "책에 지정된 줄 간격과 여백을 사용합니다.") { vm.changeSetting("EPUB", "publisherStyles", it) }
-                if (!prefs.publisherStyles) {
-                    EpubSlider("줄 간격", "epub_line", prefs.line, 1.2f..2.2f, { String.format(java.util.Locale.US, "%.1f배", it) }) { vm.changeSetting("EPUB", "line", it) }
-                    EpubSlider("좌우 여백", "epub_margin", prefs.margin, .5f..2f, { String.format(java.util.Locale.US, "%.1f배", it) }) { vm.changeSetting("EPUB", "margin", it) }
-                }
-            }
-            SettingsSection("본문 색상", Icons.Outlined.Palette) {
-                ChoiceGroup(TxtPaper.entries, prefs.paper,
-                    label = { when (it) { TxtPaper.FOLLOW_APP -> "앱 테마"; TxtPaper.LIGHT -> "라이트"; TxtPaper.SEPIA -> "세피아"; TxtPaper.DARK -> "다크" } },
-                    tag = { "epub_paper_$it" }) { vm.changeSetting("EPUB", "paper", it) }
-            }
         }
-        if (fixed || state.epubReader == null) SettingsSection("고정 지면의 바깥 배경", Icons.Outlined.Wallpaper) {
-            Small("고정 지면 책은 한 페이지씩 넘기고 두 손가락으로 확대합니다. 글꼴과 본문 색상은 원본을 따릅니다.")
-            ChoiceGroup(PdfCanvas.entries, prefs.canvas, label = { when (it) { PdfCanvas.AUTO -> "앱 테마"; PdfCanvas.LIGHT -> "라이트"; PdfCanvas.DARK -> "다크" } },
-                tag = { "epub_canvas_$it" }) { vm.changeSetting("EPUB", "canvas", it) }
-        }
+        if (fixed || state.epubReader == null) EpubCanvasOptions(vm, prefs)
         SettingsSection("설정 초기화", Icons.Outlined.RestartAlt) {
             ReaderSettingsReset(vm, "EPUB")
         }
     }
 }
 
-@Composable private fun EpubSlider(label: String, tag: String, value: Float, range: ClosedFloatingPointRange<Float>, display: (Float) -> String, change: (Float) -> Unit) {
-    var draft by remember(value) { mutableFloatStateOf(value) }
-    Text("$label · ${display(draft)}", Modifier.testTag("${tag}_value"))
-    Slider(draft, { draft = it }, Modifier.testTag(tag).semantics { contentDescription = label }, valueRange = range, onValueChangeFinished = { change(draft) })
+@Composable internal fun EpubGestureOptions(vm: AppViewModel, prefs: EpubReaderPreferences, fixed: Boolean?, quick: Boolean = false) {
+    ReaderGestureSettings(vm, "EPUB", prefs.menuVisibility,
+        pinch = prefs.pinchZoom.takeIf { fixed != false }, swipeToTurn = prefs.swipeToTurn.takeUnless { fixed == true },
+        swipeLabel = if (prefs.mode == EpubMode.SCROLL) "좌우 스와이프로 장 이동" else "좌우 스와이프로 페이지 넘김",
+        quick = quick, pinchDetail = "고정 지면 EPUB에 적용됩니다.")
+}
+
+@Composable internal fun EpubCanvasOptions(vm: AppViewModel, prefs: EpubReaderPreferences) {
+    SettingsSection("고정 지면의 바깥 배경", Icons.Outlined.Wallpaper) {
+        Small("고정 지면 책은 한 페이지씩 넘기고 두 손가락으로 확대합니다. 글꼴과 본문 색상은 원본을 따릅니다.")
+        ChoiceGroup(PdfCanvas.entries, prefs.canvas, label = { when (it) { PdfCanvas.AUTO -> "앱 테마"; PdfCanvas.LIGHT -> "라이트"; PdfCanvas.DARK -> "다크" } },
+            tag = { "epub_canvas_$it" }) { vm.changeSetting("EPUB", "canvas", it) }
+    }
 }
 
 @Composable fun EpubSheet(vm: AppViewModel, kind: String) {

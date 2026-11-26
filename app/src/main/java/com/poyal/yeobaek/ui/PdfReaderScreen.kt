@@ -130,25 +130,29 @@ fun pdfColors(prefs: PdfPreferences, app: PaperColors) = when (prefs.canvas) {
 @Composable fun PdfSettingsScreen(vm: AppViewModel, prefs: PdfPreferences) {
     SettingsPage("PDF 읽기 설정", "pdf_settings_screen", vm::closePdfSettings, contentTag = "pdf_options") {
         SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "PDF", showTitle = false, showReset = false) }
+        PdfPageOptions(vm, prefs)
         ReaderGestureSettings(vm, "PDF", prefs.menuVisibility, prefs.doubleTapZoom, prefs.pinchZoom)
-        SettingsSection("화면 맞춤과 간격", Icons.Outlined.FitScreen) {
-            ChoiceGroup(PdfFit.entries, prefs.fit, label = { if (it == PdfFit.WIDTH) "너비에 맞춤" else "페이지에 맞춤" }, tag = { "pdf_fit_$it" }) { vm.changeSetting("PDF", "fit", it) }
-            Rule()
-            var spacing by remember(prefs.spacing) { mutableFloatStateOf(prefs.spacing) }
-            Text("페이지 간격 · ${spacing.roundToInt()} dp", fontSize = 15.sp)
-            Slider(spacing, { spacing = it }, Modifier.testTag("pdf_spacing").semantics { contentDescription = "페이지 간격" }, valueRange = 0f..24f, steps = 23, onValueChangeFinished = { vm.changeSetting("PDF", "spacing", spacing) })
-        }
-        SettingsSection("페이지 색상", Icons.Outlined.Palette) {
-            LabeledSwitch("색상 반전", prefs.inverted, "pdf_inversion_switch", "글자·이미지·도표의 색상을 함께 반전합니다.") { vm.changeSetting("PDF", "inverted", it) }
-            Small("원본 파일과 메뉴 색상에는 영향을 주지 않습니다.")
-        }
-        SettingsSection("페이지 바깥 배경", Icons.Outlined.Wallpaper) {
-            ChoiceGroup(PdfCanvas.entries, prefs.canvas, label = { when (it) { PdfCanvas.AUTO -> "자동"; PdfCanvas.LIGHT -> "라이트"; PdfCanvas.DARK -> "다크" } }, tag = { "pdf_canvas_$it" }) { vm.changeSetting("PDF", "canvas", it) }
-            Small("자동은 앱 테마를 따르며, 색상 반전 중에는 어두운 배경을 사용합니다.")
-        }
         SettingsSection("설정 초기화", Icons.Outlined.RestartAlt) {
             ReaderSettingsReset(vm, "PDF")
         }
+    }
+}
+
+@Composable internal fun PdfPageOptions(vm: AppViewModel, prefs: PdfPreferences) {
+    SettingsSection("화면 맞춤과 간격", Icons.Outlined.FitScreen) {
+        ChoiceGroup(PdfFit.entries, prefs.fit, label = { if (it == PdfFit.WIDTH) "너비에 맞춤" else "페이지에 맞춤" }, tag = { "pdf_fit_$it" }) { vm.changeSetting("PDF", "fit", it) }
+        Rule()
+        ReadingSlider("페이지 간격", "pdf_spacing", prefs.spacing, 0f..24f, { "${it.roundToInt()} dp" }, steps = 23) {
+            vm.changeSetting("PDF", "spacing", it)
+        }
+    }
+    SettingsSection("페이지 색상", Icons.Outlined.Palette) {
+        LabeledSwitch("색상 반전", prefs.inverted, "pdf_inversion_switch", "글자·이미지·도표의 색상을 함께 반전합니다.") { vm.changeSetting("PDF", "inverted", it) }
+        Small("원본 파일과 메뉴 색상에는 영향을 주지 않습니다.")
+    }
+    SettingsSection("페이지 바깥 배경", Icons.Outlined.Wallpaper) {
+        ChoiceGroup(PdfCanvas.entries, prefs.canvas, label = { when (it) { PdfCanvas.AUTO -> "자동"; PdfCanvas.LIGHT -> "라이트"; PdfCanvas.DARK -> "다크" } }, tag = { "pdf_canvas_$it" }) { vm.changeSetting("PDF", "canvas", it) }
+        Small("자동은 앱 테마를 따르며, 색상 반전 중에는 어두운 배경을 사용합니다.")
     }
 }
 

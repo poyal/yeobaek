@@ -235,7 +235,7 @@ class JourneyDevice(val pkg: String = InstrumentationRegistry.getArguments().get
     fun settings(kind: String) {
         chrome(kind)
         click(if (kind == "reader") "reader_txt" else "${kind}_settings")
-        if (kind != "epub") find("quick_details", "quick_options").click()
+        find("quick_details", "quick_options").click()
         node(if (kind == "reader") "txt_options" else "${kind}_options")
     }
     fun endSettings(kind: String) { click("page_back"); ready(kind) }

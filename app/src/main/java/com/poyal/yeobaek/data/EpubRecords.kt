@@ -21,7 +21,13 @@ data class EpubBookmark(
 
 enum class EpubMode { SCROLL, PAGED }
 enum class EpubChapterButtons(val label: String) { ALWAYS("항상 표시"), WITH_MENU("메뉴와 함께 표시"), HIDDEN("숨김") }
-enum class EpubFont(val label: String) { ORIGINAL("원본 글꼴"), SERIF("기존 명조"), SANS("시스템 고딕"), MONOSPACE("고정폭") }
+enum class EpubFont(val textFont: TxtFont?) {
+    ORIGINAL(null), SERIF(TxtFont.NOTO_SERIF), SANS(TxtFont.SYSTEM_SANS),
+    SANS_LIGHT(TxtFont.SYSTEM_SANS_LIGHT), SANS_MEDIUM(TxtFont.SYSTEM_SANS_MEDIUM),
+    SYSTEM_SERIF(TxtFont.SYSTEM_SERIF), MONOSPACE(TxtFont.SYSTEM_MONOSPACE);
+
+    val label: String get() = textFont?.label ?: "원본 글꼴"
+}
 @Serializable
 data class EpubReaderPreferences(
     val mode: EpubMode = EpubMode.SCROLL, val publisherStyles: Boolean = true,

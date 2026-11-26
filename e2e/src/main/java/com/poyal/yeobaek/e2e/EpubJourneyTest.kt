@@ -71,6 +71,9 @@ class EpubJourneyTest {
         shot("FAIL-chapter-scroll")
         throw AssertionError("The end action must be reachable with vertical scrolling")
     }
+    private fun openDetailedSettings() {
+        click("epub_settings"); click("quick_details"); node("epub_settings_screen")
+    }
     private fun openReflow() { find("file_Yeobaek-Reflow.epub", "library_list"); click("file_Yeobaek-Reflow.epub"); ready() }
     private fun connect() {
         click("connect_folder")
@@ -128,8 +131,8 @@ class EpubJourneyTest {
         node("epub_search_next", 30_000); shot("04-search"); click("epub_search_next"); node("epub_search_previous")
         click("epub_result_0"); ready(); click("epub_search"); click("epub_search_return"); ready()
         Assert.assertTrue(node("epub_current_chapter").text.startsWith("2장"))
-        click("epub_settings"); click("scope_BOOK"); find("epub_mode_paged", "epub_options"); click("epub_mode_paged"); shot("05-settings")
-        find("epub_font_SERIF", "epub_options"); click("epub_font_SERIF"); click("page_back"); ready()
+        openDetailedSettings(); click("scope_BOOK"); find("epub_mode_paged", "epub_options"); click("epub_mode_paged"); shot("05-settings")
+        find("epub_font", "epub_options", Direction.UP); click("epub_font"); find("epub_font_SERIF", "epub_options"); click("epub_font_SERIF"); click("page_back"); ready()
         val before = percent(); Assert.assertTrue(before in 33..66); shot("06-paged")
         SystemClock.sleep(1500)
         val oldPid = device.executeShellCommand("pidof $pkg").trim()
@@ -152,7 +155,7 @@ class EpubJourneyTest {
         val fontScale = device.executeShellCommand("settings get system font_scale").trim()
         try {
             device.executeShellCommand("settings put system font_scale 2.0"); SystemClock.sleep(1000); ready()
-            click("epub_settings"); node("epub_settings_screen")
+            openDetailedSettings(); node("epub_settings_screen")
             find("scope_BOOK", "epub_options", Direction.UP); click("scope_BOOK")
             find("epub_mode_scroll", "epub_options"); click("epub_mode_scroll")
             find("epub_chapter_buttons_HIDDEN", "epub_options"); click("epub_chapter_buttons_HIDDEN")
@@ -185,7 +188,7 @@ class EpubJourneyTest {
         openExternal("external-fixed.epub"); ready(); Assert.assertEquals("1 / 3 페이지", fixedPage())
         click("epub_next"); SystemClock.sleep(800); Assert.assertEquals("2 / 3 페이지", fixedPage())
         body().pinchOpen(.65f); shot("12-fixed-zoom")
-        click("epub_settings"); Assert.assertFalse(device.hasObject(By.res("epub_size")))
+        openDetailedSettings(); Assert.assertFalse(device.hasObject(By.res("epub_size")))
         find("epub_canvas_DARK", "epub_options"); click("epub_canvas_DARK"); shot("13-fixed-settings")
         click("page_back"); ready(); Assert.assertEquals("2 / 3 페이지", fixedPage())
         click("epub_next"); node("reading_end_dialog"); shot("13-fixed-complete")
@@ -248,7 +251,7 @@ class EpubJourneyTest {
     }
     @Test fun backupFreshRestoreAndChangedOriginalKeepRecords() {
         connect(); openReflow(); click("epub_next"); SystemClock.sleep(700)
-        click("epub_bookmark"); click("epub_settings"); click("scope_BOOK"); find("epub_mode_paged", "epub_options"); click("epub_mode_paged"); click("page_back"); ready()
+        click("epub_bookmark"); openDetailedSettings(); click("scope_BOOK"); find("epub_mode_paged", "epub_options"); click("epub_mode_paged"); click("page_back"); ready()
         val progress = percent(); click("epub_back")
         click("nav_settings"); click("settings_general"); find("backup_export", "general_settings_options"); click("backup_export")
         documentsFolder()
@@ -269,7 +272,7 @@ class EpubJourneyTest {
         click("page_back"); click("nav_folder"); connect(); openReflow()
         Assert.assertEquals(progress.toDouble(), percent().toDouble(), 1.0)
         click("epub_bookmarks"); node("epub_mark_0"); shot("18-restored-bookmark"); click("sheet_close")
-        click("epub_settings"); click("scope_BOOK"); find("epub_mode_paged", "epub_options")
+        openDetailedSettings(); click("scope_BOOK"); find("epub_mode_paged", "epub_options")
         Assert.assertTrue(device.wait(Until.hasObject(By.res("epub_mode_paged").checked(true)), 5000)); click("page_back"); click("epub_back")
         val source = "/sdcard/Download/YeobaekEPUB/Yeobaek-Reflow.epub"
         val original = "$source.qa-original"

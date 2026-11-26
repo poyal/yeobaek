@@ -16,6 +16,56 @@ import java.io.File
 
 class ImageViewTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test fun previousUnmeasuredSpreadLtr() = checkPreviousUnmeasuredSpread(ImageDirection.LTR)
+    @Test fun previousUnmeasuredSpreadRtl() = checkPreviousUnmeasuredSpread(ImageDirection.RTL)
+
+    private fun checkPreviousUnmeasuredSpread(direction: ImageDirection) = runBlocking<Unit> {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val dir = File(context.cacheDir, "previous-spread-$direction").apply { mkdirs() }
+        val zip = File(dir, "mixed.zip")
+        java.util.zip.ZipOutputStream(zip.outputStream()).use { out ->
+            for (index in 0 until 12) {
+                out.putNextEntry(java.util.zip.ZipEntry("%03d.jpg".format(java.util.Locale.ROOT, index)))
+                val width = if (index == 7) 1200 else 600
+                val image = android.graphics.Bitmap.createBitmap(width, 900, android.graphics.Bitmap.Config.ARGB_8888)
+                image.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, out)
+                image.recycle()
+                out.closeEntry()
+            }
+        }
+        val source = ImageSource.archive(context, ImageStore(dir), { zip.inputStream() })
+        lateinit var view: ImageDocumentView
+        fun settle(index: Int) = compose.waitUntil(20_000) {
+            source.pages.value[index].measured && view.locator().page == index &&
+                view.renderStatus().let { it.visible > 0 && it.complete == it.visible && it.settled }
+        }
+        try {
+            compose.setContent {
+                AndroidView(factory = { ctx -> ImageDocumentView(ctx).also {
+                    view = it
+                    it.configure(ImagePreferences(mode = ImageMode.PAGED, direction = direction, splitWide = true), android.graphics.Color.WHITE)
+                    it.open(source, ImageLocator(page = 8))
+                } }, modifier = Modifier.fillMaxSize())
+            }
+            settle(8)
+            compose.runOnIdle { assertFalse(source.pages.value[7].measured); view.turn(-1) }
+            settle(7)
+            val first = if (direction == ImageDirection.LTR) 0 else 1
+            compose.runOnIdle {
+                assertEquals(1 - first, view.locator().segment)
+                view.turn(-1)
+                assertEquals(first, view.locator().segment)
+                view.turn(-1)
+            }
+            settle(6)
+            compose.runOnIdle { assertEquals(-1, view.locator().segment) }
+        } finally {
+            compose.runOnIdle { view.dispose() }
+            source.close()
+            dir.deleteRecursively()
+        }
+    }
     @Test fun splitWidePageKeepsOriginalCoordinatesAndOnlyCompletesAfterSecondHalf() = runBlocking {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext

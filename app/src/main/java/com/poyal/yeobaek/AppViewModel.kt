@@ -118,11 +118,24 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val key = settings.value.scopeKey(settingsScope.value, format, currentBook?.id)
         action { settingsStore.fields(key, mapOf(field to value.toString())) }
     }
-    fun setImage(value: ImagePreferences) {
-        val old = ReaderSettingValues.image(editImage.value)
-        val changes = ReaderSettingValues.image(value).filter { old[it.key] != it.value }
-        val key = settings.value.scopeKey(settingsScope.value, "IMAGE", currentBook?.id)
-        action { settingsStore.fields(key, changes) }
+    fun stepTextSize(format: String, step: Int) {
+        val scope = settingsScope.value
+        val bookId = currentBook?.id
+        val key = settings.value.scopeKey(scope, format, bookId)
+        action {
+            val txtBase = if (format == "TXT") prefs.txt.first() else null
+            settingsStore.update { stored ->
+                val fields = stored.editingFields(format, bookId, scope)
+                val size = if (txtBase != null) {
+                    (ReaderSettingValues.txt(txtBase, fields).size + step).coerceIn(14f, 32f)
+                } else {
+                    val current = ReaderSettingValues.epub(EpubReaderPreferences(), fields).size
+                    ((kotlin.math.round(current * 100) + step * 5) / 100f).coerceIn(.75f, 2.5f)
+                }
+                val changed = stored.overrides[key].orEmpty() + ("size" to size.toString())
+                stored.copy(overrides = stored.overrides + (key to changed))
+            }
+        }
     }
     fun toggleInversion(format: String) {
         val inverted = if (format == "PDF") pdf.value.inverted else image.value.inverted

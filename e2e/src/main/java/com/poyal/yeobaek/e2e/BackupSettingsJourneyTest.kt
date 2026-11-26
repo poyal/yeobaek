@@ -20,7 +20,7 @@ class BackupSettingsJourneyTest {
     @After fun cleanupExports() {
         exported.forEach { j.shell("rm -f /sdcard/Download/YeobaekQA/$it") }
     }
-    private fun fontSize() = j.find("font_size", "txt_options").text.toInt()
+    private fun fontSize() = j.find("font_size", "txt_options").text.substringBefore(" ").toInt()
     @Test fun S09_commonFolderBookInheritanceAndFormatReset(): Unit = j.step("S09") {
         j.connect(); j.open("01-short.txt", "reader"); j.moveText(.4f)
         j.settings("reader"); j.click("scope_COMMON")

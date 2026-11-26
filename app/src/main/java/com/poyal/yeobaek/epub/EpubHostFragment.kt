@@ -76,7 +76,7 @@ class EpubHostFragment : Fragment(), EpubRenderer {
                     combine(vm.epub, vm.app) { prefs, app ->
                         prefs.copy(menuVisibility = MenuVisibility.TAP, chapterButtons = EpubChapterButtons.ALWAYS) to app.theme
                     }.distinctUntilChanged().collectLatest { (prefs, theme) ->
-                        val anchor = capture() ?: vm.epubReader.locator.value ?: opened.initial
+                        val anchor = vm.epubReader.capture() ?: opened.initial
                         // Readium's JavaScript callback can resume after its WebView was removed.
                         currentCoroutineContext().ensureActive()
                         if (!isAdded || this@EpubHostFragment.view !== view || vm.ui.value.epubReader?.token != token) return@collectLatest
@@ -133,11 +133,20 @@ class EpubHostFragment : Fragment(), EpubRenderer {
                 }
             }
         }
+        val textFont = prefs.font.textFont.takeUnless { opened.document.fixed }
         val initialPrefs = EpubPreferences(
             scroll = !opened.document.fixed && prefs.mode == EpubMode.SCROLL,
             spread = Spread.NEVER, columnCount = ColumnCount.ONE,
             publisherStyles = prefs.publisherStyles,
-            fontFamily = when (prefs.font) { EpubFont.ORIGINAL -> null; EpubFont.SERIF -> FontFamily("Yeobaek Serif"); EpubFont.SANS -> FontFamily.SANS_SERIF; EpubFont.MONOSPACE -> FontFamily.MONOSPACE },
+            fontFamily = when (textFont) {
+                null -> null
+                TxtFont.NOTO_SERIF -> FontFamily("Yeobaek Serif")
+                TxtFont.SYSTEM_SERIF -> FontFamily.SERIF
+                TxtFont.SYSTEM_MONOSPACE -> FontFamily.MONOSPACE
+                TxtFont.SYSTEM_SANS, TxtFont.SYSTEM_SANS_LIGHT, TxtFont.SYSTEM_SANS_MEDIUM -> FontFamily.SANS_SERIF
+            },
+            // Readium expresses the inherited CSS weight as a multiple of normal (400).
+            fontWeight = textFont?.let { it.weight / 400.0 },
             fontSize = prefs.size.toDouble(), lineHeight = if (prefs.publisherStyles) null else prefs.line.toDouble(),
             pageMargins = if (prefs.publisherStyles) null else prefs.margin.toDouble(),
             backgroundColor = Color(colors.surface.toArgb()),

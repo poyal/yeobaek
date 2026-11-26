@@ -32,7 +32,7 @@ class UpgradeJourneyTest {
         j.click("resume_accept"); j.ready("reader")
         assertEquals(before.getDouble("percent"), j.percent().toDouble(), .2)
         j.click("reader_bookmarks"); j.node("bookmark_delete"); j.click("sheet_close")
-        j.settings("reader"); j.click("scope_BOOK"); assertEquals("19", j.find("font_size", "txt_options").text)
+        j.settings("reader"); j.click("scope_BOOK"); assertEquals("19 sp", j.find("font_size", "txt_options").text)
         j.endSettings("reader"); j.close("reader")
         j.open("03-book.pdf", "pdf"); assertEquals(40, j.page("pdf"))
         j.click("pdf_bookmarks"); j.node("pdf_bookmark_delete"); j.click("sheet_close"); j.close("pdf")

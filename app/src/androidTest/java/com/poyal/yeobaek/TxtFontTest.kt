@@ -27,7 +27,10 @@ class TxtFontTest {
             }
         }
         for (font in TxtFont.entries) {
-            ui.onNodeWithTag("font_${font.name}").performScrollTo().performClick().assertIsSelected()
+            ui.onNodeWithTag("quick_font").performScrollTo().performClick()
+            ui.onNodeWithTag("font_${selected.name}").assertIsSelected()
+            ui.onNodeWithTag("font_${font.name}").performScrollTo().performClick()
+            ui.onNodeWithTag("quick_font").assertTextContains("글꼴 · ${font.label}")
             ui.runOnIdle { assertEquals(font, selected) }
             val prefs = TxtPreferences(font = font)
             assertEquals(font.family, prefs.textStyle().fontFamily)

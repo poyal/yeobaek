@@ -326,7 +326,7 @@ import java.util.Locale
             Rule()
             SettingsRow(Icons.Outlined.PictureAsPdf, "PDF 뷰어", "화면 맞춤 · 페이지 간격 · 색상 반전", "settings_pdf", vm::openPdfSettings)
             Rule()
-            SettingsRow(Icons.Outlined.MenuBook, "EPUB 뷰어", "읽기 방식 · 글꼴 · 본문 색상", "settings_epub", { vm.openEpubSettings() })
+            SettingsRow(Icons.Outlined.MenuBook, "EPUB 뷰어", "글꼴 · 크기 · 간격 · 읽기 방식", "settings_epub", { vm.openEpubSettings() })
             Rule()
             SettingsRow(Icons.Outlined.Collections, "이미지 뷰어", "넘김 방식 · 페이지 배치 · 여백", "settings_image", vm::openImageSettings)
         }
@@ -390,27 +390,11 @@ import java.util.Locale
     Surface(color = colors.surface, border = BorderStroke(1.dp, LocalPaper.current.line), shape = RoundedCornerShape(12.dp)) {
         Text("어떤 이야기는\n잠시 머물러도 좋았다.", Modifier.fillMaxWidth().padding(20.dp), style = prefs.textStyle(), color = colors.ink)
     }
+    TxtTextOptions(vm, prefs)
     ReaderGestureSettings(vm, "TXT", prefs.menuVisibility)
-    SettingsSection("글꼴과 크기", Icons.Outlined.TextFields) {
-        TxtFontPicker(prefs.font) { font -> vm.changeSetting("TXT", "font", font) }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Text("글자 크기", Modifier.weight(1f), fontSize = 13.sp); Tool(Icons.Outlined.Remove, "글자 작게", "font_smaller", outlined = true, onClick = { vm.changeSetting("TXT", "size", prefs.size - 1) }); Text(prefs.size.toInt().toString(), Modifier.testTag("font_size")); Tool(Icons.Outlined.Add, "글자 크게", "font_larger", outlined = true, onClick = { vm.changeSetting("TXT", "size", prefs.size + 1) }) }
-    }
-    SettingsSection("간격과 여백", Icons.Outlined.FormatLineSpacing) {
-        OptionSlider("줄간격", prefs.line, 1.3f..2.1f, "line_spacing") { vm.changeSetting("TXT", "line", it) }
-        OptionSlider("좌우 여백", prefs.margin, 16f..40f, "text_margin") { vm.changeSetting("TXT", "margin", it) }
-    }
-    SettingsSection("본문 색상", Icons.Outlined.Palette) {
-        ChoiceGroup(TxtPaper.entries, prefs.paper, label = { when (it) { TxtPaper.FOLLOW_APP -> "앱 테마"; TxtPaper.LIGHT -> "라이트"; TxtPaper.SEPIA -> "세피아"; TxtPaper.DARK -> "다크" } },
-            tag = { "paper_$it" }) { vm.changeSetting("TXT", "paper", it) }
-    }
     SettingsSection("설정 초기화", Icons.Outlined.RestartAlt) {
         ReaderSettingsReset(vm, "TXT")
     }
-}
-@Composable private fun OptionSlider(label: String, value: Float, range: ClosedFloatingPointRange<Float>, tag: String, commit: (Float) -> Unit) {
-    var preview by remember(value) { mutableFloatStateOf(value) }
-    Column { Row { Text(label, Modifier.weight(1f), fontSize = 13.sp); Small(String.format(Locale.US, "%.2f", preview)) }
-        Slider(preview, { preview = it }, Modifier.testTag(tag).semantics { contentDescription = label }, valueRange = range, onValueChangeFinished = { commit(preview) }) }
 }
 @Composable private fun MoveSheet(progress: Float, apply: (Float) -> Unit, cancel: () -> Unit) {
     var target by rememberSaveable { mutableFloatStateOf(progress) }

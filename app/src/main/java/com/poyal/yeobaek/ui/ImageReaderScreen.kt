@@ -124,45 +124,50 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
 }
 
 @Composable fun ImageSettingsScreen(vm: AppViewModel, prefs: ImagePreferences) {
-    fun set(value: ImagePreferences) { vm.setImage(value) }
     SettingsPage("이미지 읽기 설정", "image_settings_screen", vm::closeImageSettings, contentTag = "image_options") {
         SettingsSection("설정 적용 범위", Icons.Outlined.Tune) { SettingsScopePicker(vm, "IMAGE", showTitle = false, showReset = false) }
-        SettingsSection("읽기 방식", Icons.Outlined.AutoStories) {
-            ChoiceGroup(ImageMode.entries, prefs.mode, label = { if (it == ImageMode.VERTICAL) "세로 연속" else "좌우 넘김" }, tag = { "image_mode_$it" }) { set(prefs.copy(mode = it)) }
-            if (prefs.mode == ImageMode.PAGED) {
-                Rule(); Text("넘김 방향")
-                ChoiceGroup(ImageDirection.entries, prefs.direction, label = { if (it == ImageDirection.LTR) "왼쪽 → 오른쪽" else "오른쪽 → 왼쪽" }, tag = { "image_direction_$it" }) { set(prefs.copy(direction = it)) }
-                Text("페이지 배치")
-                ChoiceGroup(ImageSpread.entries, prefs.spread,
-                    label = { when (it) { ImageSpread.SINGLE -> "한 쪽"; ImageSpread.DOUBLE -> "두 쪽"; ImageSpread.LANDSCAPE -> "가로 화면에서 자동" } },
-                    tag = { "image_spread_$it" }) { set(prefs.copy(spread = it)) }
-                LabeledSwitch("표지는 한 쪽으로", prefs.coverAlone, "image_cover") { set(prefs.copy(coverAlone = it)) }
-                Small("가로로 긴 이미지는 한 쪽으로 표시합니다.")
-            }
-        }
+        ImagePageOptions(vm, prefs, showPageLayout = true)
         ReaderGestureSettings(vm, "IMAGE", prefs.menuVisibility, prefs.doubleTapZoom, prefs.pinchZoom, prefs.tapToTurn.takeIf { prefs.mode == ImageMode.PAGED },
             swipeToTurn = prefs.swipeToTurn.takeIf { prefs.mode == ImageMode.PAGED })
-        SettingsSection("화면 맞춤과 간격", Icons.Outlined.FitScreen) {
-            ChoiceGroup(ImageFit.entries, prefs.fit, label = { if (it == ImageFit.WIDTH) "너비에 맞춤" else "전체 이미지" }, tag = { "image_fit_$it" }) {
-                set(if (prefs.mode == ImageMode.VERTICAL) prefs.copy(verticalFit = it) else prefs.copy(pagedFit = it))
-            }
-            Rule()
-            var spacing by remember(prefs.spacing) { mutableFloatStateOf(prefs.spacing) }
-            Text("이미지 간격 · ${spacing.roundToInt()} dp")
-            Slider(spacing, { spacing = it }, Modifier.testTag("image_spacing").semantics { contentDescription = "이미지 간격" }, valueRange = 0f..24f, steps = 23, onValueChangeFinished = { set(prefs.copy(spacing = spacing)) })
-        }
-        SettingsSection("페이지 여백", Icons.Outlined.Crop) {
-            ImageCropOptions(vm, prefs)
-        }
-        SettingsSection("페이지 색상과 배경", Icons.Outlined.Palette) {
-            LabeledSwitch("색상 반전", prefs.inverted, "image_inversion_switch", "이미지와 미리보기의 색상을 반전합니다.") { vm.changeSetting("IMAGE", "inverted", it) }
-            Text("이미지 바깥 배경")
-            ChoiceGroup(ImageCanvas.entries, prefs.canvas, label = { when (it) { ImageCanvas.AUTO -> "자동"; ImageCanvas.LIGHT -> "라이트"; ImageCanvas.DARK -> "다크" } }, tag = { "image_canvas_$it" }) { set(prefs.copy(canvas = it)) }
-            Small("자동은 앱 테마를 따르며, 색상 반전 중에는 어두운 배경을 사용합니다.")
-        }
         SettingsSection("설정 초기화", Icons.Outlined.RestartAlt) {
             ReaderSettingsReset(vm, "IMAGE")
         }
+    }
+}
+
+@Composable internal fun ImagePageOptions(vm: AppViewModel, prefs: ImagePreferences, showPageLayout: Boolean) {
+    SettingsSection("읽기 방식", Icons.Outlined.AutoStories) {
+        ChoiceGroup(ImageMode.entries, prefs.mode, label = { if (it == ImageMode.VERTICAL) "세로 연속" else "좌우 넘김" }, tag = { "image_mode_$it" }) { vm.changeSetting("IMAGE", "mode", it) }
+        if (prefs.mode == ImageMode.PAGED) {
+            Rule(); Text("넘김 방향")
+            ChoiceGroup(ImageDirection.entries, prefs.direction, label = { if (it == ImageDirection.LTR) "왼쪽 → 오른쪽" else "오른쪽 → 왼쪽" }, tag = { "image_direction_$it" }) { vm.changeSetting("IMAGE", "direction", it) }
+            if (showPageLayout) {
+                Text("페이지 배치")
+                ChoiceGroup(ImageSpread.entries, prefs.spread,
+                    label = { when (it) { ImageSpread.SINGLE -> "한 쪽"; ImageSpread.DOUBLE -> "두 쪽"; ImageSpread.LANDSCAPE -> "가로 화면에서 자동" } },
+                    tag = { "image_spread_$it" }) { vm.changeSetting("IMAGE", "spread", it) }
+                LabeledSwitch("표지는 한 쪽으로", prefs.coverAlone, "image_cover") { vm.changeSetting("IMAGE", "coverAlone", it) }
+                Small("가로로 긴 이미지는 한 쪽으로 표시합니다.")
+            }
+        }
+    }
+    SettingsSection("화면 맞춤과 간격", Icons.Outlined.FitScreen) {
+        ChoiceGroup(ImageFit.entries, prefs.fit, label = { if (it == ImageFit.WIDTH) "너비에 맞춤" else "전체 이미지" }, tag = { "image_fit_$it" }) {
+            vm.changeSetting("IMAGE", if (prefs.mode == ImageMode.VERTICAL) "verticalFit" else "pagedFit", it)
+        }
+        Rule()
+        ReadingSlider("이미지 간격", "image_spacing", prefs.spacing, 0f..24f, { "${it.roundToInt()} dp" }, steps = 23) {
+            vm.changeSetting("IMAGE", "spacing", it)
+        }
+    }
+    SettingsSection("페이지 여백", Icons.Outlined.Crop) {
+        ImageCropOptions(vm, prefs)
+    }
+    SettingsSection("페이지 색상과 배경", Icons.Outlined.Palette) {
+        LabeledSwitch("색상 반전", prefs.inverted, "image_inversion_switch", "이미지와 미리보기의 색상을 반전합니다.") { vm.changeSetting("IMAGE", "inverted", it) }
+        Text("이미지 바깥 배경")
+        ChoiceGroup(ImageCanvas.entries, prefs.canvas, label = { when (it) { ImageCanvas.AUTO -> "자동"; ImageCanvas.LIGHT -> "라이트"; ImageCanvas.DARK -> "다크" } }, tag = { "image_canvas_$it" }) { vm.changeSetting("IMAGE", "canvas", it) }
+        Small("자동은 앱 테마를 따르며, 색상 반전 중에는 어두운 배경을 사용합니다.")
     }
 }
 

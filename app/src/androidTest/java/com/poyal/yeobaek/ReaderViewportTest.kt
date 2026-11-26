@@ -10,9 +10,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.poyal.yeobaek.data.DocumentEntry
+import com.poyal.yeobaek.data.TxtFont
 import com.poyal.yeobaek.image.*
 import com.poyal.yeobaek.pdf.*
 import kotlinx.coroutines.*
@@ -86,6 +88,92 @@ class ReaderViewportTest {
             }
         } finally { screenshot.recycle() }
     }
+    @Test fun txtQuickSettingsAndDetailsShareTheFontAndReadingPosition() = runBlocking {
+        val sample = (1..250).joinToString("\n") { "${it}번째 문단. 검색구절 여백의 독서는 문장을 천천히 따라갑니다." }
+        withBook("txt", "text/plain", sample.toByteArray()) { vm ->
+            withContext(Dispatchers.Main) { vm.seekPercent(.4f) }
+            compose.waitUntil(15_000) { (vm.currentPosition?.offset ?: 0) > 0 }
+            val before = vm.currentPosition!!.offset
+            compose.onNodeWithTag("reader_txt").performClick()
+            compose.onNodeWithTag("scope_BOOK").performScrollTo().performClick()
+            compose.onNodeWithTag("quick_font").performScrollTo().performClick()
+            compose.onNodeWithTag("font_SYSTEM_SANS_LIGHT").performScrollTo().performClick()
+            compose.onNodeWithTag("line_spacing").performScrollTo().performSemanticsAction(SemanticsActions.SetProgress) { it(1.65f) }
+            compose.waitUntil(5_000) { vm.txt.value.font == TxtFont.SYSTEM_SANS_LIGHT && vm.txt.value.line == 1.65f }
+            compose.waitForIdle()
+            delay(400)
+            capture("txt-quick-text")
+            compose.onNodeWithTag("quick_details").performScrollTo().performClick()
+            compose.onNodeWithTag("txt_options").assertIsDisplayed()
+            delay(400)
+            capture("txt-detail-text")
+            compose.onNodeWithTag("quick_font").performScrollTo().assertTextContains("글꼴 · 가는 고딕")
+            compose.onNodeWithTag("line_spacing_value").performScrollTo().assertTextContains("줄 간격 · 1.65배")
+            compose.onNodeWithTag("page_back").performClick()
+            compose.waitUntil(10_000) { compose.onAllNodesWithTag("layout_loading").fetchSemanticsNodes().isEmpty() }
+            assertTrue("Reflow must keep the same sentence", kotlin.math.abs(vm.currentPosition!!.offset - before) < 40)
+        }
+    }
+
+    @Test fun pdfAndImageQuickSpacingAndFitKeepTheSelectedPage() = runBlocking {
+        val pdfBytes = ByteArrayOutputStream().also { out ->
+            val pdf = PdfDocument()
+            try {
+                for (n in 1..3) pdf.finishPage(pdf.startPage(PdfDocument.PageInfo.Builder(400, 600, n).create()))
+                pdf.writeTo(out)
+            } finally { pdf.close() }
+        }.toByteArray()
+        val imageBytes = ByteArrayOutputStream().also { out ->
+            val bitmap = Bitmap.createBitmap(400, 600, Bitmap.Config.ARGB_8888)
+            ZipOutputStream(out).use { zip ->
+                for (n in 1..3) {
+                    zip.putNextEntry(ZipEntry("$n.png"))
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, zip)
+                    zip.closeEntry()
+                }
+            }
+            bitmap.recycle()
+        }.toByteArray()
+        for ((extension, mime, bytes) in listOf(Triple("pdf", "application/pdf", pdfBytes),
+            Triple("cbz", "application/vnd.comicbook+zip", imageBytes))) {
+            val pdf = extension == "pdf"
+            val prefix = if (pdf) "pdf" else "image"
+            withBook(extension, mime, bytes) { vm ->
+                compose.waitUntil(15_000) {
+                    runCatching {
+                        if (pdf) native<PdfDocumentView>().renderStatus().visible > 0
+                        else native<ImageDocumentView>().renderStatus().visible > 0
+                    }.getOrDefault(false)
+                }
+                compose.runOnIdle {
+                    if (pdf) native<PdfDocumentView>().move(PdfLocator(page = 1))
+                    else native<ImageDocumentView>().move(ImageLocator(page = 1), announceEnd = false)
+                }
+                compose.onNodeWithTag("${prefix}_settings").performClick()
+                compose.onNodeWithTag("scope_BOOK").performScrollTo().performClick()
+                compose.onNodeWithTag("${prefix}_fit_PAGE").performScrollTo().performClick()
+                compose.onNodeWithTag("${prefix}_spacing").performScrollTo().performSemanticsAction(SemanticsActions.SetProgress) { it(12f) }
+                if (!pdf) {
+                    compose.onNodeWithTag("image_mode_PAGED").performScrollTo().performClick()
+                    compose.waitUntil(5_000) { compose.onAllNodesWithTag("image_direction_RTL").fetchSemanticsNodes().isNotEmpty() }
+                    compose.onNodeWithTag("image_direction_RTL").performScrollTo().performClick()
+                    compose.onNodeWithTag("image_fit_WIDTH").performScrollTo().performClick()
+                    compose.onNodeWithTag("image_mode_VERTICAL").performScrollTo().performClick()
+                    compose.waitUntil(5_000) { compose.onAllNodesWithTag("image_direction_RTL").fetchSemanticsNodes().isEmpty() }
+                    compose.onNodeWithTag("image_fit_PAGE").performScrollTo().assertIsSelected()
+                    compose.onNodeWithTag("image_direction_RTL").assertDoesNotExist()
+                }
+                compose.onNodeWithTag("quick_details").performScrollTo().performClick()
+                compose.onNodeWithTag("${prefix}_fit_PAGE").performScrollTo().assertIsSelected()
+                compose.onNodeWithTag("${prefix}_spacing_value").performScrollTo().assertTextContains("12 dp", substring = true)
+                compose.onNodeWithTag("page_back").performClick()
+                compose.waitUntil(15_000) {
+                    if (pdf) vm.pdfReader.locator.value.page == 1 else vm.imageReader.locator.value.page == 1
+                }
+            }
+        }
+    }
+
     @Test fun pdfHiddenMenuDoesNotClipTheScrolledPage() = runBlocking {
         val bytes = ByteArrayOutputStream().also { out ->
             val pdf = PdfDocument()

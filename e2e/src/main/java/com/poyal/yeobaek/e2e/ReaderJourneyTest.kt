@@ -120,7 +120,7 @@ class ReaderJourneyTest {
         click("reader_bookmark"); SystemClock.sleep(500); click("reader_bookmarks"); node("bookmark_delete"); capture("12-bookmarks-added"); click("sheet_close")
         click("reader_txt"); capture("13-txt-settings")
         scrollTo("font_larger", "txt_options"); click("font_larger")
-        check(device.wait(Until.hasObject(By.res("font_size").text("19")), 5000))
+        check(device.wait(Until.hasObject(By.res("font_size").text("19 sp")), 5000))
         scrollTo("paper_SEPIA", "txt_options")
         click("paper_SEPIA"); capture("14-txt-paper"); click("page_back"); capture("15-sepia-reader")
         click("reader_txt"); scrollTo("txt_reset", "txt_options"); click("txt_reset"); click("page_back")
