@@ -234,8 +234,15 @@ class JourneyDevice(val pkg: String = InstrumentationRegistry.getArguments().get
     }
     fun settings(kind: String) {
         chrome(kind)
+        ready(kind)
         click(if (kind == "reader") "reader_txt" else "${kind}_settings")
-        find("quick_details", "quick_options").click()
+        node("quick_options")
+        device.waitForIdle()
+        // The current reader puts this button first; older releases put it below the options.
+        val visibleButton = device.findObject(By.res("quick_details"))
+        val minHeight = (24 * instrumentation.context.resources.displayMetrics.density).toInt()
+        if (visibleButton != null && visibleButton.visibleBounds.height() >= minHeight) visibleButton.click()
+        else find("quick_details", "quick_options").click()
         node(if (kind == "reader") "txt_options" else "${kind}_options")
     }
     fun endSettings(kind: String) { click("page_back"); ready(kind) }
