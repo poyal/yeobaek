@@ -13,6 +13,9 @@
 
 | 버전 | 사용자 매뉴얼 | AI용 최종 검증 | 패치노트 |
 | --- | --- | --- | --- |
+| v1.0.8 | [README](releases/v1.0.8/README.md) | [AGENTS](releases/v1.0.8/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.8) |
+| v1.0.7 | [README](releases/v1.0.7/README.md) | [AGENTS](releases/v1.0.7/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.7) |
+| v1.0.6 | [README](releases/v1.0.6/README.md) | [AGENTS](releases/v1.0.6/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.6) |
 | v1.0.5 | [README](releases/v1.0.5/README.md) | [AGENTS](releases/v1.0.5/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.5) |
 | v1.0.4 | [README](releases/v1.0.4/README.md) | [AGENTS](releases/v1.0.4/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.4) |
 | v1.0.3 | [README](releases/v1.0.3/README.md) | [AGENTS](releases/v1.0.3/AGENTS.md) | [GitHub](https://github.com/poyal/yeobaek/releases/tag/v1.0.3) |
