@@ -212,6 +212,34 @@ class FullJourneyTest {
         assertFalse("The first half is not the book end", j.exists("reading_end_dialog"))
     }
 
+    @Test fun S05_verticalSplitBookmarkAndProcessRestore(): Unit = j.step("S05-vertical-split") {
+        j.connect(); j.open("04-comic.cbz", "image")
+        j.settings("image"); j.click("scope_BOOK")
+        j.find("image_split", "image_options").click()
+        j.find("image_direction_RTL", "image_options").click()
+        j.endSettings("image"); j.movePage("image", 3)
+        j.await("Expected the right half first") { j.node("image_page").text.contains("오른쪽") }
+        val bounds = j.body("image").visibleBounds
+        for (step in 1..12) {
+            if (j.node("image_page").text.contains("왼쪽")) break
+            j.device.swipe(bounds.centerX(), bounds.centerY() + bounds.height() / 10,
+                bounds.centerX(), bounds.centerY() - bounds.height() / 10, 60)
+            j.device.waitForIdle()
+        }
+        assertEquals(3, j.page("image"))
+        assertTrue(j.node("image_page").text.contains("왼쪽"))
+        j.click("image_bookmark")
+        val before = j.settledViewport("image")
+        j.killAndResume("image")
+        j.await("Resume lost the second half") { j.page("image") == 3 && j.node("image_page").text.contains("왼쪽") }
+        j.assertViewportRestored("image", before)
+        j.movePage("image", 12); j.click("image_bookmarks")
+        j.node("image_bookmark_list").findObject(By.textContains("3 페이지"))!!.click()
+        j.ready("image")
+        j.await("Bookmark lost the second half") { j.page("image") == 3 && j.node("image_page").text.contains("왼쪽") }
+        j.assertViewportRestored("image", before)
+    }
+
     @Test fun S05_archiveFormatsAndImageFolderUseActualPages(): Unit = j.step("S05-formats") {
         j.connect(); j.find("folder_Archives").click()
         for (file in listOf("mixed.cb7", "mixed.cbr", "stored-rar4.cbr")) {

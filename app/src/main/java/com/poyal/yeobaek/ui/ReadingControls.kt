@@ -187,7 +187,13 @@ import kotlin.math.min
 }
 @Composable fun ImageCropOptions(vm: AppViewModel, prefs: ImagePreferences) {
     LabeledSwitch("펼침면 반쪽씩 읽기", prefs.splitWide, "image_split") { vm.changeSetting("IMAGE", "splitWide", it) }
-    Small("세로 화면 · 좌우 넘김에서 가로로 긴 페이지에 적용합니다.")
+    Small("세로 화면에서 가로로 긴 이미지를 반쪽씩 읽습니다.")
+    if (prefs.splitWide && prefs.mode == ImageMode.VERTICAL) {
+        Text("펼침면 읽는 순서")
+        ChoiceGroup(ImageDirection.entries, prefs.direction,
+            label = { if (it == ImageDirection.LTR) "왼쪽 먼저" else "오른쪽 먼저" },
+            tag = { "image_direction_$it" }) { vm.changeSetting("IMAGE", "direction", it) }
+    }
     LabeledSwitch("자동 여백 자르기", prefs.cropMode == CropMode.AUTO, "image_auto_crop") { vm.changeSetting("IMAGE", "cropMode", if (it) CropMode.AUTO else CropMode.OFF) }
     if (vm.currentBook?.format?.startsWith("IMAGE_") == true) PaperButton("여백 직접 조절", "image_crop_edit", Modifier.fillMaxWidth(), outlined = true, onClick = { vm.sheet("image_crop") })
 }

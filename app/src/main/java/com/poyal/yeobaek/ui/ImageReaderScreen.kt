@@ -84,7 +84,7 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                         Tool(Icons.Outlined.ArrowBack, "닫기", "image_back", onClick = { vm.closeReader() })
                         Column(Modifier.weight(1f)) {
                             Text(opened.book.name, fontSize = 13.sp, lineHeight = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${locator.page + 1} / ${pages.size} 페이지 · ${ReadingProgress.page(locator.page, locator.y, pages.size, locator.completed).label}${if (prefs.splitWide && prefs.mode == ImageMode.PAGED && locator.segment >= 0) if (locator.segment == 0) " · 왼쪽" else " · 오른쪽" else ""}", Modifier.testTag("image_page"), fontSize = 11.sp, color = p.muted)
+                            Text("${locator.page + 1} / ${pages.size} 페이지 · ${ReadingProgress.page(locator.page, locator.y, pages.size, locator.completed).label}${if (prefs.splitWide && locator.segment >= 0) if (locator.segment == 0) " · 왼쪽" else " · 오른쪽" else ""}", Modifier.testTag("image_page"), fontSize = 11.sp, color = p.muted)
                         }
                         val marked = marks.any { it.version == opened.book.version && it.pageKey == locator.key }
                         Tool(if (marked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, if (marked) "책갈피 해제" else "책갈피 추가",
@@ -149,7 +149,7 @@ fun imageBackground(prefs: ImagePreferences, app: PaperColors): Color = when (pr
                     label = { when (it) { ImageSpread.SINGLE -> "한 쪽"; ImageSpread.DOUBLE -> "두 쪽"; ImageSpread.LANDSCAPE -> "가로 화면에서 자동" } },
                     tag = { "image_spread_$it" }) { vm.changeSetting("IMAGE", "spread", it) }
                 LabeledSwitch("표지는 한 쪽으로", prefs.coverAlone, "image_cover") { vm.changeSetting("IMAGE", "coverAlone", it) }
-                Small("가로로 긴 이미지는 한 쪽으로 표시합니다.")
+                Small("가로로 긴 이미지는 다른 페이지와 짝지어 표시하지 않습니다.")
             }
         }
     }

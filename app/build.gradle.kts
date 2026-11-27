@@ -16,8 +16,8 @@ android {
         applicationId = "com.poyal.yeobaek"
         minSdk = 30
         targetSdk = 36
-        versionCode = 13
-        versionName = "1.0.7"
+        versionCode = 14
+        versionName = "1.0.8"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {

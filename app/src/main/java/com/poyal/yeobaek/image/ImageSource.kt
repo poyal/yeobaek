@@ -147,7 +147,7 @@ class ImageSource private constructor(val version: String, initial: List<ImagePa
     }
     suspend fun render(index: Int, pw: Int, ph: Int, x: Int, y: Int, w: Int, h: Int): Bitmap = withContext(Dispatchers.IO) {
         val page = measure(index)
-        engine.render(file(page), pw, ph, x, y, w, h)
+        engine.render(file(page), pw, ph, x, y, w, h).also { it.prepareToDraw() }
     }
     suspend fun thumbnail(index: Int): Bitmap = withContext(Dispatchers.IO) {
         val page = measure(index)
