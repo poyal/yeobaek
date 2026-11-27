@@ -43,3 +43,11 @@ Android 16 전용 AVD 한 대에서 고정 release APK로 합성 TXT를 각 크�
 | 100 MiB | 4,288 ms | 75,661 KiB | 28 ms |
 
 각 파일에서 스크롤과 80% 위치 이동을 확인했습니다. 줄바꿈 없는 1 MiB 본문, 빈 줄이 많은 파일, 101 MiB 열기 제한도 통과했습니다. 정식 APK의 독립 기기 검사는 Android 11에서 7/7개, Android 16에서 부하 검사를 포함해 5/5개가 정상 종료됐습니다. 최종 실행의 생략·누락·중복은 0개입니다. 이전 버전에서의 기록 준비와 덮어 설치 전후 검사 3회는 별도로 집계했습니다.
+
+## 공개 파일과 앱 내 업데이트
+
+2026년 11월 28일 00시 33분 02초 KST에 v1.0.8을 GitHub 최신 정식 릴리즈로 공개했습니다. 릴리즈 ID는 `460780537`이며 주석 태그는 `59708eb2d69e2f4360e78310566dbb94e26c7ad8`을 가리킵니다. [GitHub 릴리즈](https://github.com/poyal/yeobaek/releases/tag/v1.0.8)
+
+초안에서 인증해 받은 파일과 공개 후 로그인 없이 받은 파일 모두 위 표의 크기·SHA-256과 일치했습니다. GitHub 첨부 파일의 SHA-256도 일치했습니다. APK 첨부 ID는 `801021341`, 체크섬 첨부 ID는 `801021343`입니다. [APK](https://github.com/poyal/yeobaek/releases/download/v1.0.8/yeobaek-1.0.8.apk) · [체크섬](https://github.com/poyal/yeobaek/releases/download/v1.0.8/yeobaek-1.0.8.sha256)
+
+두 전용 AVD에서 **설정 → 업데이트 → 업데이트 확인**을 눌렀습니다. Android 11의 공식 v1.0.7에서는 “여백 1.0.8 업데이트가 있어요.”, Android 16의 공식 v1.0.8에서는 “최신 버전을 사용하고 있어요.”가 표시됐습니다. 두 화면 모두 최신 확인 버전은 1.0.8이었습니다.
